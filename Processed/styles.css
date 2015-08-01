@@ -1,0 +1,115 @@
+nav.row {
+  margin: 0 0 20px 0;
+  display: none;
+}
+
+.navbar-toggle:hover .icon-bar {
+  background-color: black;
+}
+
+.weektoggledisplay {
+  background-color: transparent;
+  padding: 10px;
+  border: 1px solid #33b5e5;
+  border-radius: 10px;
+  text-align: center;
+  padding: 15px;
+  margin: 0 0 20px 1.11%;
+  font-weight: bold;
+  font-size: 140%;
+}
+
+.weektoggledisplay:hover > nav.row {
+  display: block;
+}
+
+.weektoggledisplay:hover > .showweeks {
+  margin-bottom: 15px;
+}
+
+@media screen and (max-width: 992px) {
+  .weektoggledisplay:hover > .showweeks {
+    margin-bottom: 30px;
+  }
+}
+
+button.weeknav {
+  background-color: transparent;
+  padding: 10px;
+  border: 1px solid #33b5e5;
+  border-radius: 10px;
+}
+
+button.weeknav.active {
+  background-color: rgba(51, 181, 229, 0.4);
+}
+
+.weektitle {
+  font-size: 85.71429%;
+}
+
+.date {
+  font-size: 57.14286%;
+  font-weight: normal;
+}
+
+.divtitle {
+  border-top: 2px solid #33b5e5;
+  border-bottom: 1px solid lightgrey;
+}
+
+.gamerowcontainer {
+  padding: 20px 0;
+  display: none;
+}
+
+.navbar {
+  background-color: #33b5e5;
+}
+
+.row h3 {
+  margin-left: 1.5%;
+  font-size: 250%;
+}
+
+.game {
+  border-radius: 10px;
+  padding: 10px;
+  margin: .5% 1%;
+}
+
+.score {
+  text-align: right;
+}
+
+.teamname ~ .score {
+  padding-left: 0;
+}
+
+.teams .teamname {
+  padding-right: 0;
+}
+
+.gamerow {
+  margin: 0 1%;
+}
+
+.notstarted {
+  border: 3px solid #0000ff;
+  background-color: #b9e1ff;
+}
+
+.inprogress {
+  border: 3px solid #00ff00;
+  background-color: #d1ffd1;
+}
+
+.finished {
+  border: 3px solid #ff0000;
+  background-color: #ffe7e7;
+}
+
+.refs, .location {
+  font-size: 75%;
+  color: #002aaa;
+}

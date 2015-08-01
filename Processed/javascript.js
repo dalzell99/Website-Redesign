@@ -1,0 +1,1 @@
+function showGameInfo(o){window.open("http://possumpam.com/rugby/gameinfo.php?gameID="+o,"_self")}function toggleGames(o){$(".".concat(o)).toggle()}function setActiveWeekButton(o){$(".week".concat(o+1)).addClass("active")}$(document).ready(function(){});
