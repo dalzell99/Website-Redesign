@@ -17,7 +17,7 @@ html(lang="en")
     .container-fluid
       .row
         .weektoggledisplay.col-xs-47
-          .showweeks Show Weeks
+          .showweeks(onclick="toggleWeeks()") Show Weeks
           nav.row
             +navlinks(0, 1, "23 Mar - 29 Mar")
             +navlinks(1, 2, "30 Mar - 5 Apr")

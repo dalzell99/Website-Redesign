@@ -1,3 +1,6 @@
+/*
+ * index.php styles
+ */
 nav.row {
   margin: 0 0 20px 0;
   display: none;
@@ -19,18 +22,8 @@ nav.row {
   font-size: 140%;
 }
 
-.weektoggledisplay:hover > nav.row {
-  display: block;
-}
-
-.weektoggledisplay:hover > .showweeks {
+.weeksexpanded {
   margin-bottom: 15px;
-}
-
-@media screen and (max-width: 992px) {
-  .weektoggledisplay:hover > .showweeks {
-    margin-bottom: 30px;
-  }
 }
 
 button.weeknav {
@@ -112,4 +105,99 @@ button.weeknav.active {
 .refs, .location {
   font-size: 75%;
   color: #002aaa;
+}
+
+/*
+ * livescore.php styles
+ */
+#divDropDown {
+  display: none;
+}
+
+.teamInfo {
+  font-size: 250%;
+  text-align: center;
+}
+
+.gameInfo {
+  font-size: 100%;
+  text-align: center;
+}
+
+.rowfix {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/*.scoringPlay
+  padding: 15px
+  background-color: #e7e7e7
+  border-radius: 10px
+  margin: 1%
+  text-align: center
+  font-size: 180%
+  border: 1px solid black*/
+.scoringInfo {
+  font-size: 180%;
+  margin: 10px 0;
+}
+
+.submit {
+  padding: 15px;
+  margin: 10px 2%;
+}
+
+/*
+ * gameinfobody.php styles
+ */
+.teamInfo {
+  font-size: x-large;
+  text-align: center;
+}
+
+.gameInfo {
+  font-size: large;
+  text-align: center;
+}
+
+.minutesPlayed {
+  text-align: center;
+  padding: 0;
+}
+
+.homeScoringPlay {
+  text-align: left;
+  padding-left: 30px;
+}
+
+.awayScoringPlay {
+  text-align: right;
+  padding-right: 30px;
+}
+
+.border {
+  border: 1px black solid;
+}
+
+div.row.scoringPlays {
+  font-size: large;
+}
+
+.versus {
+  padding: 0;
+}
+
+.scoringPlays > .scoringPlay {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  text-align: center;
+  border: 1px black solid;
+}
+
+.scoringPlays > .time {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-weight: bold;
+  text-align: center;
+  border: 1px black solid;
 }

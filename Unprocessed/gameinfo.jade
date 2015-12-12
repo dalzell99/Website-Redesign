@@ -1,7 +1,7 @@
 doctype html
 html(lang="en")
   head
-    title Live Scoring
+    title Game Info
     meta(charset="utf-8")
     meta(name="viewport", content="width=device-width, initial-scale=1")
     link(rel="stylesheet", href="bootstrap/css/bootstrap.css")
@@ -12,20 +12,7 @@ html(lang="en")
     include mixins
 
   body
-    +nav("live")
+    +nav("draw")
     
-    include livescorebody.php
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    .container-fluid
+      include gameinfobody.php

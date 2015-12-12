@@ -28,7 +28,7 @@
     <div class="container-fluid">
       <div class="row">
         <div class="weektoggledisplay col-xs-47">
-          <div class="showweeks">Show Weeks</div>
+          <div onclick="toggleWeeks()" class="showweeks">Show Weeks</div>
           <nav class="row">
                 <button onclick="location.href='/rugby/index.php?weekNumber=0'" class="weeknav col-xs-12 col-sm-8 col-md-4 week1"><div class="weektitle">W1</div><div class="date">23 Mar - 29 Mar</div></button>
                 <button onclick="location.href='/rugby/index.php?weekNumber=1'" class="weeknav col-xs-12 col-sm-8 col-md-4 week2"><div class="weektitle">W2</div><div class="date">30 Mar - 5 Apr</div></button>
