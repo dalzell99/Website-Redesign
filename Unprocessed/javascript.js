@@ -120,11 +120,27 @@ function toggleSelectedTeam(elem, team) {
     this.selectedTeam = team;
 }
 
-function uploadScoringPlay(gameID) {
+function uploadScoringPlay(gameID, homeScore, awayScore) {
     team = this.selectedTeam;
     play = this.selectedScoringPlay;
     minutesPlayed = document.getElementsByClassName("minutesPlayedInput")[0].value;
     description = document.getElementsByClassName("descriptionInput")[0].value;
     window.open("http://possumpam.com/rugby/livescore.php?gameID=" + gameID + "&team=" + team + 
-                "&play=" + play + "&minutesPlayed=" + minutesPlayed + "&description=" + description, "_self");
+                "&play=" + play + "&minutesPlayed=" + minutesPlayed + "&description=" + description +
+                "&homeScore=" + homeScore + "&awayScore=" + awayScore + "&uploadPlay=true", "_self");
+}
+
+function sendHalfTime(gameID, homeScore, awayScore) {
+    window.open("http://possumpam.com/rugby/livescore.php?gameID=" + gameID + "&homeScore=" + homeScore + "&awayScore=" + awayScore + "&team=&play=halfTime&minutesPlayed=40&description=" + "&uploadPlay=true", "_self");
+}
+
+function sendFullTime(gameID) {
+    window.open("http://possumpam.com/rugby/livescore.php?gameID=" + gameID + "&team=&play=fullTime&minutesPlayed=80&description=" + "&uploadPlay=true", "_self");
+}
+
+function changeScore(gameID) {
+    var homeScore = document.getElementById('newhomescore').value;
+    var awayScore = document.getElementById('newawayscore').value;
+    var minutesPlayed = document.getElementById('newminutesplayed').value;
+    window.open("http://possumpam.com/rugby/livescore.php?gameID=" + gameID + "&homeScore=" + homeScore + "&awayScore=" + awayScore + "&minutesPlayed=" + minutesPlayed + "&changeScore=true", "_self");
 }

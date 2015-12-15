@@ -680,31 +680,41 @@ if (isset($_POST['password'])) {
             echo "<button id=\"select\" onClick=\"selectGame()\">Select Game</button>";
             break;
     }
-} else if (isset($_GET["play"])) {
+} else if (isset($_GET["changeScore"])) {
+    echo "<script>hidePassword();</script>";
+    echo "<div class='row'><div class='col-xs-48 playuploadmessage'>The score is being changed</div></div>";
+    $minutesPlayed = $_GET["minutesPlayed"];
+    if (strlen($_GET["homeScore"]) == 1) { $homeScore = '0' . $_GET["homeScore"]; } else { $homeScore = $_GET["homeScore"]; };
+    if (strlen($_GET["awayScore"]) == 1) { $awayScore = '0' . $_GET["awayScore"]; } else { $awayScore = $_GET["awayScore"]; };
+    $gameID = $_GET["gameID"];
+    $scoringPlay = updt . $homeScore . $awayScore;
+    uploadScoringPlay($gameID, $homeScore, $awayScore, $minutesPlayed, '', $scoringPlay);
+    echo '<script>window.open("http://possumpam.com/rugby/livescore.php?gameID=' . $gameID . '", "_self");</script>';
+} else if (isset($_GET["uploadPlay"])) {
+    echo "<script>hidePassword();</script>";
+    echo "<div class='row'><div class='col-xs-48 playuploadmessage'>Play is being uploaded</div></div>";
     $scoringPlay = $_GET["team"] . $_GET["play"];
     $minutesPlayed = $_GET["minutesPlayed"];
     $description = $_GET["description"];
-    $homeScore = $row['homeTeamScore'];
-    $awayScore = $row['awayTeamScore'];
-    echo $_GET["gameID"] . " homescore:" . $homeScore . " awayscore:" . $awayScore . " mins:" . $minutesPlayed . " descr:" . $description . " scpl:" . $scoringPlay;
+    $homeScore = intval($_GET["homeScore"]);
+    $awayScore = intval($_GET["awayScore"]);
     switch ($_GET["play"]) {
         case "Try":
-            if ($_GET["team"] == "home") { $homeScore = intval($homeScore) + 5; }
-            else { $awayScore = intval($awayScore) + 5; }
+            if ($_GET["team"] == "home") { $homeScore = $homeScore + 5; }
+            else { $awayScore = $awayScore + 5; }
             break;
         case "Penalty":
         case "DropGoal":
-            if ($_GET["team"] == "home") { $homeScore = intval($homeScore) + 3; }
-            else { $awayScore = intval($awayScore) + 3; }
+            if ($_GET["team"] == "home") { $homeScore = $homeScore + 3; }
+            else { $awayScore = $awayScore + 3; }
             break;
         case "Conversion":
-            if ($_GET["team"] == "home") { $homeScore = intval($homeScore) + 2; }
-            else { $awayScore = intval($awayScore) + 2; }
+            if ($_GET["team"] == "home") { $homeScore = $homeScore + 2; }
+            else { $awayScore = $awayScore + 2; }
             break;
     }
-    echo $_GET["gameID"] . " homescore:" . $homeScore . " awayscore:" . $awayScore . " mins:" . $minutesPlayed . " descr:" . $description . " scpl:" . $scoringPlay;
-    //uploadScoringPlay($_GET["gameID"], $homeScore, $awayScore, $minutesPlayed, $description, $scoringPlay);
-    //echo "<script>location.href='" . $_SERVER[PHP_SELF] . "?gameID=" . $_GET['gameID'] . "'</script>";
+    uploadScoringPlay($_GET["gameID"], $homeScore, $awayScore, $minutesPlayed, $description, $scoringPlay);
+    echo "<script>location.href='" . $_SERVER[PHP_SELF] . "?gameID=" . $_GET['gameID'] . "'</script>";
 } else if (isset($_GET["gameID"])) {
     $gameID = $_GET["gameID"];
     if (gameExists($gameID)) {
@@ -729,6 +739,21 @@ if (isset($_POST['password'])) {
         echo "</div>";
         
         echo "<div class='row rowfix scoringPlayInfo'>";
+        echo "    <div class='scoringPlay changescore col-xs-48' onclick='changeScore(`" . $row['homeTeamName'] . "`, " . 
+                  intval($row['homeTeamScore']) . ", `" . $row['awayTeamName'] . "`, " . intval($row['awayTeamScore']) . ");'>
+                  Change Score</div>";
+        echo "</div>";
+        echo "<div class='row rowfix changescoreform scoringPlayInfo'>";
+        echo "  " . $row['homeTeamName'] . ": <input type='text' id='newhomescore'><br>
+                " . $row['awayTeamName'] . ": <input type='text' id='newawayscore'><br>
+                Minutes Played: <input type='number' id='newminutesplayed'><br>
+                <input type='submit' onclick='changeScore(" . $_GET["gameID"] . ")'>";
+        echo "</div>";
+        echo "<div class='row rowfix scoringPlayInfo'>";
+        echo "    <div class='scoringPlay halftime col-xs-23' onclick='sendHalfTime(" . $_GET['gameID'] . "," . $row['homeTeamScore'] . ","  . $row['awayTeamScore'] . ")'>Half Time</div>";
+        echo "    <div class='scoringPlay fulltime col-xs-23' onclick='sendFullTime(" . $_GET['gameID'] . "," . $row['homeTeamScore'] . "," . $row['awayTeamScore'] . ")'>Full Time</div>";
+        echo "</div>";
+        echo "<div class='row rowfix scoringPlayInfo'>";
         echo "    <div class='scoringPlay try col-xs-23' onclick='toggleSelectedScoringPlay(this, `Try`)'>Try</div>";
         echo "    <div class='scoringPlay conversion col-xs-23' onclick='toggleSelectedScoringPlay(this, `Conversion`)'>Conversion</div>";
         echo "</div>";
@@ -746,12 +771,14 @@ if (isset($_POST['password'])) {
         echo "    <textarea rows='3' class='descriptionInput col-xs-31'></textarea>";
         echo "</div>";
         echo "<div class='row rowfix scoringInfo'>";
-        echo "    <button class='submit col-xs-46' onclick='uploadScoringPlay(" . $_GET['gameID'] . ")'>Send</div>";
+        echo "    <button class='submit col-xs-46' onclick='uploadScoringPlay(" . $_GET['gameID'] . ", " . $row['homeTeamScore'] . ", " . $row['awayTeamScore'] . ")'>Send</div>";
         echo "</div>";
         
+        echo "<div class='row scoringPlays'>";
         $allScoringPlays = json_decode($row['scoringPlays'], false);
+        $homeScoreCurrent = 0;
+        $awayScoreCurrent = 0;
         for ($i = 0; $i < count($allScoringPlays); $i++) {
-            
             // echo scoring play   
             $scoringPlayInfo = $allScoringPlays[$i];
             $scoringPlay = $scoringPlayInfo[1];
@@ -768,26 +795,54 @@ if (isset($_POST['password'])) {
             if ($play == 'DropGoal') { 
                 $play = 'Drop Goal'; 
             } 
-            
-            echo "<div class='" . $i . "' onclick='deleteScoringPlay(" . $gameID . ", " . $i . ", \"" . substr($scoringPlay, 0, 4) . "\", \"" . substr($scoringPlay, 4) . "\", " . intval($row['homeTeamScore']) . ", " . intval($row['awayTeamScore']) . ")'>\n";
 
             if ($play == 'Time') {
-                echo "<table class='time'>\n";
+                echo "<div class='row time'>";
+                echo "<div class='col-xs-48'>" . $homeScoreCurrent . "-" . $awayScoreCurrent . "</div>";
+                echo "<div class='col-xs-48'>";
                 if ($team == 'half') {
-                    echo "<tr><td>Half Time</td></tr>\n";
+                    echo "Half Time";
                 } else {
-                    echo "<tr><td>Full Time</td></tr>\n";
+                    echo "Full Time";
                 }
+                echo "</div></div>";
             } else if ($team == 'strt') {
-                echo "<table class='time'>\n";
-                echo "<tr><td>Game Started</td></tr>\n";
+                echo "<div class='row'><div class='col-xs-48'>Game Started</div></div>";
             } else if ($team == 'updt') {
-                echo "<table class='time'>\n";
-                echo "<tr><td>Score Updated to " . intval(substr($play, 0, 2)) . " - " . intval(substr($play, 2, 2)) . "</td></tr>\n";
+                echo "<div class='row update'><div class='col-xs-48'>";
+                echo "Score Updated to " . intval(substr($play, 0, 2)) . " - " . intval(substr($play, 2, 2));
+                echo "</div></div>";
+                $homeScoreCurrent = intval(substr($play, 0, 2));
+                $awayScoreCurrent = intval(substr($play, 2, 2));
             } else {
-                echo "<table class='scoringPlay'>\n<tr>\n<td>" . $scoringPlayInfo[0] . "'</td>\n<td>" . $team . "</td>\n<td>" . $play . "</td>\n</tr>\n</table>\n<table><tr><td>" . $scoringPlayInfo[2] . "</td></tr>";
+                $team = substr($scoringPlay, 0, 4);
+                switch ($play) {
+                    case "Try":
+                        if ($team == "home") { $homeScoreCurrent = $homeScoreCurrent + 5; }
+                        else { $awayScoreCurrent = $awayScoreCurrent + 5; }
+                        break;
+                    case "Penalty":
+                    case "Drop Goal":
+                        if ($team == "home") { $homeScoreCurrent = $homeScoreCurrent + 3; }
+                        else { $awayScoreCurrent = $awayScoreCurrent + 3; }
+                        break;
+                    case "Conversion":
+                        if ($team == "home") { $homeScoreCurrent = $homeScoreCurrent + 2; }
+                        else { $awayScoreCurrent = $awayScoreCurrent + 2; }
+                        break;
+                }
+                echo "<div class='row scoringPlay'>";
+                echo "<div class='col-xs-20 homeScoringPlay'>";
+                if ($team == 'home') { echo $play; }
+                echo "</div><div class='col-xs-8 minutesPlayed'>" . $homeScoreCurrent . "-" . $awayScoreCurrent . " (" . $scoringPlayInfo[0] . "')</div>";
+                echo "<div class='col-xs-20 awayScoringPlay'>";
+                if ($team == 'away') { echo $play; }
+                echo "</div>";
+
+                echo "<div class='col-xs-48'>" . $scoringPlayInfo[2] . "</div>";
+                echo "</div>";
+
             }
-            echo "</table>\n</div>\n<br />\n\n";
         }
     } else {
         // Ask user if the teams are correct.
