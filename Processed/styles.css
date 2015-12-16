@@ -215,3 +215,7 @@ div.row.scoringPlays {
   text-align: center;
   padding: 25px;
 }
+
+.changescoreform {
+  display: none;
+}

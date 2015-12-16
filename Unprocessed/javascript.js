@@ -83,13 +83,6 @@ function selectGame() {
     var dd = today.getDate();
     var mm = today.getMonth() + 1; //January is 0!
     var yyyy = today.getFullYear();
-    if (dd < 10) {
-        dd = '0' + dd;
-    }
-
-    if (mm < 10) {
-        mm = '0' + mm;
-    }
 
     var home = document.getElementById("homeTeam");
     var homeValue = home.options[home.selectedIndex].value;
@@ -98,10 +91,18 @@ function selectGame() {
     var awayValue = away.options[away.selectedIndex].value;
     var awayText = away.options[away.selectedIndex].text;
     var division = extractGETVariable('div');
+  
+    if (dd < 10) {
+        dd = '0' + dd;
+    }
 
-    var gameID = yyyy + mm + dd + homeValue + awayValue + division;
-    // function below will run livescore.php with gameID as POST
-    window.open("http://possumpam.com/rugby/livescore.php?gameID=" + gameID + "&homeTeam=" + homeText + "&awayTeam=" + awayText, "_self");
+    if (mm < 10) {
+        mm = '0' + mm;
+    }
+    
+    var gameID = String(yyyy) + String(mm) + String(dd) + String(homeValue) + String(awayValue) + String(division);
+    // function below will run livescore.php with gameID as GET
+    window.open("http://possumpam.com/rugby/livescore.php?gameID=" + gameID + "&homeTeam=" + homeText + "&awayTeam=" + awayText + "&checkGame=true", "_self");
 }
 
 function toggleSelectedScoringPlay(elem, play) {
@@ -143,4 +144,8 @@ function changeScore(gameID) {
     var awayScore = document.getElementById('newawayscore').value;
     var minutesPlayed = document.getElementById('newminutesplayed').value;
     window.open("http://possumpam.com/rugby/livescore.php?gameID=" + gameID + "&homeScore=" + homeScore + "&awayScore=" + awayScore + "&minutesPlayed=" + minutesPlayed + "&changeScore=true", "_self");
+}
+
+function toggleChangeScoreForm() {
+    $(".changescoreform").toggle();
 }
