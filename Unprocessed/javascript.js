@@ -1,10 +1,6 @@
 var selectedScoringPlay = "";
 var selectedTeam = "";
 
-$(document).ready(function () {
-
-});
-
 function showGameInfo(gameID) {
     window.open("http://possumpam.com/rugby/gameinfo.php?gameID=" + gameID, "_self");
 }
@@ -22,12 +18,12 @@ function setActiveWeekButton(weekNumber) {
     $(".week".concat(weekNumber + 1)).addClass("active");
 }
 
-function hidePassword() {
-    $(".password").hide();
+function togglePassword() {
+    $(".password").toggle();
 }
 
 function showDivDropDown() {
-    $("#divDropDown").show();
+    $(".divDropDownRow").show();
 }
 
 function deleteScoringPlay(gameID, index, team, play, homeScore, awayScore) {
@@ -65,7 +61,8 @@ function deleteScoringPlay(gameID, index, team, play, homeScore, awayScore) {
 }
 
 function changeTeamDropdowns() {
-    location.href = "http://possumpam.com/rugby/livescore.php?div=" + divDropDown.options[divDropDown.selectedIndex].value;
+    var url = window.location.href.split("?");
+    location.href = url[0] + "?div=" + divDropDown.options[divDropDown.selectedIndex].value;
 }
 
 function setSelectedDivIndex(value) {
@@ -136,7 +133,7 @@ function sendHalfTime(gameID, homeScore, awayScore) {
 }
 
 function sendFullTime(gameID) {
-    window.open("http://possumpam.com/rugby/livescore.php?gameID=" + gameID + "&team=&play=fullTime&minutesPlayed=80&description=" + "&uploadPlay=true", "_self");
+    window.open("http://possumpam.com/rugby/livescore.php?gameID=" + gameID + "&homeScore=" + homeScore + "&awayScore=" + awayScore + "&team=&play=fullTime&minutesPlayed=80&description=" + "&uploadPlay=true", "_self");
 }
 
 function changeScore(gameID) {
@@ -147,5 +144,47 @@ function changeScore(gameID) {
 }
 
 function toggleChangeScoreForm() {
-    $(".changescoreform").toggle();
+    $(".changeScoreForm").toggle();
+}
+
+function submitScore() {
+    var today = document.getElementById("datePicker").value;
+    var dd = today.substr(8, 2);
+    var mm = today.substr(5, 2);
+    var yyyy = today.substr(0, 4);
+    
+    var home = document.getElementById("homeTeam");
+    var homeValue = home.options[home.selectedIndex].value;
+    var homeText = home.options[home.selectedIndex].text;
+    var away = document.getElementById("awayTeam");
+    var awayValue = away.options[away.selectedIndex].value;
+    var awayText = away.options[away.selectedIndex].text;
+    var division = extractGETVariable('div');
+    
+    var gameID = String(yyyy) + String(mm) + String(dd) + String(homeValue) + String(awayValue) + String(division);
+
+    var homeCheckbox = document.getElementById("homeCheckbox").checked;
+    var awayCheckbox = document.getElementById("awayCheckbox").checked;
+    var homeScore = 0;
+    var awayScore = 0;
+    if (homeCheckbox && awayCheckbox) {
+        alert("Only 1 checkbox can be checked");
+        return;
+    } else if (homeCheckbox) {
+        homeScore = 1;
+        awayScore = 2;
+    } else if (awayCheckbox) {
+        homeScore = 2;
+        awayScore = 1;
+    } else {
+        homeScore = document.getElementById("homeScore").value;
+        awayScore = document.getElementById("awayScore").value;
+    }
+    
+    window.open("http://possumpam.com/rugby/endgame.php?gameID=" + gameID + "&homeTeam=" + homeText + "&awayTeam=" + awayText + "&homeScore=" + homeScore + "&awayScore=" + awayScore + "&div=" + division + "&uploadScore=true", "_self");
+}
+
+function stopScoring(gameID) {
+    var url = window.location.href.split("?");
+    location.href = url[0] + "?gameID=" + gameID + "&stopScoring=true";
 }

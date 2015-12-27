@@ -1,3 +1,8 @@
+.rowfix {
+  margin-left: 0;
+  margin-right: 0;
+}
+
 /*
  * index.php styles
  */
@@ -110,46 +115,114 @@ button.weeknav.active {
 /*
  * livescore.php styles
  */
-#divDropDown {
+.passwordInputRow {
+  font-size: 200%;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.passwordInput {
+  max-width: 50%;
+}
+
+.passwordFormButton, .selectGameButton {
+  margin-left: 15%;
+  width: 70%;
+  height: 70px;
+  font-size: 160%;
+}
+
+@media (min-width: 768px) {
+  .passwordFormButton, .selectGameButton {
+    margin-left: 30%;
+    width: 40%;
+  }
+}
+
+.selectGameButtonRow {
+  margin: 25px 0;
+}
+
+.homeTeamRow, .awayTeamRow, .divDropDownRow {
+  font-size: 180%;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+select#homeTeam, select#awayTeam, select#divDropDown {
+  height: 50px;
+}
+
+.divDropDownRow {
   display: none;
 }
 
-.teamInfo {
+.stopScoringDiv {
+  text-align: end;
+}
+
+.changeScoreForm {
+  display: none;
+}
+
+.timingInfoLive, .changeScoreFormButtonRow {
+  font-size: 150%;
+  margin: .5% 1%;
+}
+
+.halftime {
+  margin-right: .5%;
+  width: 49.5%;
+}
+
+.fulltime {
+  margin-left: .5%;
+  width: 49.5%;
+}
+
+.teamInfoLive {
+  font-size: 170%;
+  text-align: center;
+}
+
+.scoreInfoLive {
   font-size: 250%;
   text-align: center;
 }
 
-.gameInfo {
+.gameInfoLive {
   font-size: 100%;
   text-align: center;
 }
 
-.rowfix {
-  margin-left: 0;
-  margin-right: 0;
+.scoringPlayLive {
+  font-size: 170%;
+  text-align: center;
+  padding: 10px 0;
 }
 
-/*.scoringPlay
-  padding: 15px
-  background-color: #e7e7e7
-  border-radius: 10px
-  margin: 1%
-  text-align: center
-  font-size: 180%
-  border: 1px solid black*/
-.scoringInfo {
-  font-size: 180%;
-  margin: 10px 0;
+.minutesPlayedLive, .minutesPlayedInput,
+.descriptionLive, .descriptionInput {
+  padding: 0;
+}
+
+.scoringInfoLive {
+  font-size: 120%;
+  margin: 5px 5px;
 }
 
 .submit {
-  padding: 15px;
-  margin: 10px 2%;
+  padding: 5px;
+  font-size: 150%;
 }
 
 /*
  * gameinfobody.php styles
  */
+.password {
+  display: none;
+}
+
 .teamInfo {
   font-size: x-large;
   text-align: center;
@@ -179,8 +252,9 @@ button.weeknav.active {
   border: 1px black solid;
 }
 
-div.row.scoringPlays {
-  font-size: large;
+.scoringPlays {
+  font-size: 150%;
+  margin: 0 5px;
 }
 
 .versus {
@@ -214,8 +288,4 @@ div.row.scoringPlays {
   font-weight: bold;
   text-align: center;
   padding: 25px;
-}
-
-.changescoreform {
-  display: none;
 }

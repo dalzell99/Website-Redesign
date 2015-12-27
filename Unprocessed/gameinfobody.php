@@ -17,16 +17,28 @@ if (isset($_GET["gameID"])) {
     $gameID = $_GET["gameID"];
     $game = getGame($gameID);
     $row = mysqli_fetch_assoc($game);
+  
+    if ($row['homeTeamScore'] == '2') {
+        $homeScore = 'Win';
+        $awayScore = 'Defaulted';
+    } else if ($row['homeTeamScore'] == '1') {
+        $homeScore = 'Defaulted';
+        $awayScore = 'Win';
+    } else {
+        $homeScore = $row['homeTeamScore'];
+        $awayScore = $row['awayTeamScore'];
+    }
+    
     echo "
     <div class='row teamInfo'>
       <div class='col-xs-22'>
         <div class='row'>" . $row['homeTeamName'] . "</div>
-        <div class='row'>" . $row['homeTeamScore'] . "</div>
+        <div class='row'>" . $homeScore . "</div>
       </div>
       <div class='col-xs-4 versus'>vs</div>
       <div class='col-xs-22'>
         <div class='row'>" . $row['awayTeamName'] . "</div>
-        <div class='row'>" . $row['awayTeamScore'] . "</div>
+        <div class='row'>" . $awayScore . "</div>
       </div>
     </div>";
 
@@ -67,9 +79,14 @@ if (isset($_GET["gameID"])) {
         } else if ($team == 'strt') {
             echo "<div class='row'><div class='col-xs-48'>Game Started</div></div>";
         } else if ($team == 'updt') {
-            echo "<div class='row update'><div class='col-xs-48'>";
-            echo "Score Updated to " . intval(substr($play, 0, 2)) . " - " . intval(substr($play, 2, 2));
-            echo "</div></div>";
+            if (intval(substr($play, 0, 2) == 2) {
+                $scoreString = "Game Update: " . $row['awayTeamName'] . " defaulted";
+            } else if (intval(substr($play, 0, 2) == 1) {
+                $scoreString = $row['homeTeamName'] . " defaulted";
+            } else {
+                $scoreString = "Score Update: " . intval(substr($play, 0, 2)) . " - " . intval(substr($play, 2, 2));
+            }
+            echo "<div class='row update'><div class='col-xs-48'>" . $scoreString . "</div></div>";
         } else {
             echo "<div class='row scoringPlay'>";
             echo "<div class='col-xs-22 homeScoringPlay'>";

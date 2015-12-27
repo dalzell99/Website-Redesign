@@ -1,0 +1,8 @@
+Make it look pretty!!!!!!
+delete scoring plays in live score
+add input validation to end game
+add input validation to live score
+add input validation to draw/results
+add instructions to all pages
+find out why it's sooooooo slow
+open draw/results to this week
