@@ -1,8 +1,11 @@
-Make it look pretty!!!!!!
-delete scoring plays in live score
+add minutes to score update
+comment all code
+add current minutes to minutes played in live score
+when person logs in upload gamestart play
 add input validation to end game
 add input validation to live score
 add input validation to draw/results
 add instructions to all pages
 find out why it's sooooooo slow
 open draw/results to this week
+Make it look prettier!!!!!!

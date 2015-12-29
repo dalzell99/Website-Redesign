@@ -149,10 +149,6 @@ button.weeknav.active {
   text-align: center;
 }
 
-select#homeTeam, select#awayTeam, select#divDropDown {
-  height: 50px;
-}
-
 .divDropDownRow {
   display: none;
 }
@@ -219,7 +215,7 @@ select#homeTeam, select#awayTeam, select#divDropDown {
 /*
  * gameinfobody.php styles
  */
-.password {
+.password, .divDropDownRowEnd {
   display: none;
 }
 
@@ -231,6 +227,76 @@ select#homeTeam, select#awayTeam, select#divDropDown {
 .gameInfo {
   font-size: large;
   text-align: center;
+}
+
+/* CSS for smartphones */
+.homeTeamRowEnd, .homeScoreRowEnd,
+.awayTeamRowEnd, .awayScoreRowEnd,
+.divDropDownRowEnd, .datePickerRowEnd {
+  font-size: 140%;
+  margin-bottom: 10px;
+  margin-left: 2%;
+  margin-right: 2%;
+}
+
+select#homeTeam, select#awayTeam,
+select#divDropDown, input#datePicker {
+  height: 50px;
+  width: 66%;
+}
+
+.titleEnd {
+  width: 32%;
+  display: inline-block;
+}
+
+input#homeScore, input#awayScore {
+  width: 36%;
+  margin-right: 2%;
+}
+
+.submitScoreButton {
+  margin-left: 15%;
+  width: 70%;
+  height: 70px;
+  font-size: 160%;
+}
+
+input[type=checkbox] {
+  /* All browsers except webkit*/
+  transform: scale(1.25);
+  /* Webkit browsers*/
+  -webkit-transform: scale(1.25);
+}
+
+@media (min-width: 768px) {
+  .homeTeamRowEnd, .homeScoreRowEnd,
+  .awayTeamRowEnd, .awayScoreRowEnd,
+  .divDropDownRowEnd, .datePickerRowEnd {
+    font-size: 160%;
+    margin-bottom: 10px;
+    margin-left: 10%;
+    margin-right: 10%;
+  }
+  select#homeTeam, select#awayTeam,
+  select#divDropDown, input#datePicker {
+    height: 50px;
+    width: 73%;
+  }
+  .titleEnd {
+    width: 25%;
+    display: inline-block;
+  }
+  input#homeScore, input#awayScore {
+    width: 50%;
+    margin-right: 3%;
+  }
+  .submitScoreButton {
+    height: 70px;
+    font-size: 160%;
+    margin-left: 30%;
+    width: 40%;
+  }
 }
 
 .minutesPlayed {

@@ -54,7 +54,21 @@ function deleteScoringPlay(gameID, index, team, play, homeScore, awayScore) {
 
     var choice = confirm("Do you want to delete this scoring play?");
     if (choice == true) {
-        location.href = "http://www.possumpam.com/rugby/delete_scoring_play.php?gameID=" + gameID + "&index=" + index + "&homeScore=" + homeScore + "&awayScore=" + awayScore;
+        location.href = "http://www.possumpam.com/rugby/deletescoringplay.php?gameID=" + gameID + "&index=" + index + "&homeScore=" + homeScore + "&awayScore=" + awayScore;
+    } else {
+        return;
+    }
+}
+
+function deleteUpdateScoringPlay(gameID, index, team, play, homeScore, awayScore, oldHomeScore, oldAwayScore) {
+    diffHomeScore = parseInt(play.substr(0,2)) - oldHomeScore;
+    diffAwayScore = parseInt(play.substr(2,2)) - oldAwayScore;
+    newHomeScore = homeScore - diffHomeScore;
+    newAwayScore = awayScore - diffAwayScore;
+
+    var choice = confirm("Do you want to delete this scoring play?");
+    if (choice == true) {
+        location.href = "http://www.possumpam.com/rugby/deletescoringplay.php?gameID=" + gameID + "&index=" + index + "&homeScore=" + newHomeScore + "&awayScore=" + newAwayScore;
     } else {
         return;
     }

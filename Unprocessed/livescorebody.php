@@ -1,12 +1,19 @@
+<!-- Password form with bootstrap formatting. When submitted, 
+it add the contents of the password input to a POST variable -->
 <form action="<?php htmlspecialchars($_SERVER['PHP_SELF']) ?>" method='post' class='password'>
     <div class='row rowfix'>
-        <div class='passwordInputRow'>Password: <input type='text' name='password' class='passwordInput'></div>
+        <div class='passwordInputRow'>Password: <input type='password' name='password' class='passwordInput'></div>
     </div>
     <div class='row rowfix'>
         <button type='submit' class='passwordFormButton'>Submit</button>
     </div>
 </form>
 
+<!-- Division drop down used by the scorer to choose the division 
+of the game. When the selected division is changed, the javascript 
+function changeTeamDropdowns reloads the page with a different div 
+GET variable which in turns changes the team drop downs to the teams 
+in that division -->
 <div class='row divDropDownRow rowfix'>
     Division:
     <select id="divDropDown" onchange="changeTeamDropdowns()">
@@ -27,7 +34,16 @@
 </div>
 
 <?php
+/* 
+Arguments:
+$gameID - the unqiue ID given to each game
 
+Purpose:
+Retrieve game information from database
+
+Returns:
+$result - an associative array containing the contents of the record
+*/
 function getGame($gameID) {
     $con=mysqli_connect("possumpamcom.ipagemysql.com","dalzell99","dazzle99","drc_database");
 
@@ -36,13 +52,25 @@ function getGame($gameID) {
         echo "Failed to connect to MySQL: " . mysqli_connect_error();
     }
     
+    // Retrieve record  with given gameID from database
     $result = mysqli_query($con, " SELECT * FROM Game WHERE GameID = '$gameID' ");
 
+    // Set the liveScored attribute to 'y' to indicate this game is being live scored 
     mysqli_query($con, " UPDATE Game SET liveScored = 'y' WHERE GameID = '$gameID' ");
 
     return $result;
 }
 
+/* 
+Arguments:
+$gameID - the unqiue ID given to each game
+
+Purpose:
+Checks whether there is an record in the database with the given gameID
+
+Returns:
+true if record exists, false otherwise
+*/
 function gameExists($gameID) {
     $con=mysqli_connect("possumpamcom.ipagemysql.com","dalzell99","dazzle99","drc_database");
 
@@ -51,16 +79,35 @@ function gameExists($gameID) {
         echo "Failed to connect to MySQL: " . mysqli_connect_error();
     }
     
+    // Retrieve record from database in the form of an associative array
     $select = " SELECT * FROM Game WHERE GameID = '$gameID' ";
     $result = mysqli_query($con,$select);
 
+    // Check whether any records were found and retrieved
     if (mysqli_num_rows($result) == 0) {
+        // Return false if none were found
         return false;
     } else {
+        // Return true if a record with given gameID found
         return true;
     }
 }
 
+/* 
+Arguments:
+$gameID - the unqiue ID given to each game
+$homeScore - the number of points the home team has before this play occured
+$awayScore - the number of points the away team has before this play occured
+$minutesPlayed - the number of minutes played when this play occurs
+$description - a description of the play
+$scoringPlay - a code to represent the play
+
+Purpose:
+To update the database with the current state of the game
+
+Returns:
+Nothing
+*/
 function uploadScoringPlay($gameID, $homeScore, $awayScore, $minutesPlayed, $description, $scoringPlay) {
     $con=mysqli_connect("possumpamcom.ipagemysql.com","dalzell99","dazzle99","drc_database");
 
@@ -97,6 +144,16 @@ function uploadScoringPlay($gameID, $homeScore, $awayScore, $minutesPlayed, $des
     mysqli_close($con);
 }
 
+/* 
+Arguments:
+gameID - the unqiue ID given to each game
+
+Purpose:
+Change liveScored attribute in database to indicate game is no longer being live scored 
+
+Returns:
+Nothing
+*/
 function stopScoring($gameID) {
     $con=mysqli_connect("possumpamcom.ipagemysql.com","dalzell99","dazzle99","drc_database");
 
@@ -104,7 +161,7 @@ function stopScoring($gameID) {
     if (mysqli_connect_errno()) {
         echo "Failed to connect to MySQL: " . mysqli_connect_error();
     }
-    // Update game element with new values
+    
     $update = " UPDATE Game SET liveScored = 'n' WHERE GameID = '$gameID' ";
 
     mysqli_query($con, $update);
@@ -112,6 +169,18 @@ function stopScoring($gameID) {
     mysqli_close($con);
 }
 
+/* 
+Arguments:
+gameID - the unqiue ID given to each game
+$homeTeam - the name of the home team
+$awayTeam - the name of the away team
+
+Purpose:
+Create a new record in database with default values
+
+Returns:
+Nothing
+*/
 function createGame($gameID, $homeTeam, $awayTeam) {
     $con=mysqli_connect("possumpamcom.ipagemysql.com","dalzell99","dazzle99","drc_database");
 
@@ -120,17 +189,31 @@ function createGame($gameID, $homeTeam, $awayTeam) {
         echo "Failed to connect to MySQL: " . mysqli_connect_error();
     }
 
+    // Create insert string using default values and variables given
     $sql = " INSERT INTO Game VALUES ('$gameID', '$homeTeam', '0', '$awayTeam', '0', '0', '', '', '', '$homeTeam', '12pm', '[]', 'n', 'y') ";
 
+    // Execute insert query
     if (mysqli_query($con, $sql)) {
+        // If successfully created, reload page with gameID and liveScore GET variables
         echo "<script>location.href='http://www.possumpam.com/rugby/livescore.php?gameID=" . $gameID . "&liveScore=true'</script>";
     } else {
+        // If unsuccessfully created, then there was a problem with the insert string or database and user is prompted to email me
         echo "Error. There was a problem creating the game. Please send me an email by clicking <a href='mailto:cfd19@hotmail.co.nz'>here</a>";
     }
 
     mysqli_close($con);
 }
-      
+
+/* 
+Arguments:
+gameID - the unqiue ID given to each game
+
+Purpose:
+Checks whether a game is being live scored by someone else
+
+Returns:
+true if game is being live scored already, false otherwise
+*/
 function isBeingLiveScored($gameID) {
     $con=mysqli_connect("possumpamcom.ipagemysql.com","dalzell99","dazzle99","drc_database");
 
@@ -139,29 +222,46 @@ function isBeingLiveScored($gameID) {
         echo "Failed to connect to MySQL: " . mysqli_connect_error();
     }
     
+    // Retrieve record from database as associative array
     $result = mysqli_query($con, " SELECT * FROM Game WHERE GameID = '$gameID' ");
     $row = mysqli_fetch_assoc($result);
+  
+    // Check if livescored attribute is equal to 'n'
     if ($row['liveScored'] == 'n') {
+        // If equal to 'n' then game isn't being live scored and return false
         return false;
     } else {
+        // If not equal to 'n' then game is being live scored and return true
         return true;
     }
 }
 
 if (isset($_POST['password'])) {
+    // Occurs after someone have entered a password into the password form and has clicked submit.
     if ($_POST['password'] == '12345') {
-        // refresh the page with div GET variable set to 00
-        echo '<script>location.href = window.location.href + "?div=00&gameSelection=true";</script>';
+        // If password entered equals password below then reload the page with div=00 and gameSelection GET variables
+        echo "<script>location.href='" . $_SERVER[PHP_SELF] . "?div=00&gameSelection=true'</script>";
     } else {
-        echo 'The password is wrong. Please try again.';
+        // If password is not equal to password above then display message informing user and reload page
+        echo '<script>
+              alert("The password is wrong. Please try again.");
+              location.reload();
+              </script>';
     }
 } else if (isset($_GET["stopScoring"])) {
+    // Occurs when user has clicked 'Stop Scoring' button
+    // Display message informing user they are being logged out then reload page at game selection 
     echo "<div class='row'><div class='col-xs-48 playuploadmessage'>You are being logged out</div></div>";
     stopScoring($_GET["gameID"]);
     echo "<script>location.href='" . $_SERVER[PHP_SELF] . "?div=00&gameSelection=true'</script>";
 } else if (isset($_GET["gameSelection"])) {
+    // Occurs after user enters correct password
     $div = $_GET["div"];
+    // Use javascript to display division dropdown and set the index for division drop down
     echo '<script>showDivDropDown();setSelectedDivIndex(' . $div . ');</script>';
+    // Display the drop downs for home and away teams with the correct list of teams for 
+    // the selected division as well as button to select the game the user wants to score.
+    // When button clicked, run selectGame javascript method.
     switch ($div) {
         case "00":
             echo "
@@ -825,6 +925,7 @@ if (isset($_POST['password'])) {
             break;
     }
 } else if (isset($_GET["changeScore"])) {
+    
     echo "<div class='row'><div class='col-xs-48 playuploadmessage'>The score is being changed</div></div>";
     $minutesPlayed = $_GET["minutesPlayed"];
     if (strlen($_GET["homeScore"]) == 1) { $homeScore = '0' . $_GET["homeScore"]; } else { $homeScore = $_GET["homeScore"]; };
@@ -832,7 +933,7 @@ if (isset($_POST['password'])) {
     $gameID = $_GET["gameID"];
     $scoringPlay = updt . $homeScore . $awayScore;
     uploadScoringPlay($gameID, $homeScore, $awayScore, $minutesPlayed, '', $scoringPlay);
-    echo '<script>window.open("http://possumpam.com/rugby/livescore.php?gameID=' . $gameID . '", "_self");</script>';
+    echo '<script>window.open("http://possumpam.com/rugby/livescore.php?gameID=' . $gameID . '&liveScore=true", "_self");</script>';
 } else if (isset($_GET["uploadPlay"])) {
     echo "<div class='row'><div class='col-xs-48 playuploadmessage'>Play is being uploaded</div></div>";
     $scoringPlay = $_GET["team"] . $_GET["play"];
@@ -856,7 +957,7 @@ if (isset($_POST['password'])) {
             break;
     }
     uploadScoringPlay($_GET["gameID"], $homeScore, $awayScore, $minutesPlayed, $description, $scoringPlay);
-    echo "<script>location.href='" . $_SERVER[PHP_SELF] . "?gameID=" . $_GET['gameID'] . "'</script>";
+    echo "<script>location.href='" . $_SERVER[PHP_SELF] . "?gameID=" . $_GET['gameID'] . "&liveScore=true'</script>";
 } else if (isset($_GET["checkGame"])) {
     if (gameExists($_GET["gameID"])) {
         if (isBeingLiveScored($_GET["gameID"]) == true) {
@@ -876,7 +977,7 @@ if (isset($_POST['password'])) {
     $game = getGame($gameID);
     $row = mysqli_fetch_assoc($game);
   
-    echo "<div class='row'>
+    echo "<div class='row rowfix'>
               <div class='stopScoringDiv col-xs-46'>
                   <button type='submit' onclick='stopScoring(" . $gameID . ")'>Stop Scoring</button>
               </div>
@@ -893,14 +994,14 @@ if (isset($_POST['password'])) {
                   Minutes Played: <input type='number' id='newminutesplayed'><br>
                   <input type='submit' onclick='changeScore(" . $gameID . ")'>
               </div>
-          </div>";
+          </div>\n\n";
     
     echo "<div class='row rowfix timingInfoLive'>
               <button type='button' class='halftime col-xs-23' onclick='sendHalfTime(" . $_GET['gameID'] . "," . 
                   $row['homeTeamScore'] . ","  . $row['awayTeamScore'] . ")'>Half Time</button>
               <button type='button' class='fulltime col-xs-23' onclick='sendFullTime(" . $_GET['gameID'] . "," . 
                   $row['homeTeamScore'] . "," . $row['awayTeamScore'] . ")'>Full Time</button>
-          </div>";
+          </div>\n\n";
     
     if ($row['homeTeamScore'] == '2') {
         $homeScore = 'Win';
@@ -913,47 +1014,37 @@ if (isset($_POST['password'])) {
         $awayScore = $row['awayTeamScore'];
     }
     
-    echo "<div class='row rowfix teamInfoLive'>";
-    echo "    <div class='homeTeamName col-xs-24' onclick='toggleSelectedTeam(this, `home`)'>" . $row['homeTeamName'] . "</div>";
-    echo "    <div class='awayTeamName col-xs-24' onclick='toggleSelectedTeam(this, `away`)'>" . $row['awayTeamName'] . "</div>";
-    echo "</div>";
-    echo "<div class='row rowfix scoreInfoLive'>";
-    echo "    <div class='homeTeamScore col-xs-24'>" . $homeScore . "</div>";
-    echo "    <div class='awayTeamScore col-xs-24'>" . $awayScore . "</div>";
-    echo "</div>";
-
-    /*
-    $gameDateString = substr($gameID, 0, 8);
-    $gameDateDate = new DateTime($gameDateString);
-    $minutesOrTime = ($row['minutesPlayed'] == '0' ? date_format($gameDateDate, 'D jS M') . " " . $row['time'] : $row['minutesPlayed'] . " mins");
-    echo "<div class='row rowfix gameInfoLive'>";
-    echo "    <div class='locationLiveScore col-xs-24'>" . $row['location'] . "</div>";
-    echo "    <div class='minutesOrTime col-xs-24'>" . $minutesOrTime . "</div>";
-    echo "</div>";
-    */
+    echo "<div class='row rowfix teamInfoLive'>
+              <div class='homeTeamName col-xs-24' onclick='toggleSelectedTeam(this, `home`)'>" . $row['homeTeamName'] . "</div>
+              <div class='awayTeamName col-xs-24' onclick='toggleSelectedTeam(this, `away`)'>" . $row['awayTeamName'] . "</div>
+          </div>
+          <div class='row rowfix scoreInfoLive'>
+              <div class='homeTeamScore col-xs-24'>" . $homeScore . "</div>
+              <div class='awayTeamScore col-xs-24'>" . $awayScore . "</div>
+          </div>\n\n";
     
-    echo "<div class='row rowfix scoringPlayInfoLive'>";
-    echo "    <div class='scoringPlayLive try col-xs-24' onclick='toggleSelectedScoringPlay(this, `Try`)'>Try</div>";
-    echo "    <div class='scoringPlayLive conversion col-xs-24' onclick='toggleSelectedScoringPlay(this, `Conversion`)'>Conversion</div>";
-    echo "</div>";
-    echo "<div class='row rowfix scoringPlayInfoLive'>";
-    echo "    <div class='scoringPlayLive penalty col-xs-24' onclick='toggleSelectedScoringPlay(this, `Penalty`)'>Penalty</div>";
-    echo "    <div class='scoringPlayLive dropGoal col-xs-24' onclick='toggleSelectedScoringPlay(this, `DropGoal`)'>Drop Goal</div>";
-    echo "</div>";
+    echo "<div class='row rowfix scoringPlayInfoLive'>
+              <div class='scoringPlayLive try col-xs-24' onclick='toggleSelectedScoringPlay(this, `Try`)'>Try</div>
+              <div class='scoringPlayLive conversion col-xs-24' onclick='toggleSelectedScoringPlay(this, `Conversion`)'>Conversion</div>
+          </div>
+          <div class='row rowfix scoringPlayInfoLive'>
+              <div class='scoringPlayLive penalty col-xs-24' onclick='toggleSelectedScoringPlay(this, `Penalty`)'>Penalty</div>
+              <div class='scoringPlayLive dropGoal col-xs-24' onclick='toggleSelectedScoringPlay(this, `DropGoal`)'>Drop Goal</div>
+          </div>\n\n";
 
-    echo "<div class='row rowfix scoringInfoLive'>";
-    echo "    <div class='minutesPlayedLive col-xs-17'>Minutes Played</div>";
-    echo "    <textarea rows='1' class='minutesPlayedInput col-xs-31'></textarea>";
-    echo "</div>";
-    echo "<div class='row rowfix scoringInfoLive'>";
-    echo "    <div class='descriptionLive col-xs-17'>Description</div>";
-    echo "    <textarea rows='3' class='descriptionInput col-xs-31'></textarea>";
-    echo "</div>";
-    echo "<div class='row rowfix scoringInfoLive'>";
-    echo "    <button type='submit' class='submit col-xs-48' onclick='uploadScoringPlay(" . $_GET['gameID'] . ", " . $row['homeTeamScore'] . ", " . $row['awayTeamScore'] . ")'>Send</button>";
-    echo "</div>";
+    echo "<div class='row rowfix scoringInfoLive'>
+              <div class='minutesPlayedLive col-xs-17'>Minutes Played</div>
+              <textarea rows='1' class='minutesPlayedInput col-xs-31'></textarea>
+          </div>
+          <div class='row rowfix scoringInfoLive'>
+              <div class='descriptionLive col-xs-17'>Description</div>
+              <textarea rows='3' class='descriptionInput col-xs-31'></textarea>
+          </div>
+          <div class='row rowfix scoringInfoLive'>
+              <button type='submit' class='submit col-xs-48' onclick='uploadScoringPlay(" . $_GET['gameID'] . ", " . $row['homeTeamScore'] . ", " . $row['awayTeamScore'] . ")'>Send</button>
+          </div>\n\n";
 
-    echo "<div class='row scoringPlays rowfix'>";
+    echo "<div class='row scoringPlays rowfix'>\n\n";
     $allScoringPlays = json_decode($row['scoringPlays'], false);
     $homeScoreCurrent = 0;
     $awayScoreCurrent = 0;
@@ -973,29 +1064,29 @@ if (isset($_POST['password'])) {
         $play = substr($scoringPlay, 4);
         if ($play == 'DropGoal') { 
             $play = 'Drop Goal'; 
-        } 
+        }
 
         if ($play == 'Time') {
-            echo "<div class='row time rowfix'>";
-            echo "<div class='col-xs-48'>" . $homeScoreCurrent . "-" . $awayScoreCurrent . "</div>";
+            echo "<div class='row time rowfix' onclick='deleteScoringPlay(`" . $gameID . "`, " . $i . ", `" . substr($scoringPlay, 0, 4) . "`, `" . substr($scoringPlay, 4) . "`, " . intval($row['homeTeamScore']) . ", " . intval($row['awayTeamScore']) . ")'>\n";
+            echo "<div class='col-xs-48'>" . $homeScoreCurrent . "-" . $awayScoreCurrent . "</div>\n";
             echo "<div class='col-xs-48'>";
             if ($team == 'half') {
                 echo "Half Time";
             } else {
                 echo "Full Time";
             }
-            echo "</div></div>";
+            echo "</div>\n</div>\n\n";
         } else if ($team == 'strt') {
-            echo "<div class='row rowfix'><div class='col-xs-48'>Game Started</div></div>";
+            echo "<div class='row rowfix'>\n<div class='col-xs-48'>Game Started</div>\n</div>\n\n";
         } else if ($team == 'updt') {
             if (intval(substr($play, 0, 2)) == 2) {
                 $scoreString = "Game Update: " . $row['awayTeamName'] . " defaulted";
             } else if (intval(substr($play, 0, 2)) == 1) {
                 $scoreString = "Game Update: " . $row['homeTeamName'] . " defaulted";
             } else {
-                $scoreString = "Score Update: " . intval(substr($play, 0, 2)) . " - " . intval(substr($play, 2, 2));
+                $scoreString = "Score Update: " . intval(substr($play, 0, 2)) . " - " . intval(substr($play, 2, 2)) . " (" . $scoringPlayInfo[0] . "')";
             }
-            echo "<div class='row update rowfix'><div class='col-xs-48'>" . $scoreString . "</div></div>";
+            echo "<div class='row update rowfix' onclick='deleteUpdateScoringPlay(`" . $gameID . "`, " . $i . ", `" . substr($scoringPlay, 0, 4) . "`, `" . substr($scoringPlay, 4) . "`, " . intval($row['homeTeamScore']) . ", " . intval($row['awayTeamScore']) . ", " . $homeScoreCurrent . ", " . $awayScoreCurrent . ")'>\n\t<div class='col-xs-48'>" . $scoreString . "</div>\n</div>\n\n";
             $homeScoreCurrent = intval(substr($play, 0, 2));
             $awayScoreCurrent = intval(substr($play, 2, 2));
         } else {
@@ -1015,19 +1106,21 @@ if (isset($_POST['password'])) {
                     else { $awayScoreCurrent = $awayScoreCurrent + 2; }
                     break;
             }
-            echo "<div class='row scoringPlay rowfix'>";
-            echo "<div class='col-xs-20 homeScoringPlay'>";
+            echo "<div class='row scoringPlay rowfix' onclick='deleteScoringPlay(`" . $gameID . "`, " . $i . ", `" . substr($scoringPlay, 0, 4) . "`, `" . substr($scoringPlay, 4) . "`, " . intval($row['homeTeamScore']) . ", " . intval($row['awayTeamScore']) . ")'>\n";
+            echo "\t<div class='col-xs-20 homeScoringPlay'>";
             if ($team == 'home') { echo $play; }
-            echo "</div><div class='col-xs-8 minutesPlayed'>" . $homeScoreCurrent . "-" . $awayScoreCurrent . " (" . $scoringPlayInfo[0] . "')</div>";
-            echo "<div class='col-xs-20 awayScoringPlay'>";
+            echo "</div>\n\t<div class='col-xs-8 minutesPlayed'>" . $homeScoreCurrent . " - " . $awayScoreCurrent . " (" . $scoringPlayInfo[0] . "')</div>\n";
+            echo "\t<div class='col-xs-20 awayScoringPlay'>";
             if ($team == 'away') { echo $play; }
-            echo "</div>";
+            echo "</div>\n";
 
-            echo "<div class='col-xs-48'>" . $scoringPlayInfo[2] . "</div>";
-            echo "</div>";
+            echo "\t<div class='col-xs-48'>" . $scoringPlayInfo[2] . "</div>\n";
+            echo "</div>\n\n";
 
         }
     }
+    // close scoringplays div from just before "for" loop
+    echo "</div>";
 } else {
   echo "<script>togglePassword();</script>";
 }
