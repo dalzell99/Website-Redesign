@@ -1,11 +1,10 @@
-add minutes to score update
 comment all code
-add current minutes to minutes played in live score
-when person logs in upload gamestart play
-add input validation to end game
-add input validation to live score
-add input validation to draw/results
-add instructions to all pages
+update java app to work with changes
+reduce reloads by making all page changes in javascript
+store correctly entered password variable in session storage
+change to minified files
+add overtime to live scoring
 find out why it's sooooooo slow
 open draw/results to this week
 Make it look prettier!!!!!!
+[["1","strtGame","0"],["16","homeTry","1"],["33","awayTry","2"],["34","awayConversion","3"],["36","updt1507","4"],["40","homeTry","5"],["40","halfTime","6"],["60","homeTry","7"],["60","homeConversion","8"],["65","updt3515","9"],["79","homeTry","10"],["80","fullTime","11"]]

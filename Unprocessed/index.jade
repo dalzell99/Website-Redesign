@@ -4,17 +4,20 @@ html(lang="en")
     title Rugby Draw/Results
     meta(charset="utf-8")
     meta(name="viewport", content="width=device-width, initial-scale=1")
-    link(rel="stylesheet", href="bootstrap/css/bootstrap.css")
-    script(src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js")
-    script(src="bootstrap/js/bootstrap.js")
-    script(src="javascript.js")
-    link(rel="stylesheet", href="styles.css")
+    link(rel="stylesheet", type="text/css", href="bootstrap/css/bootstrap.css")
+    link(rel="stylesheet", href="https://fonts.googleapis.com/css?family=Roboto:500")
+    script(type="text/javascript", src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js")
+    script(type="text/javascript", src="bootstrap/js/bootstrap.js")
+    script(type="text/javascript", src="javascript.js")
+    link(rel="stylesheet", type="text/css", href="styles.css")
     include mixins
 
   body
     +nav("draw")
     
     .container-fluid
+      .row
+        span.col-xs-48#instructions Tap 'Show Weeks' then tap the week you want to view. Tapping the division titles will expand/contract the game list. Tapping a game will allow you to view all the details of the game.
       .row
         .weektoggledisplay.col-xs-47
           .showweeks(onclick="toggleWeeks()") Show Weeks

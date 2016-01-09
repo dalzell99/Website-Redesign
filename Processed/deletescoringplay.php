@@ -10,6 +10,7 @@ $gameID = $_GET['gameID'];
 $scoringPlayIndex = $_GET['index'];
 $homeScore = $_GET['homeScore'];
 $awayScore = $_GET['awayScore'];
+$time = date("Y-m-d H:i:s");
 
 // Retrieve all scoring plays from database to an array by decoding json string
 $result = mysqli_query($con, " SELECT scoringPlays FROM Game WHERE GameID = '$gameID' ");
@@ -24,11 +25,9 @@ $allScoringPlays = array_values($allScoringPlays);
 $updatedScoringPlays = json_encode($allScoringPlays);
 
 // Update game element with new values
-$update = " UPDATE Game SET homeTeamScore = '$homeScore', awayTeamScore = '$awayScore', scoringPlays = '$updatedScoringPlays' WHERE GameID = '$gameID' ";
+$update = " UPDATE Game SET homeTeamScore = '$homeScore', awayTeamScore = '$awayScore', scoringPlays = '$updatedScoringPlays', lastTimeScored = '$time' WHERE GameID = '$gameID' ";
 
 mysqli_query($con, $update);
 
 mysqli_close($con);
-
-echo "<script>location.href='http://www.possumpam.com/rugby/livescore.php?gameID=" . $gameID . "&liveScore=true'</script>";
 ?>

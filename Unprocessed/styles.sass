@@ -2,6 +2,14 @@
   margin-left: 0
   margin-right: 0
 
+body
+  font-family: 'Roboto', sans-serif
+  
+#instructions
+  font-size: 110%
+  padding: 5px 25px 25px 25px
+  text-align: center
+  
 /*
  * index.php styles
  */
@@ -82,13 +90,49 @@ button.weeknav
   border: 3px solid #00ff00
   background-color: #d1ffd1
 
+.startedbutnotscored
+  border: 3px solid #ebff00
+  background-color: #f9ffba
+
 .finished 
   border: 3px solid #ff0000
-  background-color: #ffe7e7
+  background-color: #ffd9d9
 
 .refs, .location 
   font-size: 75%
-  color: #002aaa  
+  color: #002aaa 
+  
+.colourLegend
+  margin: 10px 0
+
+.colour
+  padding: 0
+  
+.colourLabel
+  font-size: 120%
+  padding-left: 40px
+
+.blueSquare, .greenSquare, .yellowSquare, .redSquare
+  width: 25px
+  height: 25px
+  float: left
+  border-radius: 5px
+  
+.blueSquare
+  background-color: #b9e1ff
+  border: 3px solid #0000ff
+
+.greenSquare
+  background-color: #d1ffd1
+  border: 3px solid #00ff00
+
+.yellowSquare
+  background-color: #f9ffba
+  border: 3px solid #ebff00
+  
+.redSquare
+  background-color: #ffd9d9
+  border: 3px solid #ff0000
 
 /*
  * livescore.php styles
@@ -128,8 +172,23 @@ button.weeknav
   
 .changeScoreForm
   display: none
+  padding: 10px
+  font-size: 120%
   
-.timingInfoLive, .changeScoreFormButtonRow
+.changeScoreInputRow
+  padding: 5px
+
+.changeScoreFormLabel
+  padding: 0
+  min-width: 130px
+
+#changeScoreFormButton
+  margin-left: 15%
+  width: 25%
+  min-width: 100px
+  height: 40px
+  
+.timingInfoLive, .changeScoreFormButtonRow, .stopScoringButtonRow
   font-size: 150%
   margin: .5% 1%
   
@@ -169,6 +228,14 @@ button.weeknav
 .submit
   padding: 5px
   font-size: 150%
+
+.deletePlayButtonRow
+  padding: 5px
+  display: none
+  
+.deletePlayButton
+  height: 40px
+  font-size: 120%
 
 /*
  * gameinfobody.php styles
@@ -219,6 +286,20 @@ input[type=checkbox]
 
   /* Webkit browsers*/
   -webkit-transform: scale(1.25);
+  
+.scoringPlays
+  font-size: 120%
+  margin: 0 5px
+
+.homeScoringPlay
+  text-align: left
+  padding-left: 10px
+  padding-right: 0
+  
+.awayScoringPlay
+  text-align: right
+  padding-right: 10px
+  padding-left: 0
 
 @media (min-width: 768px)
   .homeTeamRowEnd, .homeScoreRowEnd,
@@ -247,25 +328,26 @@ input[type=checkbox]
     font-size: 160%
     margin-left: 30%
     width: 40%
+    
+  .homeScoringPlay
+    text-align: left
+    padding-left: 30px
+  
+  .awayScoringPlay
+    text-align: right
+    padding-right: 30px
+  
+  .scoringPlays
+    font-size: 150%
+    margin: 0 5px
 
 .minutesPlayed
   text-align: center
   padding: 0
-  
-.homeScoringPlay
-  text-align: left
-  padding-left: 30px
-  
-.awayScoringPlay
-  text-align: right
-  padding-right: 30px
+  color: #33b5e5
 
 .border
   border: 1px black solid
-
-.scoringPlays
-  font-size: 150%
-  margin: 0 5px
 
 .versus
   padding: 0
@@ -282,12 +364,22 @@ input[type=checkbox]
   font-weight: bold
   text-align: center
   border: 1px black solid
+  color: #33b5e5
 
 .scoringPlays > .update
   padding-top: 5px
   padding-bottom: 5px
   text-align: center
   border: 1px black solid
+  color: #33b5e5
+
+.scoringPlays > .gameStart
+  padding-top: 5px
+  padding-bottom: 5px
+  font-weight: bold
+  text-align: center
+  border: 1px black solid
+  color: #33b5e5
 
 .playuploadmessage 
   font-size: x-large

@@ -4,11 +4,12 @@
     <title>Rugby Draw/Results</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="bootstrap/css/bootstrap.css">
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script src="bootstrap/js/bootstrap.js"></script>
-    <script src="javascript.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:500">
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script>
+    <script type="text/javascript" src="javascript.js"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
   </head>
   <body>
         <nav class="navbar navbar-default">
@@ -26,6 +27,7 @@
           </div>
         </nav>
     <div class="container-fluid">
+      <div class="row"><span id="instructions" class="col-xs-48">Tap 'Show Weeks' then tap the week you want to view. Tapping the division titles will expand/contract the game list. Tapping a game will allow you to view all the details of the game.</span></div>
       <div class="row">
         <div class="weektoggledisplay col-xs-47">
           <div onclick="toggleWeeks()" class="showweeks">Show Weeks</div>
@@ -63,6 +65,30 @@ if (isset($_GET['weekNumber'])) {
   <script language='javascript'>
     setActiveWeekButton(". $_GET['weekNumber'] . ");
   </script>";
+  
+  // Colour legend
+  echo "
+  <div class='row colourLegend'>
+      <div class='colour col-xs-24'>
+          <div class='blueSquare'></div>
+          <div class='colourLabel'>Not Started</div>
+      </div>
+      <div class='colour col-xs-24'>
+          <div class='greenSquare'></div>
+          <div class='colourLabel'>Being Live Scored</div>
+      </div>
+  </div>
+  <div class='row colourLegend'>
+      <div class='colour col-xs-24'>
+          <div class='yellowSquare'></div>
+          <div class='colourLabel'>Live Scoring Started but Not Finished</div>
+      </div>
+      <div class='colour col-xs-24'>
+          <div class='redSquare'></div>
+          <div class='colourLabel'>Game Finished</div>
+      </div>
+  </div>";
+  
   // output the geometry variables
   date_default_timezone_set("Pacific/Auckland");
   $startDate = new DateTime("2015-03-23");
@@ -75,6 +101,13 @@ if (isset($_GET['weekNumber'])) {
   $endOfWeek->modify("+6 days");
 
   $divTitles = array("Div 1", "Womens", "Div 2", "Div 3", "Colts", "U18", "U16", "U14.5", "U13", "U11.5", "U10", "U8.5", "U7");
+    
+  $teams = mysqli_query($con, "SELECT * FROM Teams");
+  $teamListArray = array();
+  while($row = mysqli_fetch_array($teams)) {
+    $array = array($row['teamID'], $row['teamName']);
+    array_push($teamListArray, $array);
+  }
   for ($divID = 0; $divID < 13; $divID++) {
     $gamesInRow = 0;
     $divString = $divID < 10 ? "0" . $divID : (string) $divID;
@@ -91,21 +124,42 @@ if (isset($_GET['weekNumber'])) {
           $gameID = (String) $row['GameID'];
           $gameDateString = substr($gameID, 0, 8);
           $gameDateDate = new DateTime($gameDateString);
-          if ($gameDateDate <= $endOfWeek AND $gameDateDate >= $startOfWeek AND substr($gameID, 12) == $divString) {
+          if ($gameDateDate <= $endOfWeek AND $gameDateDate >= $startOfWeek AND substr($gameID, -2) == $divString) {
+            if (strlen($gameID) > 14) {
+              $homeTeamID = intval(substr($gameID, 8, 3));
+              $awayTeamID = intval(substr($gameID, 11, 3));
+              for ($l = 0; $l < count($teamListArray); $l++) {
+                if ($teamListArray[$l][0] == $homeTeamID) {
+                  $homeTeamName = $teamListArray[$l][1];
+                } else if ($teamListArray[$l][0] == $awayTeamID) {
+                  $awayTeamName = $teamListArray[$l][1];
+                }
+              }
+            } else {
+              $homeTeamName = $row['homeTeamName'];
+              $awayTeamName = $row['awayTeamName'];
+            }
+            
             $timeString = "";
-            $gameSit = ""; // NS = Not Started, IP = In Progress, F = Finished
+            $gameSit = "";
             if ($row['minutesPlayed'] == 0) {
               $timeString = $gameDateDate->format('D jS M Y');
               $gameSit = "notstarted";
-            } else if ($row['minutesPlayed'] == 40) {
-              $timeString = "Half Time";
-              $gameSit = "inprogress";
             } else if ($row['minutesPlayed'] == 80) {
               $timeString = "Full Time";
               $gameSit = "finished";
-            } else {
-              $timeString = $row['minutesPlayed'];
+            } else if ($row['minutesPlayed'] == 40 && $row['liveScored'] == 'y') {
+              $timeString = "Half Time";
               $gameSit = "inprogress";
+            } else if ($row['minutesPlayed'] == 40 && $row['liveScored'] == 'n') {
+              $timeString = "Half Time";
+              $gameSit = "startedbutnotscored";
+            } else if ($row['liveScored'] == 'y') {
+              $timeString = $row['minutesPlayed'] . " mins";
+              $gameSit = "inprogress";
+            } else {
+              $timeString = $row['minutesPlayed'] . " mins";
+              $gameSit = "startedbutnotscored";
             }
 
             $homeTeamScore = "";
@@ -184,13 +238,13 @@ if (isset($_GET['weekNumber'])) {
               </div>
               <div class='row teams hometeam'>";
                 if ($winningTeam == 'home') { echo "<strong>"; }
-                echo "<div class='teamname col-xs-20 col-sm-33'>" . $row['homeTeamName'] . "</div>
+                echo "<div class='teamname col-xs-20 col-sm-33'>" . $homeTeamName . "</div>
                 <div class='score col-xs-16 col-sm-15'>" .  $homeTeamScore . "</div>";
                 if ($winningTeam == 'home') { echo "</strong>"; }
               echo "</div>
               <div class='row teams hometeam'>";
                 if ($winningTeam == 'away') { echo "<strong>"; }
-                echo "<div class='teamname col-xs-20 col-sm-33'>" .  $row['awayTeamName'] . "</div>
+                echo "<div class='teamname col-xs-20 col-sm-33'>" .  $awayTeamName . "</div>
                 <div class='score col-xs-16 col-sm-15'>" .  $awayTeamScore . "</div>";
                 if ($winningTeam == 'away') { echo "</strong>"; }
               echo "</div>
