@@ -400,18 +400,6 @@ function sendFullTime(gameID, homeScore, awayScore) {
     window.open("http://possumpam.com/rugby/livescore.php?gameID=" + gameID + "&homeScore=" + homeScore + "&awayScore=" + awayScore + "&team=&play=fullTime&minutesPlayed=80&description=" + "&uploadPlay=true", "_self");
 }
 
-// Reload page with GET variables to upload score update play
-function changeScore(gameID) {
-    var homeScore = document.getElementById('newhomescore').value;
-    var awayScore = document.getElementById('newawayscore').value;
-    var minutesPlayed = document.getElementById('newminutesplayed').value;
-    var result = areInputsValidChange(homeScore, awayScore, minutesPlayed);
-    if (result[0]) {
-        window.open("http://possumpam.com/rugby/livescore.php?gameID=" + gameID + "&homeScore=" + homeScore + "&awayScore=" + awayScore + "&minutesPlayed=" + minutesPlayed + "&changeScore=true", "_self");
-    } else {
-        alert(result[1]);
-    }
-}
 
 // Show/hide change score form
 function toggleChangeScoreForm() {

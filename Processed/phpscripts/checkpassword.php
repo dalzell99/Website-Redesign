@@ -2,6 +2,7 @@
 $con=mysqli_connect("possumpamcom.ipagemysql.com","dalzell99","dazzle99","drc_database");
 
 $password = mysqli_real_escape_string($con, $_POST['password']);
+$page = $_POST['page'];
 $response = '';
 
 // Check connection
@@ -13,7 +14,7 @@ if ($result = mysqli_query($con, "SELECT * FROM Passwords")) {
     
     /* fetch associative array */
     while ($row = mysqli_fetch_assoc($result)) {
-        if ($row['page'] == 'teameditor') {
+        if ($row['page'] == $page) {
             if ($password == $row['password']) {
                 $response = 'correct';
             } else {

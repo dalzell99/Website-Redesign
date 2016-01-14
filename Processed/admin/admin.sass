@@ -1,0 +1,148 @@
+/*
+ *--------------------------------------------------------------------------
+ *------------------------------ All Pages ---------------------------------
+ *--------------------------------------------------------------------------
+ */
+
+body
+  font-family: 'Roboto', sans-serif
+
+
+#instructions
+  font-size: 110%
+  padding: 5px 25px 25px 25px
+  text-align: center
+
+nav.row
+  margin: 0 0 20px 0
+  display: none
+
+.navbar-toggle:hover .icon-bar
+  background-color: black
+
+.weektoggledisplay
+  background-color: transparent
+  padding: 10px
+  border: 1px solid #33b5e5
+  border-radius: 10px
+  text-align: center
+  padding: 15px
+  margin: 0 0 20px 1.11%
+  font-weight: bold
+  font-size: 140%
+  
+.weeksexpanded
+  margin-bottom: 15px
+
+button.weeknav
+  background-color: transparent
+  padding: 10px
+  border: 1px solid #33b5e5
+  border-radius: 10px
+
+  &.active
+    background-color: rgba(51, 181, 229, 0.4)
+  
+.weektitle
+  font-size: 85%
+
+.navbar
+  background-color: #33b5e5
+
+/*
+ *--------------------------------------------------------------------------
+ *------------------------------- Password ---------------------------------
+ *--------------------------------------------------------------------------
+ */
+
+#passwordContainer
+    display: none
+    
+#passwordInputRow
+  font-size: 200%
+  text-align: center
+  margin-bottom: 20px
+
+#passwordInput
+  max-width: 50%
+  font-size: inherit
+  
+#checkPasswordButton
+  margin-left: 15%
+  width: 70%
+  height: 70px
+  font-size: 160%
+  
+  @media (min-width: 768px)
+    margin-left: 30%
+    width: 40%
+   
+/*
+ *--------------------------------------------------------------------------
+ *----------------------------- Team Editor --------------------------------
+ *--------------------------------------------------------------------------
+ */
+
+.teamRow
+  margin: 10px 5px
+  font-size: 120%
+  
+  @media (min-width: 768px)
+    margin: 10px 30px
+    font-size: 180%
+    
+.division, .teamName
+  display: inline-block
+
+.division
+  width: 100px
+  
+  @media (min-width: 768px)
+    width: 180px
+  
+#teamList
+  text-align: left;
+  
+  @media (min-width: 768px)
+    text-align: center;
+
+.teamName
+  @media (min-width: 768px)
+    width: 35%
+    
+#addTeamForm
+  display: none
+
+/*
+ *--------------------------------------------------------------------------
+ *----------------------------- Game Editor --------------------------------
+ *--------------------------------------------------------------------------
+ */
+
+#gameEditorTable
+    text-align: center
+    border-collapse: collapse
+    background-color: white
+
+#gameEditorTable th
+    border: 1px black solid
+    background-color: #33b5e5
+    color: snow
+    padding: 10px
+    
+#gameEditorTable td
+    border: 1px black solid
+    padding: 5px
+
+#tablePlaceholderText
+  font-size: x-large
+  font-weight: bold
+  text-align: center
+  padding: 25px
+
+.selectedRow
+    background-color: rgba(51, 181, 229, 0.2)
+
+#addGameForm
+    display: none
+

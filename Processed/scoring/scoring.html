@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>ERSU Rugby Scoring</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="http://www.possumpam.com/rugby/bootstrap/css/bootstrap.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:500">
+        <link rel="stylesheet" type="text/css" href="scoring.css">
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+        <script type="text/javascript" src="http://www.possumpam.com/rugby/bootstrap/js/bootstrap.js"></script>
+        <script type="text/javascript" src="scoring.js"></script>
+    </head>
+    <body>
+        
+        <nav class="navbar navbar-default">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" data-toggle="collapse" data-target=".navbar-collapse" class="navbar-toggle collapsed"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a href="#" class="navbar-brand">ERSU Rugby Scoring</a>
+                </div>
+                <div class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav">
+                        <li class="drawResults active" onclick='drawResults()'><a>Draw/Results</a></li>
+                        <li class="liveScoring" onclick='liveScoring()'><a>Live Score</a></li>
+                        <li class="endScoring" onclick='endScoring()'><a>End Game Score</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Span used to display instructions on each page. Javascript will be used to populate this. -->
+        <span id='instructions'></span>
+        
+        <!-----------------------------------------------------------------
+        --------------------- Draw/Results Containers  --------------------
+        ------------------------------------------------------------------>
+        
+        <div id='drawResultsContainer'>
+            <!-- Div used to display team lists grouped by division. Is populated by javascript and external php script -->
+            <div id='weekSelectorContainer'></div>
+            <div id='gameContainer'></div>
+        </div>
+        
+        <div id='gameInfoContainer'>
+        </div>
+        
+        <!-----------------------------------------------------------------
+        --------------------- Live Scoring Containers  --------------------
+        ------------------------------------------------------------------>
+        
+        <div id='liveScoringPasswordContainer'>
+            <!-- Password input-->
+            <div id='liveScoringPasswordInputRow'>Password: <input type='text' id='liveScoringPasswordInput'></div>
+            <button type='submit' id='checkLiveScoringPasswordButton' onclick='checkLiveScoringPassword()'>Submit</button>
+        </div>
+        
+        <div id='gameSelectionContainer'>
+        </div>
+        
+        <div id='liveScoringContainer'>
+        </div>
+        
+        <!-----------------------------------------------------------------
+        ------------------- End Game Scoring Containers  ------------------
+        ------------------------------------------------------------------>
+        
+        <div id='endScoringPasswordContainer'>
+            <!-- Password input -->
+            <div id='endScoringPasswordInputRow'>Password: <input type='text' id='endScoringPasswordInput'></div>
+            <button type='submit' id='checkEndScoringPasswordButton' onclick='checkEndScoringPassword()'>Submit</button>
+        </div>
+        
+        <div id='endScoringContainer'>
+        </div>
+    </body>
+</html>
