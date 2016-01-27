@@ -486,6 +486,7 @@ function enableTeam(teamID, division) {
 var selectedRowGameID = [];
 var selectedDivisionIndex = 0;
 var numGamesDeleted = 0;
+var numGamesLocked = 0;
 
 function gameEditor(backEvent) {
     if (backEvent) {
@@ -844,7 +845,7 @@ function addGame() {
             function (response) {
                 if (response == 'success') {
                     // add game to local game array if it doesn't already exist
-                    allGames[parseInt(gameID.slice(-2))].push({GameID: gameID, assRef1: '', assRef2: '', awayTeamName: awayText, awayTeamScore: '0', homeTeamName: homeText, homeTeamScore: '0', lastTimeScore: "2016-01-01 11:11:11", liveScored: 'n', location: '', minutesPlayed: '0', ref: '', scoringPlays: '[]', time: '', changed: ''});
+                    allGames[parseInt(gameID.slice(-2))].push({GameID: gameID, assRef1: '', assRef2: '', awayTeamName: awayText, awayTeamScore: '0', homeTeamName: homeText, homeTeamScore: '0', lastTimeScore: "2016-01-01 11:11:11", liveScored: 'n', location: '', minutesPlayed: '0', ref: '', scoringPlays: '[]', time: '', changed: '', locked: 'n', changes: '[]'});
                     addBackEvent(['addGame', gameID, homeText, awayText, dateString, allDivs[selectedDivisionIndex].divisionName]);
                     filterDates();
                 } else {
@@ -880,6 +881,37 @@ function deleteGame(gameID) {
                 if (numGamesDeleted == selectedRowGameID.length) {
                     selectedRowGameID = [];
                     numGamesDeleted = 0;
+                    filterDates();
+                }
+            } else {
+                // Error
+                alert("Error: " + response + ". Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+            }
+        });
+
+    post.fail(function (request, textStatus, errorThrown) {
+        alert("Error while deleting game. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+    })
+}
+
+function lockGame(gameID) {
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/lockgame.php', {
+            gameID: gameID
+        },
+        function (response) {
+            if (response == 'success') {
+                var games = allGames[parseInt(gameID.slice(-2))];
+                for (var w = 0; w < games.length; w += 1) {
+                    if (games[w].GameID == gameID) {
+                        games[w].locked = 'y';
+                        break;
+                    }
+                }
+                
+                numGamesLocked += 1;
+                if (numGamesLocked == selectedRowGameID.length) {
+                    selectedRowGameID = [];
+                    numGamesLocked = 0;
                     filterDates();
                 }
             } else {

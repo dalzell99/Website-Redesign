@@ -1,11 +1,13 @@
-lock games so they can't be edited
-fetch data before user clicks button
-possibly add tooltip with when game info was changed or a list of games that have been changed after being added
-transistions
+Finish changes. Remove score changes. Make it look better. Add last checked changer. 
+add gameID when livescoring to session storage so scorer doesn't get locked out.
+create backup of game table
+add ability to score more than 1 game at once.
 add ability to favorite games
 add points table
-change to minified files
+edit date in admin
 add overtime to live scoring
+transistions
+change to minified files
 open draw/results to this week
 Make it look prettier!!!!!!
 [["1","strtGame","0"],["16","homeTry","1"],["33","awayTry","2"],["34","awayConversion","3"],["36","updt1507","4"],["40","homeTry","5"],["40","halfTime","6"],["60","homeTry","7"],["60","homeConversion","8"],["65","updt3515","9"],["79","homeTry","10"],["80","fullTime","11"]]

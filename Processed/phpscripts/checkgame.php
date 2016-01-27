@@ -1,5 +1,4 @@
 <?php
-include checkiflocked.php;
 $config = parse_ini_file('/home/ccrsc638/config.ini'); 
 
 // Try and connect to the database
@@ -12,6 +11,19 @@ if (mysqli_connect_errno()) {
 
 $gameID = $_POST['gameID'];
 
+function checkIfLocked($con, $gameID) {
+    if ($result = mysqli_query($con, "SELECT locked FROM Game WHERE GameID = '" . $gameID . "'")) {
+        $row = mysqli_fetch_assoc($result);
+        if ($row['locked'] == 'y') {
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        echo "Select query failed";
+    }
+}
+
 // Retrieve record from database in the form of an associative array
 if ($result = mysqli_query($con, "SELECT * FROM Game WHERE GameID = '" . $gameID . "'")) {
     // Check whether any records were retrieved
@@ -23,7 +35,7 @@ if ($result = mysqli_query($con, "SELECT * FROM Game WHERE GameID = '" . $gameID
         $awayTeam = $_POST['awayTeam'];
 
         // Create insert string using default values and variables given
-        $sql = "INSERT INTO Game VALUES ('" . $gameID . "', '" . $homeTeam . "', '0', '" . $awayTeam . "', '0', '1', '', '', '', '" . $homeTeam . "', '12pm', '[[\"1\", \"strtGame\", \"\"]]', 'n', 'y', '" . $time . "')";
+        $sql = "INSERT INTO Game VALUES ('" . $gameID . "', '" . $homeTeam . "', '0', '" . $awayTeam . "', '0', '1', '', '', '', '" . $homeTeam . "', '12pm', '[[\"1\", \"strtGame\", \"\"]]', 'n', '[]', 'y', '" . $time . "', 'n')";
 
         // Execute insert query
         if (mysqli_query($con, $sql)) {
@@ -37,7 +49,7 @@ if ($result = mysqli_query($con, "SELECT * FROM Game WHERE GameID = '" . $gameID
         $row = mysqli_fetch_assoc($result);
 
         // Check if game is locked then check if livescored attribute is equal to 'y'
-        if (checkIfLocked($gameID)) {
+        if (checkIfLocked($con, $gameID)) {
             echo 'locked';
         } else if ($row['liveScored'] == 'y') {
             // If not equal to 'n' then game is being live scored and echo 'beingscored'

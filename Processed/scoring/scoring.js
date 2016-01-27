@@ -269,6 +269,38 @@ function generateBackButtonTooltip() {
     return text;
 }
 
+function getTeamName(teamID, divID) {
+    teamID = String(parseInt(teamID));
+    divID = parseInt(divID);
+    
+    for (var e = 0; e < allTeams[divID]; e += 1) {
+        if (teamID == allTeams[divID][e].teamID) {
+            return allTeams[divID][e].teamName;
+        }
+    }
+    
+    return '';
+}
+
+function columnName(columnName) {
+    switch (columnName) {
+        case 'homeTeamScore':
+            return 'Home Score';
+        case 'awayTeamScore':
+            return 'Away Score';
+        case 'time':
+            return 'Start Time';
+        case 'location':
+            return 'Location';
+        case 'ref':
+            return 'Referee';
+        case 'assRef1' || 'assRef2':
+            return 'Assistant Referee';
+        case 'locked':
+            return 'Locked';
+    }
+}
+
 /* 
 --------------------------------------------------------------------------
 ----------------------------- Draw/Results -------------------------------
@@ -298,6 +330,7 @@ function drawResults(createBackEvent) {
     setActivePage();
     generateWeekSelector();
     setActiveUpdateInterval();
+    generateChangedGames();
     generateGames();
     showDrawResultsContainer();
 }
@@ -368,6 +401,53 @@ function generateWeekSelector() {
     setActiveWeek();
 }
 
+function generateChangedGames(startOfWeek, endOfWeek) {
+    var html = '';
+    
+    if (localStorage.lastTimeUpdatesChecked == null) {
+        var lastTimeUpdatesChecked = new Date(2000, 1, 1);
+        localStorage.lastTimeUpdatesChecked = new Date().toUTCString();
+    } else {
+        var lastTimeUpdatesChecked = new Date(localStorage.lastTimeUpdatesChecked);
+    }
+    
+    // for each division
+    for (var p = 0; p < allGames.length; p += 1) {
+        // get the date of the game
+        var game = allGames[p];
+        var gameID = game.GameID;
+        var year = parseInt(gameID.substr(0, 4));
+        var month = parseInt(gameID.substr(4, 2)) - 1;
+        var day = parseInt(gameID.substr(6, 2));
+        var gameDateDate = new Date(year, month, day);
+        // check if game happens in the current week
+        if (gameDateDate <= endOfWeek && gameDateDate >= startOfWeek) {
+            // get changes array from game
+            var gameChanges = JSON.parse(allGames[p].changes);
+            // for each change
+            for (var r = 0; r < gameChanges.length; r += 1) {
+                // get when the change was made
+                var changeDate = new Date(gameChanges[r][0]);
+                // check if the change has occured since the user last checked
+                if (changeDate > lastTimeUpdatesChecked) {
+                    // display the change
+                    var divID = parseInt(gameID.slice(-2));
+                    if (gameID.length == 16) {
+                        var homeTeamName = getTeamName(gameID.substr(8, 3), divID);
+                        var awayTeamName = getTeamName(gameID.substr(11, 3), divID);
+                    } else {
+                        var homeTeamName = game.homeTeamName;
+                        var awayTeamName = game.awayTeamName;
+                    }
+                    html += "<div>" + allDivs[divID].divisionName + ") " + homeTeamName + " vs " + awayTeamName + " - " + columnName(gameChanges[r][1]) + " changed at " + changeDate.toChangesString() + "</div>"
+                }
+            }
+        }
+    }
+    
+    $("#changedGamesContainer").empty().append(html);
+}
+
 function generateGames() {
     html = '';
     var gameInDivisionThisWeekArray = [];
@@ -378,6 +458,8 @@ function generateGames() {
             allGames = response;
             var startOfWeek = new Date(startDateArray[0], startDateArray[1], startDateArray[2]).addDays(7 * currentWeek);
             var endOfWeek = new Date(startDateArray[0], startDateArray[1], startDateArray[2]).addDays(6 + 7 * currentWeek);
+        
+            generateChangedGames(startOfWeek, endOfWeek);
 
             for (var b = 0; b < allDivs.length; b += 1) {
                 var gamesInRow = 0;
@@ -395,7 +477,7 @@ function generateGames() {
                     var gameDateString = gameID.substr(0, 8);
                     var year = parseInt(gameDateString.substr(0, 4));
                     var month = parseInt(gameDateString.substr(4, 2)) - 1;
-                    var day = parseInt(gameDateString.substr(6, 8));
+                    var day = parseInt(gameDateString.substr(6, 2));
                     var gameDateDate = new Date(year, month, day);
                     if (gameDateDate <= endOfWeek && gameDateDate >= startOfWeek && gameID.slice(-2) == allDivs[b].divisionID) {
                         gameInDivisionThisWeek = true;
@@ -628,6 +710,20 @@ Date.prototype.toString = function (dayOfWeek) {
         dayOfGame = daysOfWeek[this.getDay()];
     }
     return dayOfGame + " " + this.getDate() + " " + months[this.getMonth()];
+};
+
+Date.prototype.toChangesString = function () {
+    var daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    if (this.getHours() == 0) {
+        var hours = 'Midnight';
+    } else if (this.getHours() > 12) {
+        var hours = (this.getHours() - 12) + "pm";
+    } else if (this.getHours() == 12) {
+        var hours = 'Noon';
+    } else {
+        var hours = this.getHours() + 'am';
+    }
+    return hours + " " + daysOfWeek[this.getDay()];
 };
 
 /* 
@@ -1000,7 +1096,7 @@ function checkGameLive(homeTeam, awayTeam) {
             } else if (response == 'beingscored') {
                 alert("This game is already being live scored. Please try again later or select another game.");
             } else if (response == 'locked') {
-                alert("This game is locked so can\'t be updated. If you think the score is wrong then use the contact form to send me a message.");
+                alert("This game is locked so it can\'t be updated.");
             } else {
                 // Error
                 alert("Error: " + response + ". Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
@@ -1366,7 +1462,7 @@ function uploadPlayLive(gameID, homeScore, awayScore, minutesPlayed, scoringPlay
         if (response == 'success') {
             generateLiveScoring('', '');
         } else if (response == 'locked') {
-            alert("This game is locked so can\'t be updated. If you think the score is wrong then use the contact form to send me a message.");
+            alert("This game is locked so it can\'t be updated. If you have uploaded the 'Full Time' play, you can unlock the game by deleting it, otherwise an admin locked the game.");
         } else {
             // Error
             alert("Error: " + response + ". Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");

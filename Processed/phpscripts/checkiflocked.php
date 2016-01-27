@@ -1,6 +1,6 @@
 <?php
 
-function checkIfLocked(gameID) {
+function checkIfLocked($gameID) {
     if ($result = mysqli_query($con, "SELECT locked FROM Game WHERE GameID = '" . $gameID . "'")) {
         $row = mysqli_fetch_assoc($result);
         if ($row['locked'] == 'y') {
