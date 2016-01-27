@@ -1,5 +1,8 @@
 <?php
-$con=mysqli_connect("possumpamcom.ipagemysql.com","dalzell99","dazzle99","drc_database");
+$config = parse_ini_file('/home/ccrsc638/config.ini'); 
+
+// Try and connect to the database
+$con = mysqli_connect('localhost', $config['username'], $config['password'], $config['dbname']);
 
 // Check connection
 if (mysqli_connect_errno()) {
@@ -13,23 +16,7 @@ if ($gameresult = mysqli_query($con, "SELECT * FROM Game ORDER BY `gameID` ASC")
         $game[] = $row;
     }
     
-    /* free result set */
-    mysqli_free_result($gameresult);
-    
-    if ($teamresult = mysqli_query($con, "SELECT * FROM Teams ORDER BY `division` ASC, `teamName` ASC")) {
-    
-        /* fetch associative array */
-        while ($row = mysqli_fetch_assoc($teamresult)) {
-            $team[] = $row;
-        }
-
-        /* free result set */
-        mysqli_free_result($teamresult);
-        
-        echo json_encode(array($team, $game));
-    } else {
-        echo 'Team select query failed';
-    }
+    echo json_encode($game);
 } else {
     echo 'Game select query failed';
 }

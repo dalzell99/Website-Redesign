@@ -1,5 +1,8 @@
 <?php
-$con=mysqli_connect("possumpamcom.ipagemysql.com","dalzell99","dazzle99","drc_database");
+$config = parse_ini_file('/home/ccrsc638/config.ini'); 
+
+// Try and connect to the database
+$con = mysqli_connect('localhost', $config['username'], $config['password'], $config['dbname']);
 
 $teamName = mysqli_real_escape_string($con, $_POST['teamName']);
 $divisionID = $_POST['divisionID'];
@@ -10,7 +13,7 @@ if (mysqli_connect_errno()) {
 }
 
 if ($result = mysqli_query($con, "INSERT INTO `Teams` (`teamID`, `division`, `teamName`) VALUES (NULL,'" . $divisionID . "','" . $teamName . "')")) {
-    echo 'success';
+    echo json_encode(['success', mysqli_insert_id($con)]);
 } else {
     echo 'Update query failed';
 }

@@ -6,6 +6,17 @@
 
 body
   font-family: 'Roboto', sans-serif
+  
+#loadingMessage
+  font-size: x-large
+  font-weight: bold
+  text-align: center
+  padding: 25px
+
+footer
+  font-family: 'Roboto', sans-serif
+  text-align: right
+  font-size: 80%
 
 .rowfix
   margin-left: 0
@@ -13,8 +24,8 @@ body
 
 #instructions
   font-size: 110%
-  padding: 5px 25px 25px 25px
-  text-align: center
+  padding: 15px 25px
+  text-align: justify
 
 nav.row
   margin: 0 0 20px 0
@@ -23,34 +34,34 @@ nav.row
 .navbar-toggle:hover .icon-bar
   background-color: black
 
-.weektoggledisplay
-  background-color: transparent
-  padding: 10px
-  border: 1px solid #33b5e5
-  border-radius: 10px
-  text-align: center
-  padding: 15px
-  margin: 0 0 20px 1.11%
-  font-weight: bold
-  font-size: 140%
-  
-.weeksexpanded
-  margin-bottom: 15px
-
-button.weeknav
-  background-color: transparent
-  padding: 10px
-  border: 1px solid #33b5e5
-  border-radius: 10px
-
-  &.active
-    background-color: rgba(51, 181, 229, 0.4)
-  
-.weektitle
-  font-size: 85%
-
 .navbar
   background-color: #33b5e5
+ 
+#backButton
+  position: relative
+  float: left
+  height: 35px
+  margin: 8px 20px 0 0
+  opacity: .5
+  display: none
+
+#infoButtonMobile
+  float: right
+  height: 40px
+  margin: 5px 20px 0 0
+  display: block
+  
+  @media (min-width: 768px)
+    display: none
+  
+#infoButtonDesktop
+  float: right
+  height: 40px
+  margin: 10px -20px 0 0
+  display: none
+  
+  @media (min-width: 768px)
+    display: block
 
 /*
  *--------------------------------------------------------------------------
@@ -86,10 +97,34 @@ button.weeknav
  *--------------------------------------------------------------------------
  */
 
+.weektoggledisplay
+  background-color: transparent
+  padding: 10px
+  border: 1px solid #33b5e5
+  border-radius: 10px
+  text-align: center
+  padding: 15px
+  margin: 0 0 20px 1.11%
+  font-weight: bold
+  font-size: 140%
+  
+.weeksexpanded
+  margin-bottom: 15px
 
+.weeknav
+  background-color: transparent
+  padding: 10px
+  border: 1px solid #33b5e5
+  border-radius: 10px
 
+  &.active
+    background-color: rgba(51, 181, 229, 0.4)
+  
+.weektitle
+  font-size: 85%
+  
 .date  
-  font-size: 80px/140px * 100%
+  font-size: 55%
   font-weight: normal
 
 .divtitle
@@ -172,6 +207,20 @@ button.weeknav
 .redSquare
   background-color: #ffd9d9
   border: 3px solid #ff0000
+
+#autoUpdateButtonRow
+  text-align: right
+  margin: 0px 10px 15px 0px
+
+.autoUpdateButton
+  background-color: transparent;
+  border: 1px solid #33b5e5;
+  border-radius: 3px;
+  text-align: center;
+  font-weight: bold;
+  
+  &.active
+    background-color: rgba(51, 181, 229, 0.4)
 
 /*
  *--------------------------------------------------------------------------
@@ -350,3 +399,92 @@ button.weeknav
  *--------------------------- End Game Scoring -----------------------------
  *--------------------------------------------------------------------------
  */
+
+.homeTeamRowEnd, .homeScoreRowEnd,
+.awayTeamRowEnd, .awayScoreRowEnd, 
+.divDropDownRowEnd, .datePickerRowEnd
+  font-size: 140%
+  margin-bottom: 10px
+  margin-left: 2%
+  margin-right: 2%
+
+select#endScoringHomeTeamDropDown, 
+select#endScoringAwayTeamDropDown, 
+select#endScoringDivisionDropDown, 
+input#datePicker
+  height: 50px
+  width: 66%
+
+.titleEnd
+  width: 32%
+  display: inline-block
+
+input#homeScore, input#awayScore
+  width: 36%;
+  margin-right: 2%
+
+.submitScoreButton
+  margin-left: 15%
+  width: 70%
+  height: 70px
+  font-size: 160%
+
+input[type=checkbox]
+  /* All browsers except webkit*/
+  transform: scale(1.25);
+
+  /* Webkit browsers*/
+  -webkit-transform: scale(1.25);
+
+@media (min-width: 768px)
+  .homeTeamRowEnd, .homeScoreRowEnd,
+  .awayTeamRowEnd, .awayScoreRowEnd, 
+  .divDropDownRowEnd, .datePickerRowEnd
+    font-size: 160%
+    margin-bottom: 10px
+    margin-left: 10%
+    margin-right: 10%
+  
+  select#endScoringHomeTeamDropDown, 
+  select#endScoringAwayTeamDropDown, 
+  select#endScoringDivisionDropDown, 
+  input#datePicker
+    height: 50px
+    width: 73%
+
+  .titleEnd
+    width: 25%
+    display: inline-block
+    
+  input#homeScore, input#awayScore
+    width: 50%;
+    margin-right: 3%
+  
+  .submitScoreButton
+    height: 70px
+    font-size: 160%
+    margin-left: 30%
+    width: 40%
+
+/*
+ *--------------------------------------------------------------------------
+ *----------------------------- Contact Form -------------------------------
+ *--------------------------------------------------------------------------
+ */
+
+#contactContainer
+  text-align: center
+  font-size: 150%
+
+#contactFormButton
+  height: 50px
+  font-size: 130%
+  width: 40%
+  
+  @media (min-width: 768px)
+    height: 50px
+    font-size: 130%
+    width: 20%
+    
+#contactContainer
+  display: none

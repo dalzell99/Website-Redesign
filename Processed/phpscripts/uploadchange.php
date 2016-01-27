@@ -1,5 +1,8 @@
 <?php
-$con=mysqli_connect("possumpamcom.ipagemysql.com","dalzell99","dazzle99","drc_database");
+$config = parse_ini_file('/home/ccrsc638/config.ini'); 
+
+// Try and connect to the database
+$con = mysqli_connect('localhost', $config['username'], $config['password'], $config['dbname']);
 
 $gameID = $_POST['gameID'];
 $column = $_POST['column'];
@@ -34,7 +37,9 @@ switch ($column) {
     case "assRef2":
         $update = "UPDATE Game SET assRef2 = '" . $newValue . "' WHERE GameID = '" . $gameID . "'";
         break;
-    
+    case "locked":
+        $update = "UPDATE Game SET locked = '" . $newValue . "' WHERE GameID = '" . $gameID . "'";
+        break;
 }
 
 if ($result = mysqli_query($con, $update)) {

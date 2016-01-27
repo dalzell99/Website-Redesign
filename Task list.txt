@@ -1,12 +1,11 @@
-reduce reloads by making all page changes in javascript
-collapse menu when new page clicked
-add autoupdate to draw/results
-add minimum browser/device requirements
-investigate what happens with back and forward buttons
-add instructions to all pages
+lock games so they can't be edited
+fetch data before user clicks button
+possibly add tooltip with when game info was changed or a list of games that have been changed after being added
+transistions
+add ability to favorite games
+add points table
 change to minified files
 add overtime to live scoring
-find out why the site doesn't always load
 open draw/results to this week
 Make it look prettier!!!!!!
 [["1","strtGame","0"],["16","homeTry","1"],["33","awayTry","2"],["34","awayConversion","3"],["36","updt1507","4"],["40","homeTry","5"],["40","halfTime","6"],["60","homeTry","7"],["60","homeConversion","8"],["65","updt3515","9"],["79","homeTry","10"],["80","fullTime","11"]]

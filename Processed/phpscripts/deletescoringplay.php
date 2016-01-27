@@ -6,10 +6,10 @@ if (mysqli_connect_errno()) {
     echo "Failed to connect to MySQL: " . mysqli_connect_error();
 }
 
-$gameID = $_GET['gameID'];
-$scoringPlayIndex = $_GET['index'];
-$homeScore = $_GET['homeScore'];
-$awayScore = $_GET['awayScore'];
+$gameID = $_POST['gameID'];
+$scoringPlayIndex = $_POST['index'];
+$homeScore = $_POST['homeScore'];
+$awayScore = $_POST['awayScore'];
 $time = date("Y-m-d H:i:s");
 
 // Retrieve all scoring plays from database to an array by decoding json string
@@ -27,7 +27,11 @@ $updatedScoringPlays = json_encode($allScoringPlays);
 // Update game element with new values
 $update = " UPDATE Game SET homeTeamScore = '$homeScore', awayTeamScore = '$awayScore', scoringPlays = '$updatedScoringPlays', lastTimeScored = '$time' WHERE GameID = '$gameID' ";
 
-mysqli_query($con, $update);
+if (mysqli_query($con, $update)) {
+    echo 'success';
+} else {
+    echo 'Update query failed';
+}
 
 mysqli_close($con);
 ?>

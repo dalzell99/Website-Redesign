@@ -1,5 +1,9 @@
 <?php
-$con=mysqli_connect("possumpamcom.ipagemysql.com","dalzell99","dazzle99","drc_database");
+include checkiflocked.php;
+$config = parse_ini_file('/home/ccrsc638/config.ini'); 
+
+// Try and connect to the database
+$con = mysqli_connect('localhost', $config['username'], $config['password'], $config['dbname']);
 
 // Check connection
 if (mysqli_connect_errno()) {
@@ -19,7 +23,7 @@ if ($result = mysqli_query($con, "SELECT * FROM Game WHERE GameID = '" . $gameID
         $awayTeam = $_POST['awayTeam'];
 
         // Create insert string using default values and variables given
-        $sql = "INSERT INTO Game VALUES ('" . $gameID . "', '" . $homeTeam . "', '0', '" . $awayTeam . "', '0', '0', '', '', '', '" . $homeTeam . "', '12pm', '[]', 'n', 'y', '" . $time . "')";
+        $sql = "INSERT INTO Game VALUES ('" . $gameID . "', '" . $homeTeam . "', '0', '" . $awayTeam . "', '0', '1', '', '', '', '" . $homeTeam . "', '12pm', '[[\"1\", \"strtGame\", \"\"]]', 'n', 'y', '" . $time . "')";
 
         // Execute insert query
         if (mysqli_query($con, $sql)) {
@@ -32,13 +36,19 @@ if ($result = mysqli_query($con, "SELECT * FROM Game WHERE GameID = '" . $gameID
     } else {
         $row = mysqli_fetch_assoc($result);
 
-        // Check if livescored attribute is equal to 'n'
-        if ($row['liveScored'] == 'n') {
-            // If equal to 'n' then game isn't being live scored and echo 'success'
-            echo 'success';
-        } else {
+        // Check if game is locked then check if livescored attribute is equal to 'y'
+        if (checkIfLocked($gameID)) {
+            echo 'locked';
+        } else if ($row['liveScored'] == 'y') {
             // If not equal to 'n' then game is being live scored and echo 'beingscored'
             echo 'beingscored';
+        } else {
+            // If equal to 'n' then game isn't being live scored and echo 'success'
+            if (mysqli_query($con, " UPDATE Game SET liveScored = 'y' WHERE GameID = '" . $gameID . "' ")) {
+                echo 'success';
+            } else {
+                echo "Update query failed";
+            }
         }
     }
 } else {

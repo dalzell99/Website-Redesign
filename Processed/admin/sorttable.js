@@ -91,35 +91,35 @@ sorttable = {
 	      headrow[i].sorttable_tbody = table.tBodies[0];
 	      dean_addEvent(headrow[i],"click", sorttable.innerSortFunction = function(e) {
 
-          if (this[0].className.search(/\bsorttable_sorted\b/) != -1) {
+          if (this.className.search(/\bsorttable_sorted\b/) != -1) {
             // if we're already sorted by this column, just
             // reverse the table, which is quicker
-            sorttable.reverse(this[0].sorttable_tbody);
-            this[0].className = this[0].className.replace('sorttable_sorted',
+            sorttable.reverse(this.sorttable_tbody);
+            this.className = this.className.replace('sorttable_sorted',
                                                     'sorttable_sorted_reverse');
-            this[0].removeChild(document.getElementById('sorttable_sortfwdind'));
+            this.removeChild(document.getElementById('sorttable_sortfwdind'));
             sortrevind = document.createElement('span');
             sortrevind.id = "sorttable_sortrevind";
             sortrevind.innerHTML = stIsIE ? '&nbsp<font face="webdings">5</font>' : '&nbsp;&#x25B4;';
-            this[0].appendChild(sortrevind);
+            this.appendChild(sortrevind);
             return;
           }
-          if (this[0].className.search(/\bsorttable_sorted_reverse\b/) != -1) {
+          if (this.className.search(/\bsorttable_sorted_reverse\b/) != -1) {
             // if we're already sorted by this column in reverse, just
             // re-reverse the table, which is quicker
-            sorttable.reverse(this[0].sorttable_tbody);
-            this[0].className = this[0].className.replace('sorttable_sorted_reverse',
+            sorttable.reverse(this.sorttable_tbody);
+            this.className = this.className.replace('sorttable_sorted_reverse',
                                                     'sorttable_sorted');
-            this[0].removeChild(document.getElementById('sorttable_sortrevind'));
+            this.removeChild(document.getElementById('sorttable_sortrevind'));
             sortfwdind = document.createElement('span');
             sortfwdind.id = "sorttable_sortfwdind";
             sortfwdind.innerHTML = stIsIE ? '&nbsp<font face="webdings">6</font>' : '&nbsp;&#x25BE;';
-            this[0].appendChild(sortfwdind);
+            this.appendChild(sortfwdind);
             return;
           }
 
           // remove sorttable_sorted classes
-          theadrow = this[0].parentNode;
+          theadrow = this.parentNode;
           forEach(theadrow.childNodes, function(cell) {
             if (cell.nodeType == 1) { // an element
               cell.className = cell.className.replace('sorttable_sorted_reverse','');
@@ -131,28 +131,28 @@ sorttable = {
           sortrevind = document.getElementById('sorttable_sortrevind');
           if (sortrevind) { sortrevind.parentNode.removeChild(sortrevind); }
 
-          this[0].className += ' sorttable_sorted';
+          this.className += ' sorttable_sorted';
           sortfwdind = document.createElement('span');
           sortfwdind.id = "sorttable_sortfwdind";
           sortfwdind.innerHTML = stIsIE ? '&nbsp<font face="webdings">6</font>' : '&nbsp;&#x25BE;';
-          this[0].appendChild(sortfwdind);
+          this.appendChild(sortfwdind);
 
 	        // build an array to sort. This is a Schwartzian transform thing,
 	        // i.e., we "decorate" each row with the actual sort key,
 	        // sort based on the sort keys, and then put the rows back in order
 	        // which is a lot faster because you only do getInnerText once per row
 	        row_array = [];
-	        col = this[0].sorttable_columnindex;
-	        rows = this[0].sorttable_tbody.rows;
+	        col = this.sorttable_columnindex;
+	        rows = this.sorttable_tbody.rows;
 	        for (var j=0; j<rows.length; j++) {
 	          row_array[row_array.length] = [sorttable.getInnerText(rows[j].cells[col]), rows[j]];
 	        }
 	        /* If you want a stable sort, uncomment the following line */
-	        sorttable.shaker_sort(row_array, this[0].sorttable_sortfunction);
+	        sorttable.shaker_sort(row_array, this.sorttable_sortfunction);
 	        /* and comment out this one */
-	        //row_array.sort(this[0].sorttable_sortfunction);
+	        //row_array.sort(this.sorttable_sortfunction);
 
-	        tb = this[0].sorttable_tbody;
+	        tb = this.sorttable_tbody;
 	        for (var j=0; j<row_array.length; j++) {
 	          tb.appendChild(row_array[j][1]);
 	        }
@@ -350,7 +350,7 @@ if (document.addEventListener) {
     document.write("<script id=__ie_onload defer src=javascript:void(0)><\/script>");
     var script = document.getElementById("__ie_onload");
     script.onreadystatechange = function() {
-        if (this[0].readyState == "complete") {
+        if (this.readyState == "complete") {
             sorttable.init(); // call the onload handler
         }
     };
@@ -413,13 +413,13 @@ function removeEvent(element, type, handler) {
 function handleEvent(event) {
 	var returnValue = true;
 	// grab the event object (IE uses a global event object)
-	event = event || fixEvent(((this[0].ownerDocument || this[0].document || this).parentWindow || window).event);
+	event = event || fixEvent(((this.ownerDocument || this.document || this).parentWindow || window).event);
 	// get a reference to the hash table of event handlers
-	var handlers = this[0].events[event.type];
+	var handlers = this.events[event.type];
 	// execute each event handler
 	for (var i in handlers) {
-		this[0].$$handleEvent = handlers[i];
-		if (this[0].$$handleEvent(event) === false) {
+		this.$$handleEvent = handlers[i];
+		if (this.$$handleEvent(event) === false) {
 			returnValue = false;
 		}
 	}
@@ -433,10 +433,10 @@ function fixEvent(event) {
 	return event;
 };
 fixEvent.preventDefault = function() {
-	this[0].returnValue = false;
+	this.returnValue = false;
 };
 fixEvent.stopPropagation = function() {
-  this[0].cancelBubble = true;
+  this.cancelBubble = true;
 }
 
 // Dean's forEach: http://dean.edwards.name/base/forEach.js
@@ -458,7 +458,7 @@ if (!Array.forEach) { // mozilla already supports this
 // generic enumeration
 Function.prototype.forEach = function(object, block, context) {
 	for (var key in object) {
-		if (typeof this[0].prototype[key] == "undefined") {
+		if (typeof this.prototype[key] == "undefined") {
 			block.call(context, object[key], key, object);
 		}
 	}

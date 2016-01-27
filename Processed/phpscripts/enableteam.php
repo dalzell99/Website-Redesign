@@ -4,27 +4,18 @@ $config = parse_ini_file('/home/ccrsc638/config.ini');
 // Try and connect to the database
 $con = mysqli_connect('localhost', $config['username'], $config['password'], $config['dbname']);
 
-$response = '';
+$teamID = $_POST['teamID'];
 
 // Check connection
 if (mysqli_connect_errno()) {
     $response = "Failed to connect to MySQL: " . mysqli_connect_error();
 }
 
-if ($result = mysqli_query($con, "SELECT * FROM Divisions")) {
-    
-    /* fetch associative array */
-    while ($row = mysqli_fetch_assoc($result)) {
-        $response[] = $row;
-    }
-    
-    /* free result set */
-    mysqli_free_result($result);
+if ($result = mysqli_query($con, "UPDATE Teams SET enabled = 'y' WHERE teamID = '" . $teamID . "'")) {
+    echo 'success';
 } else {
-    $response = 'Select query failed';
+    echo 'Update query failed';
 }
-
-echo json_encode($response);
 
 mysqli_close($con);
 ?>

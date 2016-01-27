@@ -1,32 +1,55 @@
-var divTitles = [];
+var backEvents = [];
+const NEVER = 100000;
+var counter = 0;
+var allTeams = [];
+var allDivs = [];
 
 $(document).ready(function () {
-    var post = $.post('http://www.possumpam.com/rugby/phpscripts/getalldivisions.php', {}, 
-        function (response) {
-            for (var t = 0; t < response.length; t += 1) {
-                var divisionID = response[t].divisionID.length == 1 ? '0' + response[t].divisionID : '' + response[t].divisionID;
-                divTitles.push([divisionID, response[t].divisionName])
-            }
-        }, 
-    'json');
-    
-    post.fail(function() {
-        alert("Error while getting division list. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+    $('#backButton').tooltip({
+        title: generateBackButtonTooltip(),
+        html: true,
+        placement: "bottom"
     });
-    
+
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/getteamsdivs.php', {},
+        function (response) {
+            var teams = response[0];
+            var divs = response[1];
+
+            for (var t = 0; t < divs.length; t += 1) {
+                var divID = parseInt(divs[t].divisionID);
+                allTeams[divID] = [];
+                allDivs[divID] = divs[t];
+                allDivs[divID].divisionID = pad(allDivs[divID].divisionID, 2);
+            }
+
+            for (var n = 0; n < teams.length; n += 1) {
+                allTeams[parseInt(teams[n].division)].push(teams[n]);
+            }
+        }, 'json');
+
+    post.fail(function (request, textStatus, errorThrown) {
+        alert("Error while retrieving info from database. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+    });
+
     post.always(function () {
-        if(typeof(Storage) !== "undefined") {
+        if (typeof (Storage) !== "undefined") {
+            if (localStorage.instructions == 'false') {
+                $("#instructions").hide();
+            }
             if (sessionStorage.currentPage == "drawResults" || sessionStorage.currentPage == null) {
-                drawResults();
+                drawResults(true);
             } else if (sessionStorage.currentPage == "liveScoring" || sessionStorage.currentPage == "gameSelection") {
-                liveScoring();
+                liveScoring(true);
             } else if (sessionStorage.currentPage == "gameInfo") {
-                gameInfo(sessionStorage.currentGameID);
+                gameInfo(sessionStorage.currentGameID, true);
+            } else if (sessionStorage.currentPage == "endScoring") {
+                endScoring(true);
             } else {
-                endScoring();
+                showContactContainer();
             }
         } else {
-            alert("Sorry, you can't use this website until you update your browser/device to the latest version");
+            alert("Sorry, you can't use this website. The minimum browser versions are:\nInternet Explorer 8\nFirefox 3.5\nSafari 4\nGoogle Chrome 5\nOpera 10.50");
         }
     });
 });
@@ -40,12 +63,210 @@ function hideAllContainers() {
     $("#gameSelectionContainer").hide();
     $("#liveScoringContainer").hide();
     $("#endScoringContainer").hide();
+    $("#contactContainer").hide();
 }
 
 function setActivePage() {
     $("li.active").removeClass("active");
     var currentPage = sessionStorage.currentPage == 'gameSelection' ? 'liveScoring' : sessionStorage.currentPage;
     $("." + currentPage).addClass("active");
+
+    $('.navbar-collapse.in').removeClass('in').prop('aria-expanded', false);
+}
+
+function pad(value, length) {
+    // Convert to string
+    value = '' + value;
+
+    // Add zeros to front until the desired length
+    while (value.length < length) {
+        value = "0" + value;
+    }
+
+    // return padded value as string
+    return value;
+}
+
+function back() {
+    var event = backEvents.pop();
+    var previousEvent = backEvents[backEvents.length - 1][0];
+    if (event[0] == 'startGameInfo') {
+        showDrawResultsContainer();
+        sessionStorage.currentPage = "drawResults";
+    } else if (event[0] == 'weekChange') {
+        changeWeeks(event[1], false);
+    } else if (event[0] == 'startGameSelection') {
+        if (previousEvent == 'weekChange') {
+            showDrawResultsContainer();
+            sessionStorage.currentPage = "drawResults";
+        } else if (previousEvent == 'startDrawResults') {
+            showDrawResultsContainer();
+            sessionStorage.currentPage = "drawResults";
+        } else if (previousEvent == 'startGameInfo') {
+            if (backEvents[backEvents.length - 1][1] != sessionStorage.currentGameID) {
+                gameInfo(backEvents[backEvents.length - 1][1], false);
+            } else {
+                showGameInfoContainer();
+                sessionStorage.currentPage = "gameInfo";
+            }
+        } else if (previousEvent == 'startEndScoring') {
+            showEndScoringContainer();
+            sessionStorage.currentPage = "endScoring";
+        }
+    } else if (event[0] == 'startLiveScoring') {
+        if (previousEvent == 'startGameSelection') {
+            showGameSelectionContainer();
+            sessionStorage.currentPage = "gameSelection";
+        }
+    } else if (event[0] == 'startEndScoring') {
+        if (previousEvent == 'weekChange') {
+            showDrawResultsContainer();
+            sessionStorage.currentPage = "drawResults";
+        } else if (previousEvent == 'startDrawResults') {
+            showDrawResultsContainer();
+            sessionStorage.currentPage = "drawResults";
+        } else if (previousEvent == 'startGameInfo') {
+            if (backEvents[backEvents.length - 1][1] != sessionStorage.currentGameID) {
+                gameInfo(backEvents[backEvents.length - 1][1], false);
+            } else {
+                showGameInfoContainer();
+                sessionStorage.currentPage = "gameInfo";
+            }
+        } else if (previousEvent == 'startLiveScoring') {
+            showLiveScoringContainer();
+            sessionStorage.currentPage = "liveScoring";
+        } else if (previousEvent == 'startGameSelection') {
+            showGameSelectionContainer();
+            sessionStorage.currentPage = "gameSelection";
+        }
+    } else if (event[0] == 'startDrawResults') {
+        if (previousEvent == 'startGameSelection') {
+            showGameSelectionContainer();
+            sessionStorage.currentPage = "gameSelection";
+        } else if (previousEvent == 'startLiveScoring') {
+            showLiveScoringContainer();
+            sessionStorage.currentPage = "liveScoring";
+        } else if (previousEvent == 'startGameInfo') {
+            if (backEvents[backEvents.length - 1][1] != sessionStorage.currentGameID) {
+                gameInfo(backEvents[backEvents.length - 1][1], false);
+            } else {
+                showGameInfoContainer();
+                sessionStorage.currentPage = "gameInfo";
+            }
+        } else if (previousEvent == 'startEndScoring') {
+            showEndScoringContainer();
+            sessionStorage.currentPage = "endScoring";
+        }
+    }
+
+    if (backEvents.length <= 1) {
+        $("#backButton").hide();
+    } else {
+        refreshBackButtonTooltip();
+    }
+}
+
+function addBackEvent(eventArray) {
+    backEvents.push(eventArray);
+    if (backEvents.length > 1) {
+        $("#backButton").show();
+    }
+    refreshBackButtonTooltip();
+}
+
+function setInstructions(page) {
+    var text = '';
+    switch (page) {
+        case 'drawResults':
+            text = "If you want the scores to update automatically, choose how often you want that to happen to the right. You can change the week displayed by clicking 'Show Weeks' then selecting the week you want. The games are colour coded to represent the situation in the game. To display the games for a division, click the division title. Clicking the title again will hide them. Clicking a game will take you to a full page display of the game including all the scoring plays (if provided).";
+            break;
+        case 'liveScoringPassword':
+            text = "Input the password provided to you and tap 'Submit'";
+            break;
+        case 'gameSelection':
+            text = "Choose the correct division, home and away teams and tap 'Select Game'";
+            break;
+        case 'liveScoring':
+            text = "To upload a scoring play, tap the name of the team and the scoring play you want to upload, enter the minutes played and description of play (optional), then tap 'Send'. If you missed some plays, you can tap 'Change Score' and enter the current score and minutes played then tap 'Submit'. If you want to delete play/s, tap the plays you want to delete then tap 'Delete Selected Plays'. Tapping the 'Half Time' or 'Full Time' buttons will upload that play to the database. Once you have finished scoring the game, tap 'Stop Scoring' to be logged out.";
+            break;
+        case 'endScoringPassword':
+            text = "Input the password provided to you and tap 'Submit'";
+            break;
+        case 'endScoring':
+            text = "To upload the final score for a game, select the division, home team, away team, enter the score for each team, the date the game was played then tap 'Submit Score'";
+            break;
+    }
+
+    $("#instructions").text(text);
+}
+
+function toggleInstructions() {
+    $("#instructions").toggle();
+    localStorage.instructions = localStorage.instructions == 'true' ? 'false' : 'true';
+}
+
+function refreshBackButtonTooltip() {
+    if ($('#backButton').is(":hover")) {
+        var title = generateBackButtonTooltip();
+        $("#backButton").attr('title', title).tooltip('fixTitle').tooltip('show');
+    } else {
+        var title = generateBackButtonTooltip();
+        $("#backButton").attr('title', title).tooltip('fixTitle');
+    }
+
+
+}
+
+function generateBackButtonTooltip() {
+    var text = '';
+    for (var m = backEvents.length - 1; m > 0; m -= 1) {
+        var event = backEvents[m];
+        var previousEvent = backEvents[m - 1][0];
+        var index = (backEvents.length - m).toString();
+        if (event[0] == 'startGameInfo') {
+            text += index + ") Redirect to Draw/Results<br>";
+        } else if (event[0] == 'weekChange') {
+            text += index + ") Change displayed week to W" + (event[1] + 1) + "<br>";
+        } else if (event[0] == 'startGameSelection') {
+            if (previousEvent == 'weekChange') {
+                text += index + ") Redirect to Draw/Results<br>";
+            } else if (previousEvent == 'startDrawResults') {
+                text += index + ") Redirect to Draw/Results<br>";
+            } else if (previousEvent == 'startGameInfo') {
+                text += index + ") Redirect to Game Info<br>";
+            } else if (previousEvent == 'startEndScoring') {
+                text += index + ") Redirect to End Game Scoring<br>";
+            }
+        } else if (event[0] == 'startLiveScoring') {
+            if (previousEvent == 'startGameSelection') {
+                text += index + ") Redirect to Game Selection<br>";
+            }
+        } else if (event[0] == 'startEndScoring') {
+            if (previousEvent == 'weekChange') {
+                text += index + ") Redirect to Draw/Results<br>";
+            } else if (previousEvent == 'startDrawResults') {
+                text += index + ") Redirect to Draw/Results<br>";
+            } else if (previousEvent == 'startGameInfo') {
+                text += index + ") Redirect to Game Info<br>";
+            } else if (previousEvent == 'startLiveScoring') {
+                text += index + ") Redirect to Live Scoring<br>";
+            } else if (previousEvent == 'startGameSelection') {
+                text += index + ") Redirect to Game Selection<br>";
+            }
+        } else if (event[0] == 'startDrawResults') {
+            if (previousEvent == 'startGameSelection') {
+                text += index + ") Redirect to Game Selection<br>";
+            } else if (previousEvent == 'startLiveScoring') {
+                text += index + ") Redirect to Live Scoring<br>";
+            } else if (previousEvent == 'startGameInfo') {
+                text += index + ") Redirect to Game Info<br>";
+            } else if (previousEvent == 'startEndScoring') {
+                text += index + ") Redirect to End Game Scoring<br>";
+            }
+        }
+    }
+
+    return text;
 }
 
 /* 
@@ -59,37 +280,61 @@ var numWeeks = 18;
 var allGames = [];
 var allTeams = [];
 var startDateArray = [2015, 2, 23];
+var autoUpdateTimer;
+var updateDuration;
+var expandedDivisions = [];
+var timer;
 
-function drawResults() {
+function drawResults(createBackEvent) {
+    if (localStorage.instructions == null) {
+        localStorage.instructions = 'true';
+    }
+    updateDuration = localStorage.updateDuration != null ? localStorage.updateDuration : 60;
+    currentWeek = localStorage.currentWeek != null ? parseInt(localStorage.currentWeek) : 0;
+    if (createBackEvent) {
+        addBackEvent(['startDrawResults']);
+    }
     sessionStorage.currentPage = "drawResults";
     setActivePage();
     generateWeekSelector();
+    setActiveUpdateInterval();
     generateGames();
-    showDrawResultsContainer()
+    showDrawResultsContainer();
 }
 
 // Show draw/result container
 function showDrawResultsContainer() {
     hideAllContainers();
+    setInstructions('drawResults');
     $("#drawResultsContainer").show();
 }
 
 function toggleWeeks() {
-    $("#weeksList").toggle();
+    $("#weeksList").slideToggle();
 }
 
 function generateWeekSelector() {
     var startDate = new Date(startDateArray[0], startDateArray[1], startDateArray[2]);
     var endDate = new Date(startDateArray[0], startDateArray[1], startDateArray[2]).addDays(6);
     html = '';
-    
+
+    html += "<div id='autoUpdateButtonRow'>";
+    html += "    Auto Update: ";
+    html += "    <button id='au10' class='autoUpdateButton active' onclick='changeAutoUpdateInterval(10)'>10s</button>";
+    html += "    <button id='au30' class='autoUpdateButton' onclick='changeAutoUpdateInterval(30)'>30s</button>";
+    html += "    <button id='au60' class='autoUpdateButton' onclick='changeAutoUpdateInterval(60)'>1m</button>";
+    html += "    <button id='au300' class='autoUpdateButton' onclick='changeAutoUpdateInterval(300)'>5m</button>";
+    html += "    <button id='au900' class='autoUpdateButton' onclick='changeAutoUpdateInterval(900)'>15m</button>";
+    html += "    <button id='au100000' class='autoUpdateButton' onclick='changeAutoUpdateInterval(NEVER)'>Never</button>";
+    html += "</div>";
+
     html += "<div class='weektoggledisplay col-xs-47'>";
     html += "    <div onclick='toggleWeeks()' class='showweeks'>Show Weeks</div>";
     html += "        <nav id='weeksList' class='row'>";
     for (var a = 0; a < numWeeks; a += 1) {
-        html += "        <button onclick='changeWeeks(" + a + ")' class='weeknav week" + (a + 1) + " col-xs-12 col-sm-8 col-md-4'>";
+        html += "        <button onclick='changeWeeks(" + a + ", true)' class='weeknav week" + (a + 1) + " col-xs-12 col-sm-8 col-md-4'>";
         html += "            <div class='weektitle'>W" + (a + 1) + "</div>";
-        html += "            <div class='date'>" + startDate.toString() + " - " + endDate.toString() + "</div>";
+        html += "            <div class='date'>" + startDate.toString(false) + " - " + endDate.toString(false) + "</div>";
         html += "        </button>";
         startDate = startDate.addDays(7);
         endDate = endDate.addDays(7);
@@ -97,7 +342,7 @@ function generateWeekSelector() {
     html += "        </nav>";
     html += "    </div>";
     html += "</div>";
-    
+
     html += "<div class='row colourLegend'>";
     html += "    <div class='colour col-xs-24'>";
     html += "        <div class='blueSquare'></div>";
@@ -118,7 +363,7 @@ function generateWeekSelector() {
     html += "        <div class='colourLabel'>Game Finished</div>";
     html += "    </div>";
     html += "</div>";
-    
+
     $("#weekSelectorContainer").empty().append(html);
     setActiveWeek();
 }
@@ -126,43 +371,41 @@ function generateWeekSelector() {
 function generateGames() {
     html = '';
     var gameInDivisionThisWeekArray = [];
-    
-    var post = $.post('http://www.possumpam.com/rugby/phpscripts/getallgames.php', {}, 
-        function(response) {
+
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/getallgames.php', {},
+        function (response) {
             // put all games into array
-            allTeams = response[0];
-            allGames = response[1];
-        
-            var gamesInRow = 0;
+            allGames = response;
             var startOfWeek = new Date(startDateArray[0], startDateArray[1], startDateArray[2]).addDays(7 * currentWeek);
             var endOfWeek = new Date(startDateArray[0], startDateArray[1], startDateArray[2]).addDays(6 + 7 * currentWeek);
 
-            for (var b = 0; b < divTitles.length; b += 1) {
+            for (var b = 0; b < allDivs.length; b += 1) {
+                var gamesInRow = 0;
                 var gameInDivisionThisWeek = false;
-                html += "<div id='div" + divTitles[b][0] + "Row' class='row rowfix'>";
-                html += "    <div class='col-sm-48 divtitle' onclick='toggleGames(`div" + divTitles[b][0] + "`);'>";
-                html += "        <h3>" + divTitles[b][1] + "</h3>";
+                html += "<div id='div" + allDivs[b].divisionID + "Row' class='row rowfix'>";
+                html += "    <div class='col-sm-48 divtitle' onclick='toggleGames(`div" + allDivs[b].divisionID + "`);'>";
+                html += "        <h3>" + allDivs[b].divisionName + "</h3>";
                 html += "    </div><!-- End of divtitle div -->";
-                html += "    <div class='col-xs-48 gamerowcontainer div" + divTitles[b][0] + "'>";
+                html += "    <div class='col-xs-48 gamerowcontainer div" + allDivs[b].divisionID + "'>";
                 html += "        <div class='row gamerow'>";
 
                 for (var c = 0; c < allGames.length; c += 1) {
                     var gameID = allGames[c].GameID;
+                    var divID = parseInt(gameID.slice(-2));
                     var gameDateString = gameID.substr(0, 8);
                     var year = parseInt(gameDateString.substr(0, 4));
                     var month = parseInt(gameDateString.substr(4, 2)) - 1;
                     var day = parseInt(gameDateString.substr(6, 8));
                     var gameDateDate = new Date(year, month, day);
-                    if (gameDateDate <= endOfWeek && gameDateDate >= startOfWeek && gameID.slice(-2) == divTitles[b][0]) {
+                    if (gameDateDate <= endOfWeek && gameDateDate >= startOfWeek && gameID.slice(-2) == allDivs[b].divisionID) {
                         gameInDivisionThisWeek = true;
-                        if (gameID.length > 14) {
-                            var homeTeamID = parseInt(gameID.substr(8, 3));
-                            var awayTeamID = parseInt(gameID.substr(11, 3));
-                            for (var d = 0; d < allTeams.length; d += 1) {
-                                if (allTeams[d].teamID == homeTeamID.toString()) {
-                                    var homeTeamName = allTeams[d].teamName;
-                                } else if (allTeams[d].teamID == awayTeamID.toString()) {
-                                    var awayTeamName = allTeams[d].teamName;
+                        if (gameID.length == 16) {
+                            var teams = allTeams[divID];
+                            for (var k = 0; k < teams.length; k += 1) {
+                                if (parseInt(gameID.substr(8, 3)) == parseInt(teams[k].teamID)) {
+                                    var homeTeamName = teams[k].teamName;
+                                } else if (parseInt(gameID.substr(11, 3)) == parseInt(teams[k].teamID)) {
+                                    var awayTeamName = teams[k].teamName;
                                 }
                             }
                         } else {
@@ -173,7 +416,7 @@ function generateGames() {
                         var timeString = '';
                         var gameSituation = '';
                         if (allGames[c].minutesPlayed == 0) {
-                            timeString = gameDateDate.toString;
+                            timeString = gameDateDate.toString(true) + " " + allGames[c].time;
                             gameSituation = "notstarted";
                         } else if (allGames[c].minutesPlayed == 80) {
                             timeString = "Full Time";
@@ -251,24 +494,32 @@ function generateGames() {
                             }
                         }
 
-                        html += "            <div class='col-sm-15 game " + gameSituation + "' onclick='gameInfo(" + allGames[c].GameID + ");'>";
+                        html += "            <div class='col-sm-15 game " + gameSituation + "' onclick='gameInfo(" + allGames[c].GameID + ", true);'>";
                         html += "                <div class='row'>";
                         html += "                    <div class='col-xs-48 location'>" + allGames[c].location + " - " + timeString + "</div>";
                         html += "                </div>";
                         html += "                <div class='row'>";
                         html += "                    <div class='col-xs-48 refs'>" + refString + "</div>";
                         html += "                </div>";
-                        if (winningTeam == 'home') { html += "<strong>"; }
+                        if (winningTeam == 'home') {
+                            html += "<strong>";
+                        }
                         html += "                <div class='row teams hometeam'>";
                         html += "                    <div class='teamname col-xs-20 col-sm-33'>" + homeTeamName + "</div>";
                         html += "                    <div class='score col-xs-16 col-sm-15'>" + homeTeamScore + "</div>";
                         html += "                </div>";
-                        if (winningTeam == 'home') { html += "</strong>"; }
-                        if (winningTeam == 'away') { html += "<strong>"; }
+                        if (winningTeam == 'home') {
+                            html += "</strong>";
+                        }
+                        if (winningTeam == 'away') {
+                            html += "<strong>";
+                        }
                         html += "                <div class='row teams hometeam'>";
                         html += "                    <div class='teamname col-xs-20 col-sm-33'>" + awayTeamName + "</div>";
                         html += "                    <div class='score col-xs-16 col-sm-15'>" + awayTeamScore + "</div>";
-                        if (winningTeam == 'away') { html += "</strong>"; }
+                        if (winningTeam == 'away') {
+                            html += "</strong>";
+                        }
                         html += "                </div>";
                         html += "            </div><!-- End of game div -->";
 
@@ -284,29 +535,35 @@ function generateGames() {
                 html += "        </div><!-- End of gamerow div -->";
                 html += "    </div><!-- End of gamerowcontainer div -->";
                 html += "</div><!-- End of row div -->";
-                
+
                 if (gameInDivisionThisWeek == false) {
-                    gameInDivisionThisWeekArray.push(divTitles[b][0]);
+                    gameInDivisionThisWeekArray.push(allDivs[b].divisionID);
                 }
             }
 
             $("#gameContainer").empty().append(html);
-            
+
             for (var f = 0; f < gameInDivisionThisWeekArray.length; f += 1) {
                 $("#div" + gameInDivisionThisWeekArray[f] + "Row").hide();
             }
-            
+
+            restoreExpandedDivisions();
+            startAutoUpdateTimer();
             setActiveWeek();
-        }, 
-    'json');
-    
-    post.fail(function() {
+        },
+        'json');
+
+    post.fail(function () {
         alert("Error while displaying games. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
     })
 }
 
-function changeWeeks(week) {
+function changeWeeks(week, createBackEvent) {
+    if (createBackEvent) {
+        addBackEvent(['weekChange', parseInt(currentWeek.toString())]);
+    }
     currentWeek = week;
+    localStorage.currentWeek = currentWeek;
     generateGames();
 }
 
@@ -315,19 +572,62 @@ function setActiveWeek() {
     $(".week".concat(currentWeek + 1)).addClass("active");
 }
 
-// Show/hide the games for the division that the user clicked on
-function toggleGames(divID) {
-    $(".".concat(divID)).toggle();
+function setActiveUpdateInterval() {
+    $(".autoUpdateButton.active").removeClass("active");
+    $("#au".concat(updateDuration)).addClass("active");
 }
 
-Date.prototype.addDays = function(days) {
+function restoreExpandedDivisions() {
+    for (var q = 0; q < expandedDivisions.length; q += 1) {
+        $("." + expandedDivisions[q]).show();
+    }
+}
+
+// Show/hide the games for the division that the user clicked on
+function toggleGames(divID) {
+    $(".".concat(divID)).slideToggle();
+    var index = expandedDivisions.indexOf(divID);
+    if (index == -1) {
+        expandedDivisions.push(divID);
+    } else {
+        expandedDivisions.splice(index, 1);
+    }
+}
+
+function startAutoUpdateTimer() {
+    stopAutoUpdateTimer();
+    autoUpdateTimer = setTimeout(generateGames, updateDuration * 1000);
+}
+
+function changeAutoUpdateInterval(interval) {
+    if (interval == NEVER) {
+        updateDuration = NEVER;
+        stopAutoUpdateTimer();
+    } else {
+        updateDuration = interval;
+        startAutoUpdateTimer();
+    }
+    localStorage.updateDuration = updateDuration;
+    setActiveUpdateInterval();
+}
+
+function stopAutoUpdateTimer() {
+    clearTimeout(autoUpdateTimer);
+}
+
+Date.prototype.addDays = function (days) {
     this.setDate(this.getDate() + parseInt(days));
     return this;
 };
 
-Date.prototype.toString = function() {
-    var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    return this.getDate() + " " + months[this.getMonth()];
+Date.prototype.toString = function (dayOfWeek) {
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    var dayOfGame = '';
+    if (dayOfWeek) {
+        dayOfGame = daysOfWeek[this.getDay()];
+    }
+    return dayOfGame + " " + this.getDate() + " " + months[this.getMonth()];
 };
 
 /* 
@@ -336,24 +636,29 @@ Date.prototype.toString = function() {
 --------------------------------------------------------------------------
 */
 
-function gameInfo(gameID) {
+function gameInfo(gameID, backEvent) {
+    changeAutoUpdateInterval(NEVER);
+    if (backEvent) {
+        addBackEvent(['startGameInfo', String(parseInt(gameID))]);
+    }
     sessionStorage.currentPage = "gameInfo";
     sessionStorage.currentGameID = gameID;
-    hideAllContainers();
     generateGameInfo();
     showGameInfoContainer();
 }
 
 function showGameInfoContainer() {
+    hideAllContainers();
     $("#gameInfoContainer").show();
 }
 
 function generateGameInfo() {
     var gameID = sessionStorage.currentGameID;
     html = '';
-    
-    var post = $.post('http://www.possumpam.com/rugby/phpscripts/getgameinfo.php', 
-        { gameID: gameID }, 
+
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/getgameinfo.php', {
+            gameID: gameID
+        },
         function (response) {
             var homeScore = '';
             var awayScore = '';
@@ -392,10 +697,10 @@ function generateGameInfo() {
             // If game has had any updates (minutesPlayed == 0) then display when the game is/was to be played
             var minutesOrTime = '';
             if (response[0].minutesPlayed == '0') {
-                minutesOrTime = gameDateDate.toString() + " " + response[0].time;
-            } else if(response[0].minutesPlayed == '80') {
+                minutesOrTime = gameDateDate.toString(true) + " " + response[0].time;
+            } else if (response[0].minutesPlayed == '80') {
                 minutesOrTime = 'Full Time';
-            } else if(response[0].minutesPlayed == '40') {
+            } else if (response[0].minutesPlayed == '40') {
                 minutesOrTime = 'Half Time';
             } else {
                 minutesOrTime = response[0].minutesPlayed + " mins";
@@ -422,8 +727,8 @@ function generateGameInfo() {
                 var scoringPlay = scoringPlayInfo[1];
                 var team = scoringPlay.substr(0, 4);
                 var play = scoringPlay.substr(4);
-                if (play == 'DropGoal') { 
-                    play = 'Drop Goal'; 
+                if (play == 'DropGoal') {
+                    play = 'Drop Goal';
                 }
 
                 if (play == 'Time') {
@@ -473,17 +778,26 @@ function generateGameInfo() {
                     var team = scoringPlay.substr(0, 4);
                     switch (play) {
                         case "Try":
-                            if (team == "home") { homeScoreCurrent = homeScoreCurrent + 5; }
-                            else { awayScoreCurrent = awayScoreCurrent + 5; }
+                            if (team == "home") {
+                                homeScoreCurrent = homeScoreCurrent + 5;
+                            } else {
+                                awayScoreCurrent = awayScoreCurrent + 5;
+                            }
                             break;
                         case "Penalty":
                         case "Drop Goal":
-                            if (team == "home") { homeScoreCurrent = homeScoreCurrent + 3; }
-                            else { awayScoreCurrent = awayScoreCurrent + 3; }
+                            if (team == "home") {
+                                homeScoreCurrent = homeScoreCurrent + 3;
+                            } else {
+                                awayScoreCurrent = awayScoreCurrent + 3;
+                            }
                             break;
                         case "Conversion":
-                            if (team == "home") { homeScoreCurrent = homeScoreCurrent + 2; }
-                            else { awayScoreCurrent = awayScoreCurrent + 2; }
+                            if (team == "home") {
+                                homeScoreCurrent = homeScoreCurrent + 2;
+                            } else {
+                                awayScoreCurrent = awayScoreCurrent + 2;
+                            }
                             break;
                     }
                     // If the home team scored, then output play into first div (left). If away team scored, output 
@@ -491,10 +805,14 @@ function generateGameInfo() {
                     // in the second div (center) in format "HH - AA (MM')"
                     html += "<div class='row scoringPlay rowfix'>\n";
                     html += "\t<div class='col-xs-20 homeScoringPlay'>";
-                    if (team == 'home') { html += play; }
+                    if (team == 'home') {
+                        html += play;
+                    }
                     html += "</div>\n\t<div class='col-xs-8 minutesPlayed'>" + homeScoreCurrent + " - " + awayScoreCurrent + " (" + scoringPlayInfo[0] + "')</div>\n";
                     html += "\t<div class='col-xs-20 awayScoringPlay'>";
-                    if (team == 'away') { html += play; }
+                    if (team == 'away') {
+                        html += play;
+                    }
                     html += "</div>\n";
                     // The second row displays the description for the scoring play if given
                     html += "\t<div class='col-xs-48'>" + scoringPlayInfo[2] + "</div>\n";
@@ -504,12 +822,12 @@ function generateGameInfo() {
             }
             // close scoringplays div from just before "for" loop
             html += "</div>\n\n";
-        
+
             $("#gameInfoContainer").empty().append(html);
-        }, 
-    'json');
-    
-    post.fail(function() {
+        },
+        'json');
+
+    post.fail(function () {
         alert("Error while getting game info. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
     });
 }
@@ -520,16 +838,23 @@ function generateGameInfo() {
 --------------------------------------------------------------------------
 */
 
-var teamList = [];
 var selectedDivisionIndex = 0;
 var selectedScoringPlay = "";
 var selectedTeam = "";
 var selectedPlays = [];
 
-function liveScoring() {
+function liveScoring(createBackEvent) {
+    changeAutoUpdateInterval(NEVER);
     if (sessionStorage.liveScoringPassword == "correct") {
-        getTeamList();
+        setActivePage();
+        if (sessionStorage.currentPage == "liveScoring") {
+            generateLiveScoring();
+        } else {
+            generateGameSelection();
+        }
     } else {
+        sessionStorage.currentPage = 'gameSelection';
+        setActivePage();
         showLiveScoringPasswordContainer();
     }
 }
@@ -537,6 +862,7 @@ function liveScoring() {
 // Shows password div
 function showLiveScoringPasswordContainer() {
     hideAllContainers();
+    setInstructions('liveScoringPassword');
     $("#liveScoringPasswordContainer").show();
 }
 
@@ -544,9 +870,11 @@ function showLiveScoringPasswordContainer() {
 function checkLiveScoringPassword() {
     var passwordInput = $("#liveScoringPasswordInput").val();
     $.post(
-        'http://www.possumpam.com/rugby/phpscripts/checkpassword.php', 
-        { page: 'liveScoring', password: passwordInput }, 
-        function(response) { 
+        'http://ccrscoring.co.nz/phpscripts/checkpassword.php', {
+            page: 'liveScoring',
+            password: passwordInput
+        },
+        function (response) {
             if (response == 'correct') {
                 // Correct password. Hide password and generate team lists
                 sessionStorage.liveScoringPassword = "correct";
@@ -561,150 +889,125 @@ function checkLiveScoringPassword() {
                 // Error
                 alert("Error: " + response + ". Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
             }
-        }).fail(function() {
-            alert("Error while checking password. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
-        })
+        }).fail(function () {
+        alert("Error while checking password. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+    })
 }
 
 // Show game editor container
 function showGameSelectionContainer() {
     hideAllContainers();
+    setInstructions('gameSelection');
     $("#gameSelectionContainer").show();
 }
 
 function showLiveScoringContainer() {
     hideAllContainers();
-    $("#liveScoringContainer").show();   
+    setInstructions('liveScoring');
+    $("#liveScoringContainer").show();
 }
 
 function toggleChangeScoreForm() {
     $(".changeScoreForm").toggle();
 }
 
-function getTeamList() {
-    for (var o = 0; o < divTitles.length; o += 1) {
-        teamList.push([]);
-    }
-    var post = $.post('http://www.possumpam.com/rugby/phpscripts/getallteams.php', {}, 
-        function(response) {
-            for (var p = 0; p < response.length; p += 1) {
-                teamList[parseInt(response[p].division)].push([response[p].teamID, response[p].teamName]);
-            }
-            setActivePage();
-            if (sessionStorage.currentPage == "liveScoring") {
-                generateLiveScoring();
-            } else {
-                generateGameSelection();
-            }
-        }, 
-    'json');
-    
-    post.fail(function() {
-        alert("Error while getting team list. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
-    })
-}
-
 function generateGameSelection() {
     var html = '';
-    
+
     html += "<div class='row divDropDownRow rowfix'>";
     html += "    Division:";
     html += "    <select id='teamSelectionDivisionDropDown' onchange='changeTeamDropdowns()'>";
-    for (var h = 0; h < divTitles.length; h += 1) {
-        html += "<option value=" + divTitles[h][0] + ">" + divTitles[h][1] + "</option>";
+    for (var h = 0; h < allDivs.length; h += 1) {
+        html += "<option value=" + allDivs[h].divisionID + ">" + allDivs[h].divisionName + "</option>";
     }
     html += "    </select>";
     html += "</div>";
-    
+
     html += "<div class='row homeTeamRow rowfix'>";
     html += "    Home Team: <select id='teamSelectionHomeTeamDropDown'>";
-    for (var r = 0; r < teamList[selectedDivisionIndex].length; r += 1) {
-        html += "    <option value='" + teamList[selectedDivisionIndex][r][0] + "'>" + teamList[selectedDivisionIndex][r][1] + "</option>";
+    for (var r = 0; r < allTeams[selectedDivisionIndex].length; r += 1) {
+        html += "    <option value='" + allTeams[selectedDivisionIndex][r].teamID + "'>" + allTeams[selectedDivisionIndex][r].teamName + "</option>";
     }
     html += "    </select>";
     html += "</div>";
-    
+
     html += "<div class='row awayTeamRow rowfix'>";
     html += "    Away Team: <select id='teamSelectionAwayTeamDropDown'>";
-    for (var s = 0; s < teamList[selectedDivisionIndex].length; s += 1) {
-        html += "    <option value='" + teamList[selectedDivisionIndex][s][0] + "'>" + teamList[selectedDivisionIndex][s][1] + "</option>";
+    for (var s = 0; s < allTeams[selectedDivisionIndex].length; s += 1) {
+        html += "    <option value='" + allTeams[selectedDivisionIndex][s].teamID + "'>" + allTeams[selectedDivisionIndex][s].teamName + "</option>";
     }
     html += "    </select>";
     html += "</div>";
-    
+
     html += "<div class='row selectGameButtonRow'>";
     html += "    <div class='col-xs-48'><button class='selectGameButton' onClick='selectGame()'>Select Game</button></div>";
     html += "</div>";
-    
+
     $("#gameSelectionContainer").empty().append(html);
+    $("#teamSelectionDivisionDropDown").prop('selectedIndex', selectedDivisionIndex);
     showGameSelectionContainer();
+    addBackEvent(['startGameSelection']);
     sessionStorage.currentPage = "gameSelection";
+    setActivePage();
 }
 
-function changeTeamDropDowns() {
+function changeTeamDropdowns() {
     selectedDivisionIndex = $("#teamSelectionDivisionDropDown").prop('selectedIndex');
     generateGameSelection();
 }
 
 function selectGame() {
     var today = new Date();
-    var dd = today.getDate().toString().length == 1 ? '0' + today.getDate() : today.getDate().toString();
-    var mm = (today.getMonth() + 1).toString().length == 1 ? '0' + (today.getMonth() + 1) : (today.getMonth() + 1).toString(); //January is 0!
+    var dd = pad(today.getDate(), 2);
+    var mm = pad(today.getMonth() + 1, 2); //January is 0!
     var yyyy = today.getFullYear().toString();
     var date = yyyy + mm + dd;
 
     var division = $("#teamSelectionDivisionDropDown").val();
-    
+
     var homeText = $("#teamSelectionHomeTeamDropDown option:selected").text();
     var homeVal = $("#teamSelectionHomeTeamDropDown").val();
-    if (homeVal.length == 1) {
-        var homeTeamID = '00' + homeVal;
-    } else if (homeVal.length == 2) {
-        var homeTeamID = '0' + homeVal;
-    } else {
-        var homeTeamID = '' + homeVal;
-    }
-    
+    var homeTeamID = pad(homeVal, 3);
+
     var awayText = $("#teamSelectionAwayTeamDropDown option:selected").text();
     var awayVal = $("#teamSelectionAwayTeamDropDown").val();
-    if (awayVal.length == 1) {
-        var awayTeamID = '00' + awayVal;
-    } else if (awayVal.length == 2) {
-        var awayTeamID = '0' + awayVal;
-    } else {
-        var awayTeamID = '' + awayVal;
-    }
-    
+    var awayTeamID = pad(awayVal, 3);
+
     var gameID = date + homeTeamID + awayTeamID + division;
     if (homeText == awayText) {
         alert("Please change one of the teams as they can't play themselves");
     } else if (gameID.length == 16) {
         sessionStorage.currentGameID = gameID;
-        checkGame(homeText, awayText);
+        checkGameLive(homeText, awayText);
     } else if (gameID.length == 8) {
         alert("Please enter a date for the game");
     } else {
-        alert ("Error while creating gameID. Please send me an email (cfd19@hotmail.co.nz) informing me of this error")
+        alert("Error while creating gameID. Please send me an email (cfd19@hotmail.co.nz) informing me of this error")
     }
 }
 
-function checkGame(homeTeam, awayTeam) {
+function checkGameLive(homeTeam, awayTeam) {
     var gameID = sessionStorage.currentGameID;
-    
-    var post = $.post('http://www.possumpam.com/rugby/phpscripts/checkgame.php', 
-        { gameID: gameID, homeTeam: homeTeam, awayTeam: awayTeam }, 
-        function(response) {
+
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/checkgame.php', {
+            gameID: gameID,
+            homeTeam: homeTeam,
+            awayTeam: awayTeam
+        },
+        function (response) {
             if (response == 'success') {
                 generateLiveScoring(homeTeam, awayTeam);
             } else if (response == 'beingscored') {
                 alert("This game is already being live scored. Please try again later or select another game.");
+            } else if (response == 'locked') {
+                alert("This game is locked so can\'t be updated. If you think the score is wrong then use the contact form to send me a message.");
             } else {
                 // Error
                 alert("Error: " + response + ". Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
             }
         });
-    
-    post.fail(function() {
+
+    post.fail(function () {
         alert("Error while checking game status. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
     })
 }
@@ -712,31 +1015,32 @@ function checkGame(homeTeam, awayTeam) {
 function generateLiveScoring(homeTeam, awayTeam) {
     var html = '';
     var gameID = sessionStorage.currentGameID;
-    var post = $.post('http://www.possumpam.com/rugby/phpscripts/getgameinfo.php', 
-        { gameID: gameID }, 
-        function(response) {
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/getgameinfo.php', {
+            gameID: gameID
+        },
+        function (response) {
             // Every minute the user is live scoring a game, the current time is uploaded to the server.
             // A cron task then checks all the games every 5 minutes. If the last time scored is more than 5 minutes
             // old then the liveScored attribute is changed to 'n'.
             setInterval(updateLastTimeScored, 60000);
 
-            if (gameID.length > 14) {
+            if (gameID.length == 16) {
                 var divID = parseInt(gameID.slice(-2));
-                for (var k = 0; k < teamList[divID].length; k += 1) {
-                    var idFromArray = teamList[divID][k][0];
+                for (var k = 0; k < allTeams[divID].length; k += 1) {
+                    var idFromArray = allTeams[divID][k].teamID;
                     var homeTeamID = '' + parseInt(gameID.substr(8, 3));
                     var awayTeamID = '' + parseInt(gameID.substr(11, 3));
                     if (homeTeamID == idFromArray) {
-                        var homeTeamName = teamList[divID][k][1];
+                        var homeTeamName = allTeams[divID][k].teamName;
                     } else if (awayTeamID == idFromArray) {
-                        var awayTeamName = teamList[divID][k][1];
+                        var awayTeamName = allTeams[divID][k].teamName;
                     }
                 }
             } else {
                 var homeTeamName = response[0].homeTeamName;
                 var awayTeamName = response[0].awayTeamName;
             }
-        
+
             var homeTeamScore = response[0].homeTeamScore;
             var awayTeamScore = response[0].awayTeamScore;
 
@@ -770,10 +1074,10 @@ function generateLiveScoring(homeTeam, awayTeam) {
 
             // The half and full time buttons are next. Clickingeither will call methods to upload the half or full time play
             html += "<div class='row rowfix timingInfoLive'>";
-            html += "    <button type='button' class='halftime col-xs-23' onclick='sendHalfTime(" + gameID + "," + 
-                          homeTeamScore + ","  + awayTeamScore + ")'>Half Time</button>";
-            html += "    <button type='button' class='fulltime col-xs-23' onclick='sendFullTime(" + gameID + "," + 
-                          homeTeamScore + "," + awayTeamScore + ")'>Full Time</button>";
+            html += "    <button type='button' class='halftime col-xs-23' onclick='sendHalfTime(" + gameID + "," +
+                homeTeamScore + "," + awayTeamScore + ")'>Half Time</button>";
+            html += "    <button type='button' class='fulltime col-xs-23' onclick='sendFullTime(" + gameID + "," +
+                homeTeamScore + "," + awayTeamScore + ")'>Full Time</button>";
             html += "</div>\n\n";
 
             // If the score is 2-1 or 1-2 then the team with 1 defaulted
@@ -833,7 +1137,7 @@ function generateLiveScoring(homeTeam, awayTeam) {
             // Next is a list of the previously uploaded plays for this game
             html += "<div class='row scoringPlays rowfix'>\n\n";
             // Decode the json into an array
-            var allScoringPlays =  JSON && JSON.parse(response[0].scoringPlays) || $.parseJSON(response[0].scoringPlays);
+            var allScoringPlays = JSON && JSON.parse(response[0].scoringPlays) || $.parseJSON(response[0].scoringPlays);
             var homeScoreCurrent = 0;
             var awayScoreCurrent = 0;
             var updatePlayIndexes = '';
@@ -850,8 +1154,8 @@ function generateLiveScoring(homeTeam, awayTeam) {
                 var scoringPlay = scoringPlayInfo[1];
                 var team = scoringPlay.substr(0, 4);
                 var play = scoringPlay.substr(4);
-                if (play == 'DropGoal') { 
-                    play = 'Drop Goal'; 
+                if (play == 'DropGoal') {
+                    play = 'Drop Goal';
                 }
 
                 if (play == 'Time') {
@@ -903,17 +1207,26 @@ function generateLiveScoring(homeTeam, awayTeam) {
                     team = scoringPlay.substr(0, 4);
                     switch (play) {
                         case "Try":
-                            if (team == "home") { homeScoreCurrent = homeScoreCurrent + 5; }
-                            else { awayScoreCurrent = awayScoreCurrent + 5; }
+                            if (team == "home") {
+                                homeScoreCurrent = homeScoreCurrent + 5;
+                            } else {
+                                awayScoreCurrent = awayScoreCurrent + 5;
+                            }
                             break;
                         case "Penalty":
                         case "Drop Goal":
-                            if (team == "home") { homeScoreCurrent = homeScoreCurrent + 3; }
-                            else { awayScoreCurrent = awayScoreCurrent + 3; }
+                            if (team == "home") {
+                                homeScoreCurrent = homeScoreCurrent + 3;
+                            } else {
+                                awayScoreCurrent = awayScoreCurrent + 3;
+                            }
                             break;
                         case "Conversion":
-                            if (team == "home") { homeScoreCurrent = homeScoreCurrent + 2; }
-                            else { awayScoreCurrent = awayScoreCurrent + 2; }
+                            if (team == "home") {
+                                homeScoreCurrent = homeScoreCurrent + 2;
+                            } else {
+                                awayScoreCurrent = awayScoreCurrent + 2;
+                            }
                             break;
                     }
                     // If the home team scored, then output play into first div (left). If away team scored, output 
@@ -921,10 +1234,14 @@ function generateLiveScoring(homeTeam, awayTeam) {
                     // in the second div (center) in format "HH - AA (MM')"
                     html += "<div class='row scoringPlay rowfix' onclick='togglePlayInSelectedPlays(this, `" + gameID + "`, " + j + ", `" + scoringPlay.substr(0, 4) + "`, `" + scoringPlay.substr(4) + "`, " + parseInt(homeTeamScore) + ", " + parseInt(awayTeamScore) + ", 0, 0)'>\n";
                     html += "\t<div class='col-sm-20 col-xs-15 homeScoringPlay'>";
-                    if (team == 'home') { html += play; }
+                    if (team == 'home') {
+                        html += play;
+                    }
                     html += "</div>\n\t<div class='col-sm-8 col-xs-18 minutesPlayed'>" + homeScoreCurrent + " - " + awayScoreCurrent + " (" + scoringPlayInfo[0] + "')</div>\n";
                     html += "\t<div class='col-sm-20 col-xs-15 awayScoringPlay'>";
-                    if (team == 'away') { html += play; }
+                    if (team == 'away') {
+                        html += play;
+                    }
                     html += "</div>\n";
                     // The second row displays the description for the scoring play if given
                     html += "\t<div class='col-xs-48'>" + scoringPlayInfo[2] + "</div>\n";
@@ -935,38 +1252,41 @@ function generateLiveScoring(homeTeam, awayTeam) {
             // close scoringplays div from just before "for" loop
             html += "</div>\n\n";
             html += "<span id='updatePlayIndexes' style='display: none'>" + updatePlayIndexes + "</span>";
-        
+
             $("#liveScoringContainer").empty().append(html);
             showLiveScoringContainer();
             sessionStorage.currentPage = "liveScoring";
+            addBackEvent(['startLiveScoring']);
         }, 'json');
 
-    post.fail(function() {
+    post.fail(function () {
         alert("Error while adding game. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
     })
 }
 
 function updateLastTimeScored() {
-    var post = $.post('http://www.possumpam.com/rugby/phpscripts/updatelasttimescored.php', 
-        { gameID: sessionStorage.currentGameID }, 
-        function(response) {
-            
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/updatelasttimescored.php', {
+            gameID: sessionStorage.currentGameID
+        },
+        function (response) {
+
         });
 }
 
 function stopScoring(gameID) {
-    var post = $.post('http://www.possumpam.com/rugby/phpscripts/stopscoring.php', 
-        { gameID: sessionStorage.currentGameID }, 
-        function(response) {
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/stopscoring.php', {
+            gameID: sessionStorage.currentGameID
+        },
+        function (response) {
             // go back to game selection
-            if (response != 'success') { 
+            if (response != 'success') {
                 // Error
                 alert("Error: " + response + ". Please send me an email (cfd19@hotmail.co.nz) informing me of this.");
             }
             generateGameSelection();
         });
-    
-    post.fail(function() {
+
+    post.fail(function () {
         alert("Error while logging out. Please send me an email (cfd19@hotmail.co.nz) informing me of this.");
         generateGameSelection();
     })
@@ -978,30 +1298,19 @@ function changeScore(gameID) {
     var minutesPlayed = $('#newminutesplayed').val();
     var result = areInputsValidChange(homeScore, awayScore, minutesPlayed);
     if (result[0]) {
-        if (homeScore.length == 1) {
-            homeScore = '00' + homeScore
-        } else if (homeScore.length == 2) {
-            homeScore = '0' + homeScore
-        }
-        
-        if (awayScore.length == 1) {
-            awayScore = '00' + awayScore
-        } else if (awayScore.length == 2) {
-            awayScore = '0' + awayScore
-        }
-        var scoringPlay = 'updt' + homeScore + awayScore;
-        uploadPlay(gameID, homeScore, awayScore, minutesPlayed, scoringPlay, '');
+        var scoringPlay = 'updt' + pad(homeScore, 3) + pad(awayScore, 3);
+        uploadPlayLive(gameID, homeScore, awayScore, minutesPlayed, scoringPlay, '');
     } else {
         alert(result[1]);
     }
 }
 
 function sendHalfTime(gameID, homeScore, awayScore) {
-    uploadPlay(gameID, homeScore, awayScore, '40', 'halfTime', '');
+    uploadPlayLive(gameID, homeScore, awayScore, '40', 'halfTime', '', 'n');
 }
 
 function sendFullTime(gameID, homeScore, awayScore) {
-    uploadPlay(gameID, homeScore, awayScore, '80', 'fullTime', '');
+    uploadPlayLive(gameID, homeScore, awayScore, '80', 'fullTime', '', 'y');
 }
 
 function uploadScoringPlay(gameID, homeScore, awayScore) {
@@ -1014,40 +1323,57 @@ function uploadScoringPlay(gameID, homeScore, awayScore) {
         // Change the current score based on the play and team passed in
         switch (play) {
             case "Try":
-                if (team == "home") { homeScore += 5; }
-                else { awayScore += 5; }
+                if (team == "home") {
+                    homeScore += 5;
+                } else {
+                    awayScore += 5;
+                }
                 break;
             case "Penalty":
             case "DropGoal":
-                if (team == "home") { homeScore += 3; }
-                else { awayScore += 3; }
+                if (team == "home") {
+                    homeScore += 3;
+                } else {
+                    awayScore += 3;
+                }
                 break;
             case "Conversion":
-                if (team == "home") { homeScore += 2; }
-                else { awayScore += 2; }
+                if (team == "home") {
+                    homeScore += 2;
+                } else {
+                    awayScore += 2;
+                }
                 break;
         }
         var scoringPlay = team + play;
-        uploadPlay(gameID, homeScore, awayScore, minutesPlayed, scoringPlay, description);
+        uploadPlayLive(gameID, homeScore, awayScore, minutesPlayed, scoringPlay, description, 'n');
     } else {
         alert(result[1]);
     }
 }
 
-function uploadPlay(gameID, homeScore, awayScore, minutesPlayed, scoringPlay, description) {
-    var post = $.post('http://www.possumpam.com/rugby/phpscripts/uploadplay.php', 
-        { gameID: sessionStorage.currentGameID, homeScore: homeScore, awayScore: awayScore, 
-          minutesPlayed: minutesPlayed, scoringPlay: scoringPlay, description: description }, 
-        function(response) {
-            if (response == 'success') {
-                generateLiveScoring('', '');
-            } else {
-                // Error
-                alert("Error: " + response + ". Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
-            }
-        });
-    
-    post.fail(function() {
+function uploadPlayLive(gameID, homeScore, awayScore, minutesPlayed, scoringPlay, description, locked) {
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/uploadplay.php', {
+        gameID: gameID,
+        homeScore: homeScore,
+        awayScore: awayScore,
+        minutesPlayed: minutesPlayed,
+        scoringPlay: scoringPlay,
+        description: description,
+        locked: locked
+    },
+    function (response) {
+        if (response == 'success') {
+            generateLiveScoring('', '');
+        } else if (response == 'locked') {
+            alert("This game is locked so can\'t be updated. If you think the score is wrong then use the contact form to send me a message.");
+        } else {
+            // Error
+            alert("Error: " + response + ". Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+        }
+    });
+
+    post.fail(function () {
         alert("Error while uploading play. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
     })
 }
@@ -1077,20 +1403,20 @@ function areInputsValidUpload(team, play, minutesPlayed) {
     if (team == "") {
         message += "Please select a team\n";
         valid = false;
-    } 
-    
+    }
+
     if (play == "") {
         message += "Please select a play\n";
         valid = false;
     }
-    
+
     // Tests if minutesPlayed is not an integer
-    if (isNaN(minutesPlayed) || !(parseInt(Number(minutesPlayed)) == minutesPlayed) || 
+    if (isNaN(minutesPlayed) || !(parseInt(Number(minutesPlayed)) == minutesPlayed) ||
         isNaN(parseInt(minutesPlayed, 10)) || parseInt(minutesPlayed) < 0 || parseInt(minutesPlayed) > 120) {
         message += "Please enter a valid minutes played (min: 0, max: 120, no decimal)\n";
         valid = false;
     }
-    
+
     return [valid, message];
 }
 
@@ -1098,60 +1424,25 @@ function areInputsValidUpload(team, play, minutesPlayed) {
 function areInputsValidChange(homeScore, awayScore, minutesPlayed) {
     var message = "";
     var valid = true;
-    if (isNaN(homeScore) || !(parseInt(Number(homeScore)) == homeScore) || 
+    if (isNaN(homeScore) || !(parseInt(Number(homeScore)) == homeScore) ||
         isNaN(parseInt(homeScore, 10)) || parseInt(homeScore) < 0 || parseInt(homeScore) > 200) {
         message += "Please enter a valid home score\n";
         valid = false;
-    } 
-    
-    if (isNaN(awayScore) || !(parseInt(Number(awayScore)) == awayScore) || 
+    }
+
+    if (isNaN(awayScore) || !(parseInt(Number(awayScore)) == awayScore) ||
         isNaN(parseInt(awayScore, 10)) || parseInt(awayScore) < 0 || parseInt(awayScore) > 200) {
         message += "Please enter a valid away score\n";
         valid = false;
     }
-    
+
     // Tests if minutesPlayed is not an integer
-    if (isNaN(minutesPlayed) || !(parseInt(Number(minutesPlayed)) == minutesPlayed) || 
+    if (isNaN(minutesPlayed) || !(parseInt(Number(minutesPlayed)) == minutesPlayed) ||
         isNaN(parseInt(minutesPlayed, 10)) || parseInt(minutesPlayed) < 0 || parseInt(minutesPlayed) > 120) {
         message += "Please enter a valid minutes played (min: 0, max: 120, no decimal)\n";
         valid = false;
     }
-    
-    return [valid, message];
-}
 
-// Checks if input are valid when submitting end game score
-function areInputsValidEnd(homeValue, awayValue, homeCheckbox, awayCheckbox, homeScore, awayScore, date) {
-    var message = "";
-    var valid = true;
-    
-    if (homeValue == awayValue) {
-        message += "Teams can't play themselves. Change one of the teams\n";
-        valid = false;
-    }
-    
-    if (homeCheckbox && awayCheckbox) {
-        message += "Both teams can't default. Uncheck one of the checkboxes\n";
-        valid = false;
-    }
-    
-    if (!(homeCheckbox || awayCheckbox) && (isNaN(homeScore) || !(parseInt(Number(homeScore)) == homeScore) || 
-        isNaN(parseInt(homeScore, 10)) || parseInt(homeScore) < 0 || parseInt(homeScore) > 200)) {
-        message += "Please enter a valid home score\n";
-        valid = false;
-    } 
-    
-    if (!(homeCheckbox || awayCheckbox) && (isNaN(awayScore) || !(parseInt(Number(awayScore)) == awayScore) || 
-        isNaN(parseInt(awayScore, 10)) || parseInt(awayScore) < 0 || parseInt(awayScore) > 200)) {
-        message += "Please enter a valid away score\n";
-        valid = false;
-    }
-    
-    if (date == "") {
-        message += "Please enter a date\n";
-        valid = false;
-    }
-    
     return [valid, message];
 }
 
@@ -1164,7 +1455,7 @@ function togglePlayInSelectedPlays(elem, gameID, index, team, play, homeScore, a
             playInArray = k;
         }
     }
-    
+
     if (playInArray == -1) {
         // Add play to selectedPlays if not already in array
         if (team == 'updt') {
@@ -1182,19 +1473,19 @@ function togglePlayInSelectedPlays(elem, gameID, index, team, play, homeScore, a
         // remove background colour to show play not selected anymore
         elem.style.backgroundColor = 'transparent';
     }
-    
+
     // Sort array in descending index order
-    selectedPlays.sort(function(a,b) { 
-        return parseInt(b[1]) - parseInt(a[1]); 
+    selectedPlays.sort(function (a, b) {
+        return parseInt(b[1]) - parseInt(a[1]);
     });
-    
+
     // Show delete button if there is at least 1 play selected, otherwise hide it
     if (selectedPlays.length > 0) {
         $(".deletePlayButtonRow").show();
     } else {
         $(".deletePlayButtonRow").hide();
     }
-    
+
     // Debug problems with adding games to selectedPlays array
     //alert(selectedPlays.join('\n'));
 }
@@ -1213,8 +1504,12 @@ function deleteSelectedPlays() {
         // Get scoring play to be deleted
         var p = selectedPlays[i];
         // On the first pass through set the current scores and gameID
-        if (i == 0) { currentscores[0] = p[4]; currentscores[1] = p[5]; gameID = p[0]; }
-        
+        if (i == 0) {
+            currentscores[0] = p[4];
+            currentscores[1] = p[5];
+            gameID = p[0];
+        }
+
         // Check whether the score should be changed. The score shouldn't be changed 
         // if there was an update play uploaded after the one being deleted
         if (shouldScoreBeChanged(p[1])) {
@@ -1229,28 +1524,30 @@ function deleteSelectedPlays() {
         } else {
             string += "i=" + i + ", index=" + p[1] + ", Score Not Changed\n";
         }
-            
-        // Send info to deleteScoringPlay php script
-        $.ajax({
-            data: 'gameID=' + p[0] + '&index=' + p[1] + '&homeScore=' + currentscores[0] + '&awayScore=' + currentscores[1],
-            url: 'http://www.possumpam.com/rugby/phpscripts/deletescoringplay.php',
-            method: 'GET',
-            complete: function() { 
-                playsDeleted += 1; 
-                //alert("plays deleted: " + playsDeleted);
-                if (playsDeleted == selectedPlays.length) {
-                    // Empty selected plays array
-                    selectedPlays.length = 0;
 
-                    //alert(string);
-                    // Reload page
-                    generateLiveScoring('', '');
-                } 
+        var post = $.post('http://ccrscoring.co.nz/phpscripts/deletescoringplay.php', {
+                gameID: p[0],
+                index: p[1],
+                homeScore: currentscores[0],
+                awayScore: currentscores[1]
             },
-            error: function(xhr, status, error) {
-                //var err = eval("(" + xhr.responseText + ")");
-                //alert(err.Message + "\n" + status + "\n" + error);
-            }
+            function (response) {
+                if (response == 'success') {
+                    playsDeleted += 1;
+                    if (playsDeleted == selectedPlays.length) {
+                        // Empty selected plays array
+                        selectedPlays.length = 0;
+
+                        // Reload page
+                        generateLiveScoring('', '');
+                    }
+                } else {
+                    alert('Error. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)');
+                }
+            });
+
+        post.fail(function (request, textStatus, errorThrown) {
+            alert("Error while deleting games. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
         });
     }
 }
@@ -1273,7 +1570,7 @@ function shouldScoreBeChanged(index) {
             document.getElementById('updatePlayIndexes').textContent = split.join(",");
         }
     }
-    
+
     // If none of the update play indexes are higher than the index of the play being deleted then return true.
     return true;
 }
@@ -1313,15 +1610,315 @@ function calcScoresUpdate(team, play, homeScore, awayScore, oldHomeScore, oldAwa
     // The update play length was increased to handle scores above 99 so it 6 characters long (XXXYYY e.g. 145005 for 145-5) instead of 4.
     // Work out the amount the home and away scores were increased by when update was uploaded
     if (play.length == 6) {
-        diffHomeScore = parseInt(play.substr(0,3)) - oldHomeScore;
-        diffAwayScore = parseInt(play.substr(3,3)) - oldAwayScore;
+        diffHomeScore = parseInt(play.substr(0, 3)) - oldHomeScore;
+        diffAwayScore = parseInt(play.substr(3, 3)) - oldAwayScore;
     } else {
-        diffHomeScore = parseInt(play.substr(0,2)) - oldHomeScore;
-        diffAwayScore = parseInt(play.substr(2,2)) - oldAwayScore;
+        diffHomeScore = parseInt(play.substr(0, 2)) - oldHomeScore;
+        diffAwayScore = parseInt(play.substr(2, 2)) - oldAwayScore;
     }
     // Adjust current scores by amounts above
     newHomeScore = homeScore - diffHomeScore;
     newAwayScore = awayScore - diffAwayScore;
 
     return [newHomeScore, newAwayScore];
+}
+
+/* 
+--------------------------------------------------------------------------
+--------------------------- End Game Scoring -----------------------------
+--------------------------------------------------------------------------
+*/
+
+var selectedDivisionIndexEnd = 0;
+
+function endScoring(createBackEvent) {
+    changeAutoUpdateInterval(NEVER);
+    if (createBackEvent) {
+        addBackEvent(['startEndScoring']);
+    }
+    sessionStorage.currentPage = 'endScoring';
+    setActivePage();
+    if (sessionStorage.endScoringPassword == "correct") {
+        generateEndScoring();
+    } else {
+        showEndScoringPasswordContainer();
+    }
+}
+
+// Shows password div
+function showEndScoringPasswordContainer() {
+    hideAllContainers();
+    setInstructions('endScoringPassword');
+    $("#endScoringPasswordContainer").show();
+}
+
+// Uses jquery ajax to call php script to check live scoring password entered is correct
+function checkEndScoringPassword() {
+    var passwordInput = $("#endScoringPasswordInput").val();
+    $.post(
+        'http://ccrscoring.co.nz/phpscripts/checkpassword.php', {
+            page: 'endScoring',
+            password: passwordInput
+        },
+        function (response) {
+            if (response == 'correct') {
+                // Correct password. Hide password and generate team lists
+                sessionStorage.endScoringPassword = "correct";
+                endScoring();
+            } else if (response == 'incorrect') {
+                // Incorrect password. Do nothing
+                alert("Incorrect password. Please try again.")
+                $("#endScoringPasswordInput").val = "";
+            } else {
+                // Error
+                alert("Error: " + response + ". Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+            }
+        }).fail(function () {
+        alert("Error while checking password. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+    })
+}
+
+// Show game editor container
+function showEndScoringContainer() {
+    hideAllContainers();
+    setInstructions('endScoring');
+    $("#endScoringContainer").show();
+}
+
+function generateEndScoring() {
+    var html = '';
+
+    html += "<div class='row divDropDownRowEnd rowfix'>";
+    html += "    <div class='titleEnd'>Division:</div>";
+    html += "    <select id='endScoringDivisionDropDown' onchange='changeTeamDropdownsEnd()'>";
+    for (var l = 0; l < allDivs.length; l += 1) {
+        html += "<option value=" + allDivs[l].divisionID + ">" + allDivs[l].divisionName + "</option>";
+    }
+    html += "    </select>";
+    html += "</div>";
+
+    html += "<div class='row homeTeamRowEnd rowfix'>";
+    html += "    <div class='titleEnd'>Home Team</div>";
+    html += "    <select id='endScoringHomeTeamDropDown'>";
+    for (var m = 0; m < allTeams[selectedDivisionIndexEnd].length; m += 1) {
+        html += "    <option value='" + allTeams[selectedDivisionIndexEnd][m].teamID + "'>" + allTeams[selectedDivisionIndexEnd][m].teamName + "</option>";
+    }
+    html += "    </select>";
+    html += "</div>";
+
+    html += "<div class='row homeScoreRowEnd rowfix'>";
+    html += "    <div class='titleEnd'>Home Score</div> <input type='number' id='homeScore'>";
+    html += "    Defaulted <input type='checkbox' id='homeCheckbox' onchange='toggleScoreInputs()'>";
+    html += "</div>";
+
+    html += "<div class='row awayTeamRowEnd rowfix'>";
+    html += "    <div class='titleEnd'>Away Team</div>";
+    html += "    <select id='endScoringAwayTeamDropDown'>";
+    for (var n = 0; n < allTeams[selectedDivisionIndexEnd].length; n += 1) {
+        html += "    <option value='" + allTeams[selectedDivisionIndexEnd][n].teamID + "'>" + allTeams[selectedDivisionIndexEnd][n].teamName + "</option>";
+    }
+    html += "    </select>";
+    html += "</div>";
+
+    html += "<div class='row awayScoreRowEnd rowfix'>";
+    html += "    <div class='titleEnd'>Away Score</div> <input type='number' id='awayScore'>";
+    html += "    Defaulted <input type='checkbox' id='awayCheckbox' onchange='toggleScoreInputs()'>";
+    html += "</div>";
+
+    html += "<div class='row datePickerRowEnd rowfix'>";
+    html += "    <div class='titleEnd'>Date</div> <input type='date' id='datePicker'>";
+    html += "</div>";
+
+    html += "<div class='row submitScoreButtonRow rowfix'>";
+    html += "    <button class='submitScoreButton' onClick='submitScore()'>Submit Score</button>";
+    html += "</div>";
+
+    $("#endScoringContainer").empty().append(html);
+    $("#endScoringDivisionDropDown").prop('selectedIndex', selectedDivisionIndexEnd);
+    showEndScoringContainer();
+}
+
+function changeTeamDropdownsEnd() {
+    selectedDivisionIndexEnd = $("#endScoringDivisionDropDown").prop('selectedIndex');
+    generateEndScoring();
+}
+
+// Disable score input on end game scoring page if a checkbox is checked
+function toggleScoreInputs() {
+    var homeCheckbox = document.getElementById("homeCheckbox").checked;
+    var awayCheckbox = document.getElementById("awayCheckbox").checked;
+
+    // if either checkbox is checked, disable score inputs
+    if (homeCheckbox || awayCheckbox) {
+        document.getElementById('homeScore').disabled = true;
+        document.getElementById('awayScore').disabled = true;
+    } else {
+        document.getElementById('homeScore').disabled = false;
+        document.getElementById('awayScore').disabled = false;
+    }
+}
+
+function checkGameEnd(gameID, homeScore, awayScore, scoringPlay, homeTeam, awayTeam) {
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/checkgame.php', {
+            gameID: gameID,
+            homeTeam: homeTeam,
+            awayTeam: awayTeam
+        },
+        function (response) {
+            if (response == 'success') {
+                uploadPlayEnd(gameID, homeScore, awayScore, scoringPlay);
+            } else if (response == 'beingscored') {
+                alert("This game is already being live scored. Please try again later or select another game.");
+            } else if (response == 'locked') {
+                alert("This game is locked so can\'t be updated. If you think the score is wrong then use the contact form to send me a message.");
+            } else {
+                // Error
+                alert("Error: " + response + ". Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+            }
+        });
+
+    post.fail(function () {
+        alert("Error while checking game status. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+    })
+}
+
+function submitScore() {
+    var today = $("#datePicker").val();
+    var dd = today.substr(8, 2);
+    var mm = today.substr(5, 2);
+    var yyyy = today.substr(0, 4);
+
+    var division = $("#endScoringDivisionDropDown").val();
+
+    var homeVal = $("#endScoringHomeTeamDropDown").val();
+    var homeText = $("#endScoringHomeTeamDropDown option:selected").text();
+    var homeTeamID = pad(homeVal, 3);
+
+    var awayVal = $("#endScoringAwayTeamDropDown").val();
+    var awayText = $("#endScoringAwayTeamDropDown option:selected").text();
+    var awayTeamID = pad(awayVal, 3);
+
+    var homeCheckbox = document.getElementById("homeCheckbox").checked;
+    var awayCheckbox = document.getElementById("awayCheckbox").checked;
+    var homeScore = document.getElementById("homeScore").value;
+    var awayScore = document.getElementById("awayScore").value;
+
+    var result = areInputsValidEnd(homeVal, awayVal, homeCheckbox, awayCheckbox, homeScore, awayScore, today);
+    if (result[0]) {
+        var gameID = String(yyyy) + String(mm) + String(dd) + homeTeamID + awayTeamID + division;
+
+        if (homeCheckbox) {
+            homeScore = 1;
+            awayScore = 2;
+        } else if (awayCheckbox) {
+            homeScore = 2;
+            awayScore = 1;
+        }
+
+        var scoringPlay = 'updt' + pad(homeScore, 3) + pad(awayScore, 3);
+
+        checkGameEnd(gameID, homeScore, awayScore, scoringPlay, homeText, awayText);
+    } else {
+        alert(result[1]);
+    }
+}
+
+// Checks if input are valid when submitting end game score
+function areInputsValidEnd(homeValue, awayValue, homeCheckbox, awayCheckbox, homeScore, awayScore, date) {
+    var message = "";
+    var valid = true;
+
+    if (homeValue == awayValue) {
+        message += "Teams can't play themselves. Change one of the teams\n";
+        valid = false;
+    }
+
+    if (homeCheckbox && awayCheckbox) {
+        message += "Both teams can't default. Uncheck one of the checkboxes\n";
+        valid = false;
+    }
+
+    if (!(homeCheckbox || awayCheckbox) && (isNaN(homeScore) || !(parseInt(Number(homeScore)) == homeScore) ||
+            isNaN(parseInt(homeScore, 10)) || parseInt(homeScore) < 0 || parseInt(homeScore) > 200)) {
+        message += "Please enter a valid home score\n";
+        valid = false;
+    }
+
+    if (!(homeCheckbox || awayCheckbox) && (isNaN(awayScore) || !(parseInt(Number(awayScore)) == awayScore) ||
+            isNaN(parseInt(awayScore, 10)) || parseInt(awayScore) < 0 || parseInt(awayScore) > 200)) {
+        message += "Please enter a valid away score\n";
+        valid = false;
+    }
+
+    if (date == "") {
+        message += "Please enter a date\n";
+        valid = false;
+    }
+
+    return [valid, message];
+}
+
+function uploadPlayEnd(gameID, homeScore, awayScore, scoringPlay) {
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/uploadplay.php', {
+            gameID: gameID,
+            homeScore: homeScore,
+            awayScore: awayScore,
+            minutesPlayed: '80',
+            scoringPlay: scoringPlay,
+            description: '',
+            locked: 'y'
+        },
+        function (response) {
+            if (response == 'success') {
+                generateEndScoring();
+            } else {
+                // Error
+                alert("Error: " + response + ". Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+            }
+        });
+
+    post.fail(function () {
+        alert("Error while uploading score. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+    })
+}
+
+/* 
+--------------------------------------------------------------------------
+------------------------------- Contact ----------------------------------
+--------------------------------------------------------------------------
+*/
+
+function showContactContainer() {
+    hideAllContainers();
+    setInstructions('contact');
+    sessionStorage.currentPage = 'contact';
+    setActivePage();
+    $("#contactContainer").show();
+}
+
+function submitContactForm() {
+    var name = $("#contactFormName").val();
+    var email = $("#contactFormEmail").val();
+    var message = $("#contactFormMessage").val();
+
+    if (message != "") {
+        var post = $.post('http://ccrscoring.co.nz/phpscripts/contactform.php', {
+                name: name,
+                email: email,
+                message: message
+            },
+            function (response) {
+                if (response == 'success') {
+                    alert('Message sent');
+                } else {
+                    alert('Message not sent. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)');
+                }
+            });
+
+        post.fail(function () {
+            alert("Error while sending message. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+        })
+    } else {
+        alert('Please enter a message');
+    }
 }

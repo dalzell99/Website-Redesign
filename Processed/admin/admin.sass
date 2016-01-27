@@ -7,11 +7,16 @@
 body
   font-family: 'Roboto', sans-serif
 
+#loadingMessage
+  font-size: x-large
+  font-weight: bold
+  text-align: center
+  padding: 25px
 
 #instructions
   font-size: 110%
-  padding: 5px 25px 25px 25px
-  text-align: center
+  padding: 15px 25px
+  text-align: justify
 
 nav.row
   margin: 0 0 20px 0
@@ -49,6 +54,32 @@ button.weeknav
 .navbar
   background-color: #33b5e5
 
+#backButton
+  position: relative
+  float: left
+  height: 35px
+  margin: 8px 20px 0 0
+  opacity: .5
+  display: none
+
+#infoButtonMobile
+  float: right
+  height: 40px
+  margin: 5px 20px 0 0
+  display: block
+  
+  @media (min-width: 768px)
+    display: none
+  
+#infoButtonDesktop
+  float: right
+  height: 40px
+  margin: 10px -20px 0 0
+  display: none
+  
+  @media (min-width: 768px)
+    display: block
+
 /*
  *--------------------------------------------------------------------------
  *------------------------------- Password ---------------------------------
@@ -83,6 +114,9 @@ button.weeknav
  *--------------------------------------------------------------------------
  */
 
+#teamEditorContainer
+    display: none
+    
 .teamRow
   margin: 10px 5px
   font-size: 120%
@@ -119,6 +153,9 @@ button.weeknav
  *--------------------------------------------------------------------------
  */
 
+#gameEditorContainer
+    display: none
+
 #gameEditorTable
     text-align: center
     border-collapse: collapse
@@ -129,6 +166,7 @@ button.weeknav
     background-color: #33b5e5
     color: snow
     padding: 10px
+    text-align: center
     
 #gameEditorTable td
     border: 1px black solid
@@ -141,8 +179,7 @@ button.weeknav
   padding: 25px
 
 .selectedRow
-    background-color: rgba(51, 181, 229, 0.2)
+  background-color: rgba(51, 181, 229, 0.2)
 
 #addGameForm
-    display: none
-
+  display: none

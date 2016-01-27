@@ -4,11 +4,11 @@
         <title>ERSU Rugby Scoring</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" type="text/css" href="http://www.possumpam.com/rugby/bootstrap/css/bootstrap.css">
+        <link rel="stylesheet" type="text/css" href="http://www.ccrscoring.co.nz/bootstrap/bootstrap.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:500">
         <link rel="stylesheet" type="text/css" href="scoring.css">
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-        <script type="text/javascript" src="http://www.possumpam.com/rugby/bootstrap/js/bootstrap.js"></script>
+        <script type="text/javascript" src="http://www.ccrscoring.co.nz/bootstrap/bootstrap.js"></script>
         <script type="text/javascript" src="scoring.js"></script>
     </head>
     <body>
@@ -16,23 +16,34 @@
         <nav class="navbar navbar-default">
             <div class="container">
                 <div class="navbar-header">
-                    <button type="button" data-toggle="collapse" data-target=".navbar-collapse" class="navbar-toggle collapsed"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a href="#" class="navbar-brand">ERSU Rugby Scoring</a>
+                    <img id='backButton' src='backButton.png' alt='back button' onclick='back()'>
+                    <button type="button" data-toggle="collapse" data-target=".navbar-collapse" class="navbar-toggle collapsed">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a href="#" class="navbar-brand">ERSU Rugby Scoring</a>
+                    <img id='infoButtonMobile' src='info.png' alt='info button' onclick='toggleInstructions()'>
                 </div>
                 <div class="navbar-collapse collapse">
                     <ul class="nav navbar-nav">
-                        <li class="drawResults active" onclick='drawResults()'><a>Draw/Results</a></li>
-                        <li class="liveScoring" onclick='liveScoring()'><a>Live Score</a></li>
-                        <li class="endScoring" onclick='endScoring()'><a>End Game Score</a></li>
+                        <li class="drawResults active" onclick='drawResults(true)'><a>Draw/Results</a></li>
+                        <li class="liveScoring" onclick='liveScoring(true)'><a>Live Score</a></li>
+                        <li class="endScoring" onclick='endScoring(true)'><a>End Game Score</a></li>
+                        <li class="contact" onclick='showContactContainer()'><a>Contact</a></li>
                     </ul>
+                    <img id='infoButtonDesktop' src='info.png' alt='info button' onclick='toggleInstructions()'>
                 </div>
             </div>
         </nav>
         
         <!-- Span used to display instructions on each page. Javascript will be used to populate this. -->
-        <span id='instructions'></span>
+        <div id='instructions'></div>
         
         <!-----------------------------------------------------------------
-        --------------------- Draw/Results Containers  --------------------
+        --------------------- Draw/Results Containers ---------------------
         ------------------------------------------------------------------>
         
         <div id='drawResultsContainer'>
@@ -45,7 +56,7 @@
         </div>
         
         <!-----------------------------------------------------------------
-        --------------------- Live Scoring Containers  --------------------
+        --------------------- Live Scoring Containers ---------------------
         ------------------------------------------------------------------>
         
         <div id='liveScoringPasswordContainer'>
@@ -61,7 +72,7 @@
         </div>
         
         <!-----------------------------------------------------------------
-        ------------------- End Game Scoring Containers  ------------------
+        ------------------- End Game Scoring Containers -------------------
         ------------------------------------------------------------------>
         
         <div id='endScoringPasswordContainer'>
@@ -72,5 +83,18 @@
         
         <div id='endScoringContainer'>
         </div>
+        
+        <!-----------------------------------------------------------------
+        ------------------------ Contact Container ------------------------
+        ------------------------------------------------------------------>
+        
+        <div id='contactContainer'>
+            <div><div class='contactFormLabel'>Name</div><input type='text' id='contactFormName'></div>
+            <div><div class='contactFormLabel'>Email</div><input type='text' id='contactFormEmail'></div>
+            <div><div class='contactFormLabel'>Message</div><textarea id='contactFormMessage' rows="3"></textarea></div>
+            <button type='submit' id='contactFormButton' onclick='submitContactForm()'>Submit</button>
+        </div>
+      
     </body>
+    <footer>Info icon from <a href='http://www.bogdanrosu.com/'>http://www.bogdanrosu.com/</a></footer>
 </html>

@@ -1,5 +1,8 @@
 <?php
-$con=mysqli_connect("possumpamcom.ipagemysql.com","dalzell99","dazzle99","drc_database");
+$config = parse_ini_file('/home/ccrsc638/config.ini'); 
+
+// Try and connect to the database
+$con = mysqli_connect('localhost', $config['username'], $config['password'], $config['dbname']);
 
 $password = mysqli_real_escape_string($con, $_POST['password']);
 $page = $_POST['page'];
