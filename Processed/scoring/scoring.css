@@ -118,7 +118,7 @@ nav.row {
  *----------------------------- Draw/Results -------------------------------
  *--------------------------------------------------------------------------
  */
-.weektoggledisplay {
+.weektoggledisplay, .changestoggledisplay {
   background-color: transparent;
   padding: 10px;
   border: 1px solid #33b5e5;
@@ -271,6 +271,10 @@ nav.row {
 
 .autoUpdateButton.active {
   background-color: rgba(51, 181, 229, 0.4);
+}
+
+#gameChanges {
+  display: none;
 }
 
 /*

@@ -37,6 +37,15 @@ $(document).ready(function () {
             if (localStorage.instructions == 'false') {
                 $("#instructions").hide();
             }
+            
+            if (localStorage.lastTimeUpdatesChecked == null) {
+                localStorage.lastTimeUpdatesChecked = new Date().toUTCString();
+            }
+            
+            if (sessionStorage.scoringGameID == null) {
+                sessionStorage.scoringGameID = JSON.stringify([]);
+            }
+            
             if (sessionStorage.currentPage == "drawResults" || sessionStorage.currentPage == null) {
                 drawResults(true);
             } else if (sessionStorage.currentPage == "liveScoring" || sessionStorage.currentPage == "gameSelection") {
@@ -56,6 +65,7 @@ $(document).ready(function () {
 
 // Hides all the web page containers
 function hideAllContainers() {
+    clearInterval(lastTimeScored);
     $("#liveScoringPasswordContainer").hide();
     $("#endScoringPasswordContainer").hide();
     $("#drawResultsContainer").hide();
@@ -346,6 +356,11 @@ function toggleWeeks() {
     $("#weeksList").slideToggle();
 }
 
+function toggleGameChanges() {
+    $("#gameChanges").toggle();
+    localStorage.lastTimeUpdatesChecked = new Date().toUTCString();
+}
+
 function generateWeekSelector() {
     var startDate = new Date(startDateArray[0], startDateArray[1], startDateArray[2]);
     var endDate = new Date(startDateArray[0], startDateArray[1], startDateArray[2]).addDays(6);
@@ -402,50 +417,61 @@ function generateWeekSelector() {
 }
 
 function generateChangedGames(startOfWeek, endOfWeek) {
+    var lastTimeUpdatesChecked = new Date(localStorage.lastTimeUpdatesChecked);
     var html = '';
+    var hasAGameBeenChanged = false;
+    var todaysDate = new Date(2015, 2, 30);
     
-    if (localStorage.lastTimeUpdatesChecked == null) {
-        var lastTimeUpdatesChecked = new Date(2000, 1, 1);
-        localStorage.lastTimeUpdatesChecked = new Date().toUTCString();
-    } else {
-        var lastTimeUpdatesChecked = new Date(localStorage.lastTimeUpdatesChecked);
-    }
-    
-    // for each division
-    for (var p = 0; p < allGames.length; p += 1) {
-        // get the date of the game
-        var game = allGames[p];
-        var gameID = game.GameID;
-        var year = parseInt(gameID.substr(0, 4));
-        var month = parseInt(gameID.substr(4, 2)) - 1;
-        var day = parseInt(gameID.substr(6, 2));
-        var gameDateDate = new Date(year, month, day);
-        // check if game happens in the current week
-        if (gameDateDate <= endOfWeek && gameDateDate >= startOfWeek) {
-            // get changes array from game
-            var gameChanges = JSON.parse(allGames[p].changes);
-            // for each change
-            for (var r = 0; r < gameChanges.length; r += 1) {
-                // get when the change was made
-                var changeDate = new Date(gameChanges[r][0]);
-                // check if the change has occured since the user last checked
-                if (changeDate > lastTimeUpdatesChecked) {
-                    // display the change
-                    var divID = parseInt(gameID.slice(-2));
-                    if (gameID.length == 16) {
-                        var homeTeamName = getTeamName(gameID.substr(8, 3), divID);
-                        var awayTeamName = getTeamName(gameID.substr(11, 3), divID);
-                    } else {
-                        var homeTeamName = game.homeTeamName;
-                        var awayTeamName = game.awayTeamName;
+    if(todaysDate >= startOfWeek && todaysDate <= endOfWeek) {
+        html += "<div class='changestoggledisplay col-xs-47'>";
+        html += "    <div onclick='toggleGameChanges()'>Show Game Changes</div>";
+        html += "        <div id='gameChanges'>";
+        // for each division
+        for (var p = 0; p < allGames.length; p += 1) {
+            // get the date of the game
+            var game = allGames[p];
+            var gameID = game.GameID;
+            var year = parseInt(gameID.substr(0, 4));
+            var month = parseInt(gameID.substr(4, 2)) - 1;
+            var day = parseInt(gameID.substr(6, 2));
+            var gameDateDate = new Date(year, month, day);
+            // check if game happens in the current week
+            if (gameDateDate <= endOfWeek && gameDateDate >= startOfWeek) {
+                // get changes array from game
+                var gameChanges = JSON.parse(allGames[p].changes);
+                // for each change
+                for (var r = 0; r < gameChanges.length; r += 1) {
+                    // get when the change was made
+                    var changeDate = new Date(gameChanges[r][0]);
+                    // check if the change has occured since the user last checked
+                    if (changeDate > lastTimeUpdatesChecked) {
+                        // display the change
+                        var divID = parseInt(gameID.slice(-2));
+                        if (gameID.length == 16) {
+                            var homeTeamName = getTeamName(gameID.substr(8, 3), divID);
+                            var awayTeamName = getTeamName(gameID.substr(11, 3), divID);
+                        } else {
+                            var homeTeamName = game.homeTeamName;
+                            var awayTeamName = game.awayTeamName;
+                        }
+                        hasAGameBeenChanged = true;
+                        html += "<div>" + allDivs[divID].divisionName + ") " + homeTeamName + " vs " + awayTeamName + " - " + columnName(gameChanges[r][1]) + " changed to " + gameChanges[r][2] + " at " + changeDate.toChangesString() + "</div>"
                     }
-                    html += "<div>" + allDivs[divID].divisionName + ") " + homeTeamName + " vs " + awayTeamName + " - " + columnName(gameChanges[r][1]) + " changed at " + changeDate.toChangesString() + "</div>"
                 }
             }
         }
+        html += "        </div>";
+        html += "    </div>";
+        html += "</div>";
+
+        $("#changedGamesContainer").empty().append(html);
+
+        if (!hasAGameBeenChanged) {
+            $(".changestoggledisplay").hide();
+        }
+    } else {
+        $("#changedGamesContainer").empty();
     }
-    
-    $("#changedGamesContainer").empty().append(html);
 }
 
 function generateGames() {
@@ -713,6 +739,7 @@ Date.prototype.toString = function (dayOfWeek) {
 };
 
 Date.prototype.toChangesString = function () {
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     if (this.getHours() == 0) {
         var hours = 'Midnight';
@@ -723,7 +750,14 @@ Date.prototype.toChangesString = function () {
     } else {
         var hours = this.getHours() + 'am';
     }
-    return hours + " " + daysOfWeek[this.getDay()];
+    
+    if (new Date() > this.addDays(6)) {
+        var date = this.getDate() + " " + months[this.getMonth()];
+    } else {
+        var date = '';
+    }
+    
+    return hours + " " + daysOfWeek[this.getDay()] + date;
 };
 
 /* 
@@ -938,6 +972,7 @@ var selectedDivisionIndex = 0;
 var selectedScoringPlay = "";
 var selectedTeam = "";
 var selectedPlays = [];
+var lastTimeScored = null;
 
 function liveScoring(createBackEvent) {
     changeAutoUpdateInterval(NEVER);
@@ -946,7 +981,12 @@ function liveScoring(createBackEvent) {
         if (sessionStorage.currentPage == "liveScoring") {
             generateLiveScoring();
         } else {
-            generateGameSelection();
+            var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
+            if (scoringGameIDArray.length > 0) {
+                generateLiveScoring();
+            } else {
+                generateGameSelection();
+            }
         }
     } else {
         sessionStorage.currentPage = 'gameSelection';
@@ -1001,6 +1041,11 @@ function showLiveScoringContainer() {
     hideAllContainers();
     setInstructions('liveScoring');
     $("#liveScoringContainer").show();
+    
+    // Every minute the user is live scoring a game, the current time is uploaded to the server.
+    // A cron task then checks all the games every 5 minutes. If the last time scored is more than 5 minutes
+    // old then the liveScored attribute is changed to 'n'.
+    lastTimeScored = setInterval(updateLastTimeScored, 60000);
 }
 
 function toggleChangeScoreForm() {
@@ -1038,6 +1083,16 @@ function generateGameSelection() {
     html += "<div class='row selectGameButtonRow'>";
     html += "    <div class='col-xs-48'><button class='selectGameButton' onClick='selectGame()'>Select Game</button></div>";
     html += "</div>";
+    
+    var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
+    html += "<div id='currentScoringContainer'>";
+    for (var j = 0; j < scoringGameIDArray.length; j += 1) {
+        var game = getGameInfo(scoringGameIDArray[j]);
+        var gameID = game.GameID;
+        var divID = parseInt(gameID.slice(-2));
+        html += "<div class='" + gameID + "' onclick=''>" + allDivs[divID] + " - " + getTeamName(gameID.substr(8, 3), divID) + " vs " + getTeamName(gameID.substr(11, 3), divID) + "</div>"
+    }
+    html += "</div>"
 
     $("#gameSelectionContainer").empty().append(html);
     $("#teamSelectionDivisionDropDown").prop('selectedIndex', selectedDivisionIndex);
@@ -1045,6 +1100,15 @@ function generateGameSelection() {
     addBackEvent(['startGameSelection']);
     sessionStorage.currentPage = "gameSelection";
     setActivePage();
+}
+
+function getGameInfo(gameID) {
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/getgameinfo.php', {
+        gameID: gameID
+    },
+    function (response) {
+        return response;
+    });
 }
 
 function changeTeamDropdowns() {
@@ -1092,6 +1156,9 @@ function checkGameLive(homeTeam, awayTeam) {
         },
         function (response) {
             if (response == 'success') {
+                var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
+                scoringGameIDArray.push(gameID);
+                sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
                 generateLiveScoring(homeTeam, awayTeam);
             } else if (response == 'beingscored') {
                 alert("This game is already being live scored. Please try again later or select another game.");
@@ -1115,11 +1182,6 @@ function generateLiveScoring(homeTeam, awayTeam) {
             gameID: gameID
         },
         function (response) {
-            // Every minute the user is live scoring a game, the current time is uploaded to the server.
-            // A cron task then checks all the games every 5 minutes. If the last time scored is more than 5 minutes
-            // old then the liveScored attribute is changed to 'n'.
-            setInterval(updateLastTimeScored, 60000);
-
             if (gameID.length == 16) {
                 var divID = parseInt(gameID.slice(-2));
                 for (var k = 0; k < allTeams[divID].length; k += 1) {
@@ -1352,6 +1414,7 @@ function generateLiveScoring(homeTeam, awayTeam) {
             $("#liveScoringContainer").empty().append(html);
             showLiveScoringContainer();
             sessionStorage.currentPage = "liveScoring";
+            setActivePage();
             addBackEvent(['startLiveScoring']);
         }, 'json');
 

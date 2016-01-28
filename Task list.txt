@@ -1,6 +1,3 @@
-Finish changes. Remove score changes. Make it look better. Add last checked changer. 
-add gameID when livescoring to session storage so scorer doesn't get locked out.
-create backup of game table
 add ability to score more than 1 game at once.
 add ability to favorite games
 add points table

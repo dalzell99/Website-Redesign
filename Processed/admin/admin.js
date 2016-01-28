@@ -260,13 +260,17 @@ function pad(value, length) {
 */
 
 function teamEditor(backEvent) {
-    if (backEvent) {
-        addBackEvent(['startTeamEditor']);
+    if (sessionStorage.password == "correct") {
+        if (backEvent) {
+            addBackEvent(['startTeamEditor']);
+        }
+        sessionStorage.currentPage = "teamEditor";
+        generateAddTeam();
+        generateTeamList();
+        showTeamEditorContainer()
+    } else {
+        showPassword();
     }
-    sessionStorage.currentPage = "teamEditor";
-    generateAddTeam();
-    generateTeamList();
-    showTeamEditorContainer()
 }
 
 // Show team editor container
@@ -489,13 +493,17 @@ var numGamesDeleted = 0;
 var numGamesLocked = 0;
 
 function gameEditor(backEvent) {
-    if (backEvent) {
-        addBackEvent(['startGameEditor']);
+    if (sessionStorage.password == "correct") {
+        if (backEvent) {
+            addBackEvent(['startGameEditor']);
+        }
+        sessionStorage.currentPage = "gameEditor";
+        generateToolbar();
+        generateGameTable(new Date(2000, 1, 1), new Date(2050, 1, 1));
+        showGameEditorContainer();
+    } else {
+        showPassword();
     }
-    sessionStorage.currentPage = "gameEditor";
-    generateToolbar();
-    generateGameTable(new Date(2000, 1, 1), new Date(2050, 1, 1));
-    showGameEditorContainer();
 }
 
 // Show game editor container
@@ -517,6 +525,7 @@ function generateToolbar() {
     html += "    <button id='addGameButton' onclick='toggleAddGameForm()'>Add Games</button>";
     html += "    <button id='deleteSelectedGameButton' onclick='deleteSelectedGames()'>Delete Selected Games</button>";
     html += "    <button id='lockSelectedGameButton' onclick='lockSelectedGames()'>Lock Selected Games</button>";
+    html += "    <button id='unlockSelectedGameButton' onclick='unlockSelectedGames()'>Unlock Selected Games</button>";
     html += "</div>";
 
     html += "<div id='addGameForm'>";
@@ -800,6 +809,12 @@ function lockSelectedGames() {
     }
 }
 
+function unlockSelectedGames() {
+    for (var n = 0; n < selectedRowGameID.length; n += 1) {
+        unlockGame(selectedRowGameID[n]);
+    }
+}
+
 function changeTeamDropDowns() {
     selectedDivisionIndex = parseInt($("#addGameDivisionDropDown").val());
     generateToolbar();
@@ -904,6 +919,37 @@ function lockGame(gameID) {
                 for (var w = 0; w < games.length; w += 1) {
                     if (games[w].GameID == gameID) {
                         games[w].locked = 'y';
+                        break;
+                    }
+                }
+                
+                numGamesLocked += 1;
+                if (numGamesLocked == selectedRowGameID.length) {
+                    selectedRowGameID = [];
+                    numGamesLocked = 0;
+                    filterDates();
+                }
+            } else {
+                // Error
+                alert("Error: " + response + ". Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+            }
+        });
+
+    post.fail(function (request, textStatus, errorThrown) {
+        alert("Error while deleting game. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+    })
+}
+
+function unlockGame(gameID) {
+    var post = $.post('http://ccrscoring.co.nz/phpscripts/unlockgame.php', {
+            gameID: gameID
+        },
+        function (response) {
+            if (response == 'success') {
+                var games = allGames[parseInt(gameID.slice(-2))];
+                for (var w = 0; w < games.length; w += 1) {
+                    if (games[w].GameID == gameID) {
+                        games[w].locked = 'n';
                         break;
                     }
                 }
