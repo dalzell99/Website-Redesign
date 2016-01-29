@@ -9,7 +9,7 @@ if (mysqli_connect_errno()) {
     echo "Failed to connect to MySQL: " . mysqli_connect_error();
 }
 
-$gameID = $_GET['gameID'];
+$gameID = $_POST['gameID'];
 $time = date("Y-m-d H:i:s");
 
 // Update game element with new values

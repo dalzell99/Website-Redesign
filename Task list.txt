@@ -1,7 +1,6 @@
-add ability to score more than 1 game at once.
+add date change to draw/results. fix the css for date picker.
 add ability to favorite games
 add points table
-edit date in admin
 add overtime to live scoring
 transistions
 change to minified files

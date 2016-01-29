@@ -491,6 +491,7 @@ var selectedRowGameID = [];
 var selectedDivisionIndex = 0;
 var numGamesDeleted = 0;
 var numGamesLocked = 0;
+var datePickers = [];
 
 function gameEditor(backEvent) {
     if (sessionStorage.password == "correct") {
@@ -602,7 +603,7 @@ function generateGameTable(startDate, endDate) {
             var gameDate = new Date(parseInt('20' + year), month, day);
             var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
             var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            var dateToDisplay = days[gameDate.getDay()] + " " + day + " " + months[month] + " " + year;
+            var dateToDisplay = dateFromGameID.substr(6, 2) + "/" + dateFromGameID.substr(4, 2) + "/" + dateFromGameID.substr(0, 4);
 
             if (gameDate >= startDate && gameDate <= endDate) {
                 if (gameID.length == 16) {
@@ -621,7 +622,7 @@ function generateGameTable(startDate, endDate) {
 
                 var division = allDivs[divID].divisionName;                
                 html += "    <tr class='gameRow " + gameID + " " + (offset + l) + "'>";
-                html += "        <td class='date' sorttable_customkey='" + dateFromGameID + "'>" + dateToDisplay + "</td>";
+                html += "        <td class='date' sorttable_customkey='" + dateFromGameID + "'><input class='datepicker " + (offset + l) + "' data-value='" + dateToDisplay + "'></input></td>";
                 html += "        <td class='divisionName' sorttable_customkey='" + divID + "'>" + division + "</td>";
                 html += "        <td class='homeTeamName'>" + homeTeamName + "</td>";
                 html += "        <td class='homeTeamScore' contenteditable='true'>" + game.homeTeamScore + "</td>";
@@ -681,6 +682,46 @@ function filterDates() {
 }
 
 function addEventsGame() {
+    $("input.datepicker").pickadate({
+        format: 'ddd d mmm yy',
+        today: '',
+        clear: '',
+        close: 'Cancel',
+        labelMonthNext: 'Go to the next month',
+        labelMonthPrev: 'Go to the previous month',
+        labelMonthSelect: 'Pick a month from the dropdown',
+        labelYearSelect: 'Pick a year from the dropdown',
+        selectMonths: true,
+        selectYears: true,
+        formatSubmit: 'dd/mm/yyyy',
+        hiddenPrefix: 'prefix__',
+        onSet: function(context) {
+            var oldGameID = this.$node[0].parentElement.parentElement.classList[1];
+            var date = this._hidden.value;
+            var newGameID = date.substr(6, 4) + date.substr(3, 2) + date.substr(0, 2) + oldGameID.substr(8, oldGameID.length - 8);
+            // delete game
+            // create new one with date change added to changes
+            var post = $.post('http://ccrscoring.co.nz/phpscripts/changedate.php', {
+                oldGameID: oldGameID,
+                newGameID: newGameID
+            },
+            function (response) {
+                if (response == 'success') {
+                    // do nothing
+                } else {
+                    // Error
+                    alert("Error while changing date. Please refresh page and try again. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+                }
+            });
+
+            post.fail(function (request, textStatus, errorThrown) {
+                alert("Error while changing date. Please refresh page and try again. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+            });
+        }
+    });
+    
+    
+    
     $("tr > [contenteditable=true]").on({
         keydown: function (event) {
             if (event.which == 13 && event.shiftKey) { // Shift + enter
@@ -860,7 +901,7 @@ function addGame() {
             function (response) {
                 if (response == 'success') {
                     // add game to local game array if it doesn't already exist
-                    allGames[parseInt(gameID.slice(-2))].push({GameID: gameID, assRef1: '', assRef2: '', awayTeamName: awayText, awayTeamScore: '0', homeTeamName: homeText, homeTeamScore: '0', lastTimeScore: "2016-01-01 11:11:11", liveScored: 'n', location: '', minutesPlayed: '0', ref: '', scoringPlays: '[]', time: '', changed: '', locked: 'n', changes: '[]'});
+                    allGames[parseInt(gameID.slice(-2))].push({GameID: gameID, assRef1: '', assRef2: '', awayTeamName: awayText, awayTeamScore: '0', homeTeamName: homeText, homeTeamScore: '0', lastTimeScore: "2016-01-01 11:11:11", liveScored: 'n', location: '', minutesPlayed: '0', ref: '', scoringPlays: '[]', time: '', changed: '', locked: 'n', changes: '[]', userID: ''});
                     addBackEvent(['addGame', gameID, homeText, awayText, dateString, allDivs[selectedDivisionIndex].divisionName]);
                     filterDates();
                 } else {

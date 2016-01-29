@@ -10,6 +10,7 @@ if (mysqli_connect_errno()) {
 }
 
 $gameID = $_POST['gameID'];
+$userID = $_POST['userID'];
 
 function checkIfLocked($con, $gameID) {
     if ($result = mysqli_query($con, "SELECT locked FROM Game WHERE GameID = '" . $gameID . "'")) {
@@ -35,7 +36,7 @@ if ($result = mysqli_query($con, "SELECT * FROM Game WHERE GameID = '" . $gameID
         $awayTeam = $_POST['awayTeam'];
 
         // Create insert string using default values and variables given
-        $sql = "INSERT INTO Game VALUES ('" . $gameID . "', '" . $homeTeam . "', '0', '" . $awayTeam . "', '0', '1', '', '', '', '" . $homeTeam . "', '12pm', '[[\"1\", \"strtGame\", \"\"]]', 'n', '[]', 'y', '" . $time . "', 'n')";
+        $sql = "INSERT INTO Game VALUES ('" . $gameID . "', '" . $homeTeam . "', '0', '" . $awayTeam . "', '0', '1', '', '', '', '" . $homeTeam . "', '12pm', '[[\"1\", \"strtGame\", \"\"]]', 'n', '[]', 'y', '" . $userID . "', '" . $time . "', 'n')";
 
         // Execute insert query
         if (mysqli_query($con, $sql)) {
@@ -52,11 +53,11 @@ if ($result = mysqli_query($con, "SELECT * FROM Game WHERE GameID = '" . $gameID
         if (checkIfLocked($con, $gameID)) {
             echo 'locked';
         } else if ($row['liveScored'] == 'y') {
-            // If not equal to 'n' then game is being live scored and echo 'beingscored'
-            echo 'beingscored';
+            // If not equal to 'n' then game is being live scored and echo 'beingscored' and include userID for scorer
+            echo 'beingscored' . $row['userID'];
         } else {
             // If equal to 'n' then game isn't being live scored and echo 'success'
-            if (mysqli_query($con, " UPDATE Game SET liveScored = 'y' WHERE GameID = '" . $gameID . "' ")) {
+            if (mysqli_query($con, " UPDATE Game SET liveScored = 'y', userID = '" . $userID . "' WHERE GameID = '" . $gameID . "' ")) {
                 echo 'success';
             } else {
                 echo "Update query failed";

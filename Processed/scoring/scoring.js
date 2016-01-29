@@ -42,6 +42,10 @@ $(document).ready(function () {
                 localStorage.lastTimeUpdatesChecked = new Date().toUTCString();
             }
             
+            if (localStorage.userID == null) {
+                localStorage.userID = pad(Math.floor(Math.random() * 100000000), 8);
+            }
+            
             if (sessionStorage.scoringGameID == null) {
                 sessionStorage.scoringGameID = JSON.stringify([]);
             }
@@ -977,17 +981,7 @@ var lastTimeScored = null;
 function liveScoring(createBackEvent) {
     changeAutoUpdateInterval(NEVER);
     if (sessionStorage.liveScoringPassword == "correct") {
-        setActivePage();
-        if (sessionStorage.currentPage == "liveScoring") {
-            generateLiveScoring();
-        } else {
-            var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
-            if (scoringGameIDArray.length > 0) {
-                generateLiveScoring();
-            } else {
-                generateGameSelection();
-            }
-        }
+        generateGameSelection();
     } else {
         sessionStorage.currentPage = 'gameSelection';
         setActivePage();
@@ -1035,6 +1029,11 @@ function showGameSelectionContainer() {
     hideAllContainers();
     setInstructions('gameSelection');
     $("#gameSelectionContainer").show();
+    
+    // Every 30 seconds the user is live scoring a game, the current time is uploaded to the server.
+    // A cron task then checks all the games every 5 minutes. If the last time scored is more than 5 minutes
+    // old then the liveScored attribute is changed to 'n'.
+    lastTimeScored = setInterval(updateLastTimeScored, 30000);
 }
 
 function showLiveScoringContainer() {
@@ -1042,10 +1041,10 @@ function showLiveScoringContainer() {
     setInstructions('liveScoring');
     $("#liveScoringContainer").show();
     
-    // Every minute the user is live scoring a game, the current time is uploaded to the server.
+    // Every 30 seconds the user is live scoring a game, the current time is uploaded to the server.
     // A cron task then checks all the games every 5 minutes. If the last time scored is more than 5 minutes
     // old then the liveScored attribute is changed to 'n'.
-    lastTimeScored = setInterval(updateLastTimeScored, 60000);
+    lastTimeScored = setInterval(updateLastTimeScored, 30000);
 }
 
 function toggleChangeScoreForm() {
@@ -1085,16 +1084,17 @@ function generateGameSelection() {
     html += "</div>";
     
     var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
-    html += "<div id='currentScoringContainer'>";
+    html += "<div id='currentScoringContainer' class='col-xs-47'>";
+    html += "<div id='currentScoringContainerTitle'>Games you are scoring</div>";
     for (var j = 0; j < scoringGameIDArray.length; j += 1) {
-        var game = getGameInfo(scoringGameIDArray[j]);
-        var gameID = game.GameID;
-        var divID = parseInt(gameID.slice(-2));
-        html += "<div class='" + gameID + "' onclick=''>" + allDivs[divID] + " - " + getTeamName(gameID.substr(8, 3), divID) + " vs " + getTeamName(gameID.substr(11, 3), divID) + "</div>"
+        var game = scoringGameIDArray[j];
+        var divID = parseInt(game[0].slice(-2));
+        html += "<div class='currentScoringGameRow " + game[0] + "' onclick='startLiveScoring(" + game[0] + ")'>" + allDivs[divID].divisionName + " - " + game[1] + " vs " + game[2] + "</div>"
     }
     html += "</div>"
-
+    
     $("#gameSelectionContainer").empty().append(html);
+    if (scoringGameIDArray.length == 0) { $("#currentScoringContainer").hide(); }
     $("#teamSelectionDivisionDropDown").prop('selectedIndex', selectedDivisionIndex);
     showGameSelectionContainer();
     addBackEvent(['startGameSelection']);
@@ -1102,13 +1102,9 @@ function generateGameSelection() {
     setActivePage();
 }
 
-function getGameInfo(gameID) {
-    var post = $.post('http://ccrscoring.co.nz/phpscripts/getgameinfo.php', {
-        gameID: gameID
-    },
-    function (response) {
-        return response;
-    });
+function startLiveScoring(gameID) {
+    sessionStorage.currentGameID = gameID;
+    checkGameLive('', '', true);
 }
 
 function changeTeamDropdowns() {
@@ -1138,7 +1134,7 @@ function selectGame() {
         alert("Please change one of the teams as they can't play themselves");
     } else if (gameID.length == 16) {
         sessionStorage.currentGameID = gameID;
-        checkGameLive(homeText, awayText);
+        checkGameLive(homeText, awayText, false);
     } else if (gameID.length == 8) {
         alert("Please enter a date for the game");
     } else {
@@ -1146,23 +1142,51 @@ function selectGame() {
     }
 }
 
-function checkGameLive(homeTeam, awayTeam) {
+function checkGameLive(homeTeam, awayTeam, alreadyScored) {
     var gameID = sessionStorage.currentGameID;
 
     var post = $.post('http://ccrscoring.co.nz/phpscripts/checkgame.php', {
             gameID: gameID,
             homeTeam: homeTeam,
-            awayTeam: awayTeam
+            awayTeam: awayTeam,
+            userID: localStorage.userID
         },
         function (response) {
+            var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
             if (response == 'success') {
-                var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
-                scoringGameIDArray.push(gameID);
-                sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
-                generateLiveScoring(homeTeam, awayTeam);
-            } else if (response == 'beingscored') {
-                alert("This game is already being live scored. Please try again later or select another game.");
+                if (!alreadyScored) {
+                    scoringGameIDArray.push([gameID, homeTeam, awayTeam]);
+                    sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
+                }
+                generateLiveScoring();
+            } else if (response.substr(0, 11) == 'beingscored') {
+                var scorersID = response.slice(-8);
+                if (alreadyScored && (scorersID != localStorage.userID)) {
+                    for (var a = 0; a < scoringGameIDArray.length; a += 1) {
+                        if (scoringGameIDArray[a][0] == gameID) {
+                            scoringGameIDArray.splice(a, 1);
+                            a -= 1;
+                            sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
+                        }
+                    }
+                    generateGameSelection();
+                    alert("This game is already being live scored. Please try again later or select another game.");
+                } else if (alreadyScored && (scorersID == localStorage.userID)) {
+                    generateLiveScoring();
+                } else {
+                    alert("This game is already being live scored. Please try again later or select another game.");
+                }
             } else if (response == 'locked') {
+                if (alreadyScored) {
+                    for (var b = 0; b < scoringGameIDArray.length; b += 1) {
+                        if (scoringGameIDArray[b][0] == gameID) {
+                            scoringGameIDArray.splice(b, 1);
+                            b -= 1;
+                            sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
+                        }
+                    }
+                    generateGameSelection();
+                }
                 alert("This game is locked so it can\'t be updated.");
             } else {
                 // Error
@@ -1172,10 +1196,10 @@ function checkGameLive(homeTeam, awayTeam) {
 
     post.fail(function () {
         alert("Error while checking game status. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)");
-    })
+    });
 }
 
-function generateLiveScoring(homeTeam, awayTeam) {
+function generateLiveScoring() {
     var html = '';
     var gameID = sessionStorage.currentGameID;
     var post = $.post('http://ccrscoring.co.nz/phpscripts/getgameinfo.php', {
@@ -1424,12 +1448,17 @@ function generateLiveScoring(homeTeam, awayTeam) {
 }
 
 function updateLastTimeScored() {
-    var post = $.post('http://ccrscoring.co.nz/phpscripts/updatelasttimescored.php', {
-            gameID: sessionStorage.currentGameID
+    var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
+    for (var e = 0; e < scoringGameIDArray.length; e += 1) {
+        var post = $.post('http://ccrscoring.co.nz/phpscripts/updatelasttimescored.php', {
+            gameID: scoringGameIDArray[e][0]
         },
         function (response) {
-
+            if (response == 'success') {
+                if (1) {}
+            }
         });
+    }
 }
 
 function stopScoring(gameID) {
@@ -1442,6 +1471,14 @@ function stopScoring(gameID) {
                 // Error
                 alert("Error: " + response + ". Please send me an email (cfd19@hotmail.co.nz) informing me of this.");
             }
+            var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
+            for (var g = 0; g < scoringGameIDArray.length; g += 1) {
+                if (scoringGameIDArray[g][0] == gameID) {
+                    scoringGameIDArray.splice(g, 1);
+                    g -= 1;
+                }
+            }
+            sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
             generateGameSelection();
         });
 
@@ -1523,7 +1560,7 @@ function uploadPlayLive(gameID, homeScore, awayScore, minutesPlayed, scoringPlay
     },
     function (response) {
         if (response == 'success') {
-            generateLiveScoring('', '');
+            generateLiveScoring();
         } else if (response == 'locked') {
             alert("This game is locked so it can\'t be updated. If you have uploaded the 'Full Time' play, you can unlock the game by deleting it, otherwise an admin locked the game.");
         } else {
@@ -1698,7 +1735,7 @@ function deleteSelectedPlays() {
                         selectedPlays.length = 0;
 
                         // Reload page
-                        generateLiveScoring('', '');
+                        generateLiveScoring();
                     }
                 } else {
                     alert('Error. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)');
