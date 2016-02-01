@@ -5,12 +5,6 @@ var allTeams = [];
 var allDivs = [];
 
 $(document).ready(function () {
-    $('#backButton').tooltip({
-        title: generateBackButtonTooltip(),
-        html: true,
-        placement: "bottom"
-    });
-
     var post = $.post('http://ccrscoring.co.nz/phpscripts/getteamsdivs.php', {},
         function (response) {
             var teams = response[0];
@@ -50,6 +44,8 @@ $(document).ready(function () {
                 sessionStorage.scoringGameID = JSON.stringify([]);
             }
             
+            sessionStorage.backEvents = JSON.stringify([[]]);
+            
             if (sessionStorage.currentPage == "drawResults" || sessionStorage.currentPage == null) {
                 drawResults(true);
             } else if (sessionStorage.currentPage == "liveScoring" || sessionStorage.currentPage == "gameSelection") {
@@ -66,6 +62,120 @@ $(document).ready(function () {
         }
     });
 });
+
+// Catch browser back button event
+window.onpopstate = function(event) {
+    var state = event.state;
+    var backEvents = JSON.parse(sessionStorage.backEvents);
+    var previousEvent = backEvents[backEvents.length - 2][0];
+    if (previousEvent == undefined) {
+        history.back();
+    } else {
+        if (state != null) {
+            if (state.event == 'startGameInfo') {
+                showDrawResultsContainer();
+                sessionStorage.currentPage = "drawResults";
+            } else if (state.event == 'weekChange') {
+                changeWeeks(state.weekNumber, false);
+            } else if (state.event == 'startGameSelection') {
+                if (previousEvent == 'weekChange') {
+                    showDrawResultsContainer();
+                    sessionStorage.currentPage = "drawResults";
+                } else if (previousEvent == 'startDrawResults') {
+                    showDrawResultsContainer();
+                    sessionStorage.currentPage = "drawResults";
+                } else if (previousEvent == 'startGameInfo') {
+                    if (backEvents[backEvents.length - 2][1] != sessionStorage.currentGameID) {
+                        gameInfo(backEvents[backEvents.length - 2][1], false);
+                    } else {
+                        showGameInfoContainer();
+                        sessionStorage.currentPage = "gameInfo";
+                    }
+                } else if (previousEvent == 'startEndScoring') {
+                    showEndScoringContainer();
+                    sessionStorage.currentPage = "endScoring";
+                } else if (previousEvent == 'startContactForm') {
+                    showContactContainer();
+                    sessionStorage.currentPage = "contact";
+                }
+            } else if (state.event == 'startLiveScoring') {
+                if (previousEvent == 'startGameSelection') {
+                    showGameSelectionContainer();
+                    sessionStorage.currentPage = "gameSelection";
+                }
+            } else if (state.event == 'startEndScoring') {
+                if (previousEvent == 'weekChange') {
+                    showDrawResultsContainer();
+                    sessionStorage.currentPage = "drawResults";
+                } else if (previousEvent == 'startDrawResults') {
+                    showDrawResultsContainer();
+                    sessionStorage.currentPage = "drawResults";
+                } else if (previousEvent == 'startGameInfo') {
+                    if (backEvents[backEvents.length - 1][1] != sessionStorage.currentGameID) {
+                        gameInfo(backEvents[backEvents.length - 1][1], false);
+                    } else {
+                        showGameInfoContainer();
+                        sessionStorage.currentPage = "gameInfo";
+                    }
+                } else if (previousEvent == 'startLiveScoring') {
+                    showLiveScoringContainer();
+                    sessionStorage.currentPage = "liveScoring";
+                } else if (previousEvent == 'startGameSelection') {
+                    showGameSelectionContainer();
+                    sessionStorage.currentPage = "gameSelection";
+                } else if (previousEvent == 'startContactForm') {
+                    showContactContainer();
+                    sessionStorage.currentPage = "contact";
+                }
+            } else if (state.event == 'startDrawResults') {
+                if (previousEvent == 'startGameSelection') {
+                    showGameSelectionContainer();
+                    sessionStorage.currentPage = "gameSelection";
+                } else if (previousEvent == 'startLiveScoring') {
+                    showLiveScoringContainer();
+                    sessionStorage.currentPage = "liveScoring";
+                } else if (previousEvent == 'startGameInfo') {
+                    if (backEvents[backEvents.length - 2][1] != sessionStorage.currentGameID) {
+                        gameInfo(backEvents[backEvents.length - 2][1], false);
+                    } else {
+                        showGameInfoContainer();
+                        sessionStorage.currentPage = "gameInfo";
+                    }
+                } else if (previousEvent == 'startEndScoring') {
+                    showEndScoringContainer();
+                    sessionStorage.currentPage = "endScoring";
+                } else if (previousEvent == 'startContactForm') {
+                    showContactContainer();
+                    sessionStorage.currentPage = "contact";
+                }
+            } else if (state.event == 'startContactForm') {
+                if (previousEvent == 'startGameSelection') {
+                    showGameSelectionContainer();
+                    sessionStorage.currentPage = "gameSelection";
+                } else if (previousEvent == 'startDrawResults' || previousEvent == 'weekChange') {
+                    showDrawResultsContainer();
+                    sessionStorage.currentPage = "drawResults";
+                } else if (previousEvent == 'startLiveScoring') {
+                    showLiveScoringContainer();
+                    sessionStorage.currentPage = "liveScoring";
+                } else if (previousEvent == 'startGameInfo') {
+                    if (backEvents[backEvents.length - 2][1] != sessionStorage.currentGameID) {
+                        gameInfo(backEvents[backEvents.length - 2][1], false);
+                    } else {
+                        showGameInfoContainer();
+                        sessionStorage.currentPage = "gameInfo";
+                    }
+                } else if (previousEvent == 'startEndScoring') {
+                    showEndScoringContainer();
+                    sessionStorage.currentPage = "endScoring";
+                }
+            }
+        }
+        setActivePage();
+        backEvents.pop();
+        sessionStorage.backEvents = JSON.stringify(backEvents);
+    }
+};
 
 // Hides all the web page containers
 function hideAllContainers() {
@@ -101,91 +211,31 @@ function pad(value, length) {
     return value;
 }
 
-function back() {
-    var event = backEvents.pop();
-    var previousEvent = backEvents[backEvents.length - 1][0];
-    if (event[0] == 'startGameInfo') {
-        showDrawResultsContainer();
-        sessionStorage.currentPage = "drawResults";
-    } else if (event[0] == 'weekChange') {
-        changeWeeks(event[1], false);
-    } else if (event[0] == 'startGameSelection') {
-        if (previousEvent == 'weekChange') {
-            showDrawResultsContainer();
-            sessionStorage.currentPage = "drawResults";
-        } else if (previousEvent == 'startDrawResults') {
-            showDrawResultsContainer();
-            sessionStorage.currentPage = "drawResults";
-        } else if (previousEvent == 'startGameInfo') {
-            if (backEvents[backEvents.length - 1][1] != sessionStorage.currentGameID) {
-                gameInfo(backEvents[backEvents.length - 1][1], false);
-            } else {
-                showGameInfoContainer();
-                sessionStorage.currentPage = "gameInfo";
-            }
-        } else if (previousEvent == 'startEndScoring') {
-            showEndScoringContainer();
-            sessionStorage.currentPage = "endScoring";
-        }
-    } else if (event[0] == 'startLiveScoring') {
-        if (previousEvent == 'startGameSelection') {
-            showGameSelectionContainer();
-            sessionStorage.currentPage = "gameSelection";
-        }
-    } else if (event[0] == 'startEndScoring') {
-        if (previousEvent == 'weekChange') {
-            showDrawResultsContainer();
-            sessionStorage.currentPage = "drawResults";
-        } else if (previousEvent == 'startDrawResults') {
-            showDrawResultsContainer();
-            sessionStorage.currentPage = "drawResults";
-        } else if (previousEvent == 'startGameInfo') {
-            if (backEvents[backEvents.length - 1][1] != sessionStorage.currentGameID) {
-                gameInfo(backEvents[backEvents.length - 1][1], false);
-            } else {
-                showGameInfoContainer();
-                sessionStorage.currentPage = "gameInfo";
-            }
-        } else if (previousEvent == 'startLiveScoring') {
-            showLiveScoringContainer();
-            sessionStorage.currentPage = "liveScoring";
-        } else if (previousEvent == 'startGameSelection') {
-            showGameSelectionContainer();
-            sessionStorage.currentPage = "gameSelection";
-        }
-    } else if (event[0] == 'startDrawResults') {
-        if (previousEvent == 'startGameSelection') {
-            showGameSelectionContainer();
-            sessionStorage.currentPage = "gameSelection";
-        } else if (previousEvent == 'startLiveScoring') {
-            showLiveScoringContainer();
-            sessionStorage.currentPage = "liveScoring";
-        } else if (previousEvent == 'startGameInfo') {
-            if (backEvents[backEvents.length - 1][1] != sessionStorage.currentGameID) {
-                gameInfo(backEvents[backEvents.length - 1][1], false);
-            } else {
-                showGameInfoContainer();
-                sessionStorage.currentPage = "gameInfo";
-            }
-        } else if (previousEvent == 'startEndScoring') {
-            showEndScoringContainer();
-            sessionStorage.currentPage = "endScoring";
-        }
-    }
-
-    if (backEvents.length <= 1) {
-        $("#backButton").hide();
-    } else {
-        refreshBackButtonTooltip();
-    }
-}
-
 function addBackEvent(eventArray) {
-    backEvents.push(eventArray);
-    if (backEvents.length > 1) {
-        $("#backButton").show();
+    if (eventArray[0] == 'startDrawResults' || 
+        eventArray[0] == 'startGameSelection' || 
+        eventArray[0] == 'startLiveScoring' || 
+        eventArray[0] == 'startContactForm' || 
+        eventArray[0] == 'startEndScoring') {
+        var stateObj = { 
+            event: eventArray[0]
+        };
+    } else if (eventArray[0] == 'weekChange') {
+        var stateObj = { 
+            event: eventArray[0], 
+            weekNumber: eventArray[1]
+        };
+    } else if (eventArray[0] == 'startGameInfo') {
+        var stateObj = { 
+            event: eventArray[0], 
+            gameID: eventArray[1]
+        };
     }
-    refreshBackButtonTooltip();
+    history.replaceState(stateObj, "", "");
+    history.pushState(stateObj, "", "");
+    var backEvents = JSON.parse(sessionStorage.backEvents);
+    backEvents.push(eventArray);
+    sessionStorage.backEvents = JSON.stringify(backEvents);
 }
 
 function setInstructions(page) {
@@ -219,70 +269,6 @@ function toggleInstructions() {
     localStorage.instructions = localStorage.instructions == 'true' ? 'false' : 'true';
 }
 
-function refreshBackButtonTooltip() {
-    if ($('#backButton').is(":hover")) {
-        var title = generateBackButtonTooltip();
-        $("#backButton").attr('title', title).tooltip('fixTitle').tooltip('show');
-    } else {
-        var title = generateBackButtonTooltip();
-        $("#backButton").attr('title', title).tooltip('fixTitle');
-    }
-
-
-}
-
-function generateBackButtonTooltip() {
-    var text = '';
-    for (var m = backEvents.length - 1; m > 0; m -= 1) {
-        var event = backEvents[m];
-        var previousEvent = backEvents[m - 1][0];
-        var index = (backEvents.length - m).toString();
-        if (event[0] == 'startGameInfo') {
-            text += index + ") Redirect to Draw/Results<br>";
-        } else if (event[0] == 'weekChange') {
-            text += index + ") Change displayed week to W" + (event[1] + 1) + "<br>";
-        } else if (event[0] == 'startGameSelection') {
-            if (previousEvent == 'weekChange') {
-                text += index + ") Redirect to Draw/Results<br>";
-            } else if (previousEvent == 'startDrawResults') {
-                text += index + ") Redirect to Draw/Results<br>";
-            } else if (previousEvent == 'startGameInfo') {
-                text += index + ") Redirect to Game Info<br>";
-            } else if (previousEvent == 'startEndScoring') {
-                text += index + ") Redirect to End Game Scoring<br>";
-            }
-        } else if (event[0] == 'startLiveScoring') {
-            if (previousEvent == 'startGameSelection') {
-                text += index + ") Redirect to Game Selection<br>";
-            }
-        } else if (event[0] == 'startEndScoring') {
-            if (previousEvent == 'weekChange') {
-                text += index + ") Redirect to Draw/Results<br>";
-            } else if (previousEvent == 'startDrawResults') {
-                text += index + ") Redirect to Draw/Results<br>";
-            } else if (previousEvent == 'startGameInfo') {
-                text += index + ") Redirect to Game Info<br>";
-            } else if (previousEvent == 'startLiveScoring') {
-                text += index + ") Redirect to Live Scoring<br>";
-            } else if (previousEvent == 'startGameSelection') {
-                text += index + ") Redirect to Game Selection<br>";
-            }
-        } else if (event[0] == 'startDrawResults') {
-            if (previousEvent == 'startGameSelection') {
-                text += index + ") Redirect to Game Selection<br>";
-            } else if (previousEvent == 'startLiveScoring') {
-                text += index + ") Redirect to Live Scoring<br>";
-            } else if (previousEvent == 'startGameInfo') {
-                text += index + ") Redirect to Game Info<br>";
-            } else if (previousEvent == 'startEndScoring') {
-                text += index + ") Redirect to End Game Scoring<br>";
-            }
-        }
-    }
-
-    return text;
-}
-
 function getTeamName(teamID, divID) {
     teamID = String(parseInt(teamID));
     divID = parseInt(divID);
@@ -312,6 +298,8 @@ function columnName(columnName) {
             return 'Assistant Referee';
         case 'locked':
             return 'Locked';
+        case 'date':
+            return 'Date';
     }
 }
 
@@ -459,7 +447,13 @@ function generateChangedGames(startOfWeek, endOfWeek) {
                             var awayTeamName = game.awayTeamName;
                         }
                         hasAGameBeenChanged = true;
-                        html += "<div>" + allDivs[divID].divisionName + ") " + homeTeamName + " vs " + awayTeamName + " - " + columnName(gameChanges[r][1]) + " changed to " + gameChanges[r][2] + " at " + changeDate.toChangesString() + "</div>"
+                        if (gameChanges[r][1] == 'date') {
+                            var date = gameChanges[r][2];
+                            var changeValue = new Date(date.substr(0, 4), date.substr(4, 2), date.substr(6, 2)).toString(true);
+                        } else {
+                            var changeValue = gameChanges[r][2];
+                        }
+                        html += "<div>" + allDivs[divID].divisionName + ") " + homeTeamName + " vs " + awayTeamName + " - " + columnName(gameChanges[r][1]) + " was changed to " + changeValue + " (" + changeDate.toChangesString() + ")</div>"
                     }
                 }
             }
@@ -562,9 +556,9 @@ function generateGames() {
                         }
 
                         var winningTeam = "";
-                        if (allGames[c].homeTeamScore > allGames[c].awayTeamScore) {
+                        if (parseInt(allGames[c].homeTeamScore) > parseInt(allGames[c].awayTeamScore)) {
                             winningTeam = "home";
-                        } else if (allGames[c].awayTeamScore > allGames[c].homeTeamScore) {
+                        } else if (parseInt(allGames[c].awayTeamScore) > parseInt(allGames[c].homeTeamScore)) {
                             winningTeam = "away";
                         }
 
@@ -756,8 +750,10 @@ Date.prototype.toChangesString = function () {
     }
     
     if (new Date() > this.addDays(6)) {
+        this.addDays(-6);
         var date = this.getDate() + " " + months[this.getMonth()];
     } else {
+        this.addDays(-6);
         var date = '';
     }
     
@@ -974,7 +970,6 @@ function generateGameInfo() {
 
 var selectedDivisionIndex = 0;
 var selectedScoringPlay = "";
-var selectedTeam = "";
 var selectedPlays = [];
 var lastTimeScored = null;
 
@@ -1276,11 +1271,10 @@ function generateLiveScoring() {
                 awayScore = awayTeamScore;
             }
 
-            // The team names and scores are added next. Once clicked, the team name will have a 
-            // grey background and the previously selected team will be changed to a white background
+            // The team names and scores are added next.
             html += "<div class='row rowfix teamInfoLive'>";
-            html += "    <div class='homeTeamName col-xs-24' onclick='toggleSelectedTeam(this, `home`)'>" + homeTeamName + "</div>";
-            html += "    <div class='awayTeamName col-xs-24' onclick='toggleSelectedTeam(this, `away`)'>" + awayTeamName + "</div>";
+            html += "    <div class='homeTeamName col-xs-24'>" + homeTeamName + "</div>";
+            html += "    <div class='awayTeamName col-xs-24'>" + awayTeamName + "</div>";
             html += "</div>";
             html += "<div class='row rowfix scoreInfoLive'>";
             html += "    <div class='homeTeamScore col-xs-24'>" + homeScore + "</div>";
@@ -1290,12 +1284,20 @@ function generateLiveScoring() {
             // The 4 scoring plays are next. Once clicked, the scoring play will have a 
             // grey background and the previously selected play will be changed to a white background
             html += "<div class='row rowfix scoringPlayInfoLive'>";
-            html += "    <div class='scoringPlayLive try col-xs-24' onclick='toggleSelectedScoringPlay(this, `Try`)'>Try</div>";
-            html += "    <div class='scoringPlayLive conversion col-xs-24' onclick='toggleSelectedScoringPlay(this, `Conversion`)'>Conversion</div>";
+            html += "    <div class='scoringPlayLive hometry col-xs-24' onclick='toggleSelectedScoringPlay(this, `hometry`)'>Try</div>";
+            html += "    <div class='scoringPlayLive awaytry col-xs-24' onclick='toggleSelectedScoringPlay(this, `awaytry`)'>Try</div>";
             html += "</div>";
             html += "<div class='row rowfix scoringPlayInfoLive'>";
-            html += "    <div class='scoringPlayLive penalty col-xs-24' onclick='toggleSelectedScoringPlay(this, `Penalty`)'>Penalty</div>";
-            html += "    <div class='scoringPlayLive dropGoal col-xs-24' onclick='toggleSelectedScoringPlay(this, `DropGoal`)'>Drop Goal</div>";
+            html += "    <div class='scoringPlayLive homeconversion col-xs-24' onclick='toggleSelectedScoringPlay(this, `homeconversion`)'>Conversion</div>";
+            html += "    <div class='scoringPlayLive awayconversion col-xs-24' onclick='toggleSelectedScoringPlay(this, `awayconversion`)'>Conversion</div>";
+            html += "</div>";
+            html += "<div class='row rowfix scoringPlayInfoLive'>";
+            html += "    <div class='scoringPlayLive homepenalty col-xs-24' onclick='toggleSelectedScoringPlay(this, `homepenalty`)'>Penalty</div>";
+            html += "    <div class='scoringPlayLive awaypenalty col-xs-24' onclick='toggleSelectedScoringPlay(this, `awaypenalty`)'>Penalty</div>";
+            html += "</div>";
+            html += "<div class='row rowfix scoringPlayInfoLive'>";
+            html += "    <div class='scoringPlayLive homedropgoal col-xs-24' onclick='toggleSelectedScoringPlay(this, `homedropgoal`)'>Drop Goal</div>";
+            html += "    <div class='scoringPlayLive awaydropgoal col-xs-24' onclick='toggleSelectedScoringPlay(this, `awaydropgoal`)'>Drop Goal</div>";
             html += "</div>\n\n";
 
             // Next are the minutes played, description inputs and the 'Send' button. 
@@ -1309,7 +1311,7 @@ function generateLiveScoring() {
             html += "    <textarea rows='3' class='descriptionInput col-xs-31'></textarea>";
             html += "</div>";
             html += "<div class='row rowfix scoringInfoLive'>";
-            html += "    <button type='submit' class='submit col-xs-48' onclick='uploadScoringPlay(" + gameID + ", " + homeTeamScore + ", " + awayTeamScore + ")'>Send</button>";
+            html += "    <button type='submit' class='submit col-xs-48' onclick='uploadScoringPlay(" + gameID + ", " + homeTeamScore + ", " + awayTeamScore + ")'>Submit Play</button>";
             html += "</div>\n\n";
 
             html += "<div class='row deletePlayButtonRow rowfix'>";
@@ -1510,30 +1512,30 @@ function sendFullTime(gameID, homeScore, awayScore) {
 }
 
 function uploadScoringPlay(gameID, homeScore, awayScore) {
-    team = this.selectedTeam;
-    play = this.selectedScoringPlay;
+    team = selectedScoringPlay.substr(0, 4);
+    play = selectedScoringPlay.substr(4);
     minutesPlayed = document.getElementsByClassName("minutesPlayedInput")[0].value;
     description = document.getElementsByClassName("descriptionInput")[0].value;
     var result = areInputsValidUpload(team, play, minutesPlayed);
     if (result[0]) {
         // Change the current score based on the play and team passed in
         switch (play) {
-            case "Try":
+            case "try":
                 if (team == "home") {
                     homeScore += 5;
                 } else {
                     awayScore += 5;
                 }
                 break;
-            case "Penalty":
-            case "DropGoal":
+            case "penalty":
+            case "dropgoal":
                 if (team == "home") {
                     homeScore += 3;
                 } else {
                     awayScore += 3;
                 }
                 break;
-            case "Conversion":
+            case "conversion":
                 if (team == "home") {
                     homeScore += 2;
                 } else {
@@ -1576,30 +1578,15 @@ function uploadPlayLive(gameID, homeScore, awayScore, minutesPlayed, scoringPlay
 
 // Changes background of selected scoring play to light grey and the rest to transparent
 function toggleSelectedScoringPlay(elem, play) {
-    document.getElementsByClassName("try")[0].style.backgroundColor = "transparent";
-    document.getElementsByClassName("penalty")[0].style.backgroundColor = "transparent";
-    document.getElementsByClassName("conversion")[0].style.backgroundColor = "transparent";
-    document.getElementsByClassName("dropGoal")[0].style.backgroundColor = "transparent";
+    $(".scoringPlayLive").css('background-color', 'transparent');
     elem.style.backgroundColor = '#bcbcbc';
     this.selectedScoringPlay = play;
-}
-
-// Changes background of selected team to light grey and other to transparent
-function toggleSelectedTeam(elem, team) {
-    document.getElementsByClassName("homeTeamName")[0].style.backgroundColor = "transparent";
-    document.getElementsByClassName("awayTeamName")[0].style.backgroundColor = "transparent";
-    elem.style.backgroundColor = '#bcbcbc';
-    this.selectedTeam = team;
 }
 
 // Checks if all the inputs are valid when uploading a scoring play
 function areInputsValidUpload(team, play, minutesPlayed) {
     var message = "";
     var valid = true;
-    if (team == "") {
-        message += "Please select a team\n";
-        valid = false;
-    }
 
     if (play == "") {
         message += "Please select a play\n";
@@ -2088,6 +2075,7 @@ function showContactContainer() {
     hideAllContainers();
     setInstructions('contact');
     sessionStorage.currentPage = 'contact';
+    addBackEvent(['startContactForm']);
     setActivePage();
     $("#contactContainer").show();
 }

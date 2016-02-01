@@ -1,4 +1,9 @@
-add date change to draw/results. fix the css for date picker.
+add 2 columns of scoring plays to live scoring and check upload still works
+chnage division to grade
+test selecting play then half time then submit
+
+TEST EVERYTHING
+
 add ability to favorite games
 add points table
 add overtime to live scoring

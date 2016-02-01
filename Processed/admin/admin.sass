@@ -171,6 +171,10 @@ button.weeknav
 #gameEditorTable td
   border: 1px black solid
   padding: 5px
+  user-select: none;
+
+  &.date
+    padding: 0
 
 #tablePlaceholderText
   font-size: x-large
@@ -184,5 +188,7 @@ button.weeknav
 #addGameForm
   display: none
 
-td
-  user-select: none;
+input.datepicker
+  padding-left: 15px
+  border: 0
+  width: 130px

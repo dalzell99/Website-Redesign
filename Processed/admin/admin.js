@@ -3,13 +3,7 @@ var allDivs = [];
 var allTeams = [];
 var allGames = [];
 
-$(document).ready(function () {
-    $('#backButton').tooltip({
-        title: generateBackButtonTooltip(), 
-        html: true, 
-        placement: "bottom"
-    });
-    
+$(document).ready(function () {    
     var post = $.post('http://ccrscoring.co.nz/phpscripts/getallinfo.php', {},
         function (response) {
             var teams = response[0];
@@ -60,6 +54,29 @@ $(document).ready(function () {
         }
     })
 });
+
+// Catch browser back button event
+window.onpopstate = function(event) {
+    var state = event.state;
+    if (state != null) {
+        if (state.event == 'startTeamEditor') {
+            sessionStorage.currentPage = "gameEditor";
+            showGameEditorContainer();
+        } else if (state.event == 'startGameEditor') {
+            sessionStorage.currentPage = "teamEditor";
+            showTeamEditorContainer();
+        } else if (state.event == 'changeTeamName') {
+            changeTeamName(state.teamID, state.oldName, state.divisionID, false);
+        } else if (state.event == 'addTeam') {
+            deleteTeam(state.teamName, state.divisionID);
+        } else if (state.event == 'gameInfoChanged') {
+            changeGameInfo(state.gameID, state.column, state.oldValue, '', state.rowIndex, false);
+        } else if (state.event == 'addGame') {
+            selectedRowGameID.push(state.gameID);
+            deleteGame(state.gameID);
+        }
+    }
+};
 
 // Shows password div
 function showPassword() {
@@ -117,100 +134,40 @@ function setActivePage() {
     $('.navbar-collapse.in').removeClass('in').prop('aria-expanded', false);
 }
 
-function back() {
-    var event = backEvents.pop();
-    var previousEvent = backEvents[backEvents.length - 1][0];
-    if (event[0] == 'startTeamEditor') {
-        sessionStorage.currentPage = "gameEditor";
-        showGameEditorContainer();
-    } else if (event[0] == 'startGameEditor') {
-        sessionStorage.currentPage = "teamEditor";
-        showTeamEditorContainer();
-    } else if (event[0] == 'changeTeamName') {
-        changeTeamName(event[1], event[2], false);
-    } else if (event[0] == 'addTeam') {
-        deleteTeam(event[1], event[2]);
-    } else if (event[0] == 'gameInfoChanged') {
-        changeGameInfo(event[1], event[2], event[3], '', event[4], false);
-    } else if (event[0] == 'addGame') {
-        selectedRowGameID.push(event[1]);
-        deleteGame(event[1]);
-    }
-
-    if (backEvents.length <= 1) {
-        $("#backButton").hide();
-    } else {
-        refreshBackButtonTooltip();
-    }
-}
-
 function addBackEvent(eventArray) {
-    backEvents.push(eventArray);
-    if (backEvents.length > 1) {
-        $("#backButton").show();
+    if (eventArray[0] == 'startTeamEditor' || eventArray[0] == 'startGameEditor') {
+        var stateObj = { 
+            event: eventArray[0]
+        };
+    } else if (eventArray[0] == 'changeTeamName') {
+        var stateObj = { 
+            event: eventArray[0], 
+            teamID: eventArray[1], 
+            oldName: eventArray[2],
+            divisionID: eventArray[3]
+        };
+    } else if (eventArray[0] == 'addTeam') {
+        var stateObj = { 
+            event: eventArray[0], 
+            teamName: eventArray[1], 
+            divisionID: eventArray[2]
+        };
+    } else if (eventArray[0] == 'gameInfoChanged') {
+        var stateObj = { 
+            event: eventArray[0], 
+            gameID: eventArray[1], 
+            column: eventArray[2], 
+            oldValue: eventArray[3], 
+            rowIndex: eventArray[4]
+        };
+    } else if (eventArray[0] == 'addGame') {
+        var stateObj = { 
+            event: eventArray[0], 
+            gameID: eventArray[1]
+        };
     }
-    refreshBackButtonTooltip();
-}
-
-function refreshBackButtonTooltip() {
-    if ($('#backButton').is(":hover")) {
-        var title = generateBackButtonTooltip();
-        $("#backButton").attr('title', title).tooltip('fixTitle').tooltip('show');
-    } else {
-        var title = generateBackButtonTooltip();
-        $("#backButton").attr('title', title).tooltip('fixTitle');
-    }
-    
-    
-}
-
-function generateBackButtonTooltip() {
-    var text = '';
-    for (var m = backEvents.length - 1; m > 0; m -= 1) {
-        var event = backEvents[m];
-        var index = (backEvents.length - m).toString();
-        switch (event[0]) {
-            case 'startTeamEditor':
-                text += index + ") Redirect to Game Editor<br>";
-                break;
-            case 'startGameEditor':
-                text += index + ") Redirect to Team Editor<br>";
-                break;
-            case 'changeTeamName':
-                text += index + ") Change the " + event[3] + " team name back to " + event[2] + "<br>";
-                break;
-            case 'addTeam':
-                text += index + ") Remove the " + event[1] + " team from " + allDivs[parseInt(event[2])].divisionName + "<br>";
-                break;
-            case 'gameInfoChanged':
-                text += index + ") Change the " + columnName(event[2]) + " for the " + event[8] + " game between " + event[5] + " and " + event[6] + " on " + event[7] + " back to " + event[3] + "<br>";
-                break;
-            case 'addGame':
-                text += index + ") Delete the " + event[5] + " game between " + event[2] + " and " + event[3] + " on " + event[4] + "<br>";
-                break;
-        }
-    }
-    
-    return text;
-}
-
-function columnName(columnName) {
-    switch (columnName) {
-        case 'homeTeamScore':
-            return 'home score';
-        case 'awayTeamScore':
-            return 'away score';
-        case 'time':
-            return 'start time';
-        case 'location':
-            return 'location';
-        case 'ref':
-            return 'referee';
-        case 'assRef1' || 'assRef2':
-            return 'assistant referee';
-        case 'locked':
-            return 'locked';
-    }
+    history.replaceState(stateObj, "", "");
+    history.pushState(stateObj, "", "");
 }
 
 function setInstructions(page) {
@@ -238,6 +195,13 @@ function toggleInstructions() {
 Date.prototype.toString = function() {
     var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     return this.getDate() + " " + months[this.getMonth()];
+};
+
+Date.prototype.toInitialString = function() {
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    var dayOfGame = daysOfWeek[this.getDay()];
+    return dayOfGame + " " + this.getDate() + " " + months[this.getMonth()] + " " + String(this.getFullYear()).substr(2, 2);
 };
 
 function pad(value, length) {
@@ -362,7 +326,7 @@ function changeTeamName(teamID, newName, divisionID, backEvent) {
         function (response) {
             if (response == 'success') {
                 if (backEvent) {
-                    addBackEvent(['changeTeamName', teamID, oldName, newName]);
+                    addBackEvent(['changeTeamName', teamID, oldName, divisionID]);
                 }
                 var teams = allTeams[parseInt(divisionID)];
                 for (var q = 0; q < teams.length; q += 1) {
@@ -575,21 +539,24 @@ function generateGameTable(startDate, endDate) {
     $("#gameEditorTable").empty().append("<div id='tablePlaceholderText'>Table is being created</div>");
 
     html += "<table id='gameEditorTable'>";
-    html += "    <tr>";
-    html += "        <th id='tableHeaderDate'>Date</th>";
-    html += "        <th id='tableHeaderDivision'>Division</th>";
-    html += "        <th id='tableHeaderHomeTeam'>Home Team</th>";
-    html += "        <th id='tableHeaderHomeScore'>Home Score</th>";
-    html += "        <th id='tableHeaderAwayTeam'>Away Team</th>";
-    html += "        <th id='tableHeaderAwayScore'>Away Score</th>";
-    html += "        <th id='tableHeaderTime'>Time</th>";
-    html += "        <th id='tableHeaderLocation'>Location</th>";
-    html += "        <th id='tableHeaderRef'>Ref</th>";
-    html += "        <th id='tableHeaderAssRef1'>Assistant Ref 1</th>";
-    html += "        <th id='tableHeaderAssRef2'>Assistant Ref 2</th>";
-    html += "        <th id='tableHeaderLocked'>Locked</th>";
-    html += "    </tr>";
+    html += "    <thead>";
+    html += "        <tr>";
+    html += "            <th id='tableHeaderDate'>Date</th>";
+    html += "            <th id='tableHeaderDivision'>Division</th>";
+    html += "            <th id='tableHeaderHomeTeam'>Home Team</th>";
+    html += "            <th id='tableHeaderHomeScore'>Home Score</th>";
+    html += "            <th id='tableHeaderAwayTeam'>Away Team</th>";
+    html += "            <th id='tableHeaderAwayScore'>Away Score</th>";
+    html += "            <th id='tableHeaderTime'>Time</th>";
+    html += "            <th id='tableHeaderLocation'>Location</th>";
+    html += "            <th id='tableHeaderRef'>Ref</th>";
+    html += "            <th id='tableHeaderAssRef1'>Assistant Ref 1</th>";
+    html += "            <th id='tableHeaderAssRef2'>Assistant Ref 2</th>";
+    html += "            <th id='tableHeaderLocked'>Locked</th>";
+    html += "        </tr>";
+    html += "    </thead>";
     
+    html += "    <tbody>";
     var offset = 0;
     for (var u = 0; u < allGames.length; u += 1) {
         for (var l = 0; l < allGames[u].length; l += 1) {
@@ -621,29 +588,31 @@ function generateGameTable(startDate, endDate) {
                 }
 
                 var division = allDivs[divID].divisionName;                
-                html += "    <tr class='gameRow " + gameID + " " + (offset + l) + "'>";
-                html += "        <td class='date' sorttable_customkey='" + dateFromGameID + "'><input class='datepicker " + (offset + l) + "' data-value='" + dateToDisplay + "'></input></td>";
-                html += "        <td class='divisionName' sorttable_customkey='" + divID + "'>" + division + "</td>";
-                html += "        <td class='homeTeamName'>" + homeTeamName + "</td>";
-                html += "        <td class='homeTeamScore' contenteditable='true'>" + game.homeTeamScore + "</td>";
-                html += "        <td class='awayTeamName'>" + awayTeamName + "</td>";
-                html += "        <td class='awayTeamScore' contenteditable='true'>" + game.awayTeamScore + "</td>";
-                html += "        <td class='time' contenteditable='true'>" + game.time + "</td>";
-                html += "        <td class='location' contenteditable='true'>" + game.location + "</td>";
-                html += "        <td class='ref' contenteditable='true'>" + game.ref + "</td>";
-                html += "        <td class='assRef1' contenteditable='true'>" + game.assRef1 + "</td>";
-                html += "        <td class='assRef2' contenteditable='true'>" + game.assRef2 + "</td>";
-                html += "        <td class='locked' contenteditable='true'>" + game.locked + "</td>";
-                html += "    </tr>";
+                html += "        <tr class='gameRow " + gameID + " " + (offset + l) + "'>";
+                html += "            <td class='date' sorttable_customkey='" + dateFromGameID + "'><input class='datepicker " + (offset + l) + "' data-value='" + dateToDisplay + "' value='" + gameDate.toInitialString() + "'></td>";
+                html += "            <td class='divisionName' sorttable_customkey='" + divID + "'>" + division + "</td>";
+                html += "            <td class='homeTeamName'>" + homeTeamName + "</td>";
+                html += "            <td class='homeTeamScore' contenteditable='true'>" + game.homeTeamScore + "</td>";
+                html += "            <td class='awayTeamName'>" + awayTeamName + "</td>";
+                html += "            <td class='awayTeamScore' contenteditable='true'>" + game.awayTeamScore + "</td>";
+                html += "            <td class='time' contenteditable='true'>" + game.time + "</td>";
+                html += "            <td class='location' contenteditable='true'>" + game.location + "</td>";
+                html += "            <td class='ref' contenteditable='true'>" + game.ref + "</td>";
+                html += "            <td class='assRef1' contenteditable='true'>" + game.assRef1 + "</td>";
+                html += "            <td class='assRef2' contenteditable='true'>" + game.assRef2 + "</td>";
+                html += "            <td class='locked' contenteditable='true'>" + game.locked + "</td>";
+                html += "        </tr>";
             }
         }
         offset += allGames[u].length;
     }
+    html += "    </tbody>"
+    html += "    <tfoot></tfoot>"
     html += "</table>";
     $("#gameEditorTable").empty().append(html);
 
     // Make the table sortable
-    newTableObject = $("table")[0];
+    newTableObject = $("table#gameEditorTable")[0];
     sorttable.makeSortable(newTableObject);
     // Sort by division
     var divisionTableHeader = $("#tableHeaderDivision")[0];
@@ -658,21 +627,21 @@ function generateGameTable(startDate, endDate) {
 }
 
 function filterDates() {
-    var startDateString = $("#dateFilterStart").val();
+    var startDateString = $("#dateFilterStart")[0].nextElementSibling.nextElementSibling.value;
     if (startDateString != "") {
-        var yearStart = parseInt(startDateString.substr(0, 4));
-        var monthStart = parseInt(startDateString.substr(5, 2)) - 1;
-        var dayStart = parseInt(startDateString.substr(8, 2));
+        var yearStart = parseInt(startDateString.substr(6, 4));
+        var monthStart = parseInt(startDateString.substr(3, 2)) - 1;
+        var dayStart = parseInt(startDateString.substr(0, 2));
         var startDate = new Date(yearStart, monthStart, dayStart);
     } else {
         var startDate = new Date(2000, 1, 1);
     }
 
-    var endDateString = $("#dateFilterEnd").val();
+    var endDateString = $("#dateFilterEnd")[0].nextElementSibling.nextElementSibling.value;
     if (endDateString != "") {
-        var yearEnd = parseInt(endDateString.substr(0, 4));
-        var monthEnd = parseInt(endDateString.substr(5, 2)) - 1;
-        var dayEnd = parseInt(endDateString.substr(8, 2));
+        var yearEnd = parseInt(endDateString.substr(6, 4));
+        var monthEnd = parseInt(endDateString.substr(3, 2)) - 1;
+        var dayEnd = parseInt(endDateString.substr(0, 2));
         var endDate = new Date(yearEnd, monthEnd, dayEnd);
     } else {
         var endDate = new Date(2050, 1, 1);
@@ -682,45 +651,53 @@ function filterDates() {
 }
 
 function addEventsGame() {
-    $("input.datepicker").pickadate({
+    $("input.datepicker").click(function() {
+        $(this).off('click');
+        $(this).pickadate({
+            format: 'ddd d mmm yy',
+            today: 'Today',
+            clear: '',
+            close: 'Cancel',
+            labelMonthNext: 'Go to the next month',
+            labelMonthPrev: 'Go to the previous month',
+            formatSubmit: 'dd/mm/yyyy',
+            hiddenPrefix: 'prefix__',
+            onSet: function(context) {
+                var oldGameID = this.$node[0].parentElement.parentElement.classList[1];
+                var date = this._hidden.value;
+                var newGameID = date.substr(6, 4) + date.substr(3, 2) + date.substr(0, 2) + oldGameID.substr(8, oldGameID.length - 8);
+                // delete game
+                // create new one with date change added to changes
+                var post = $.post('http://ccrscoring.co.nz/phpscripts/changedate.php', {
+                    oldGameID: oldGameID,
+                    newGameID: newGameID
+                },
+                function (response) {
+                    if (response == 'success') {
+                        // do nothing
+                    } else {
+                        // Error
+                        alert("Error while changing date. Please refresh page and try again. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+                    }
+                });
+
+                post.fail(function (request, textStatus, errorThrown) {
+                    alert("Error while changing date. Please refresh page and try again. If problem persists, send me an email (cfd19@hotmail.co.nz)");
+                });
+            }
+        });
+        $(this).click();
+    });
+    $("input[type='date']").pickadate({
         format: 'ddd d mmm yy',
-        today: '',
-        clear: '',
+        today: 'Today',
+        clear: 'Clear',
         close: 'Cancel',
         labelMonthNext: 'Go to the next month',
         labelMonthPrev: 'Go to the previous month',
-        labelMonthSelect: 'Pick a month from the dropdown',
-        labelYearSelect: 'Pick a year from the dropdown',
-        selectMonths: true,
-        selectYears: true,
         formatSubmit: 'dd/mm/yyyy',
-        hiddenPrefix: 'prefix__',
-        onSet: function(context) {
-            var oldGameID = this.$node[0].parentElement.parentElement.classList[1];
-            var date = this._hidden.value;
-            var newGameID = date.substr(6, 4) + date.substr(3, 2) + date.substr(0, 2) + oldGameID.substr(8, oldGameID.length - 8);
-            // delete game
-            // create new one with date change added to changes
-            var post = $.post('http://ccrscoring.co.nz/phpscripts/changedate.php', {
-                oldGameID: oldGameID,
-                newGameID: newGameID
-            },
-            function (response) {
-                if (response == 'success') {
-                    // do nothing
-                } else {
-                    // Error
-                    alert("Error while changing date. Please refresh page and try again. If problem persists, send me an email (cfd19@hotmail.co.nz)");
-                }
-            });
-
-            post.fail(function (request, textStatus, errorThrown) {
-                alert("Error while changing date. Please refresh page and try again. If problem persists, send me an email (cfd19@hotmail.co.nz)");
-            });
-        }
+        hiddenPrefix: 'prefix__'
     });
-    
-    
     
     $("tr > [contenteditable=true]").on({
         keydown: function (event) {
@@ -747,7 +724,7 @@ function addEventsGame() {
             var rowIndex = this.parentElement.classList.item(2);
             var homeTeam = $("." + gameID + " > .homeTeamName").html();
             var awayTeam = $("." + gameID + " > .awayTeamName").html();
-            var date = $("." + gameID + " > .date").html();
+            var date = $("." + gameID + " > .date")[0].firstElementChild.value;
             // check if content changed
             if (oldValue != newValue) {
                 changeGameInfo(gameID, column, newValue, oldValue, rowIndex, true, homeTeam, awayTeam, date);
@@ -795,7 +772,7 @@ function changeGameInfo(gameID, column, newValue, oldValue, rowIndex, backEvent,
         function (response) {
             if (response == 'success') {
                 if (backEvent) { 
-                    addBackEvent(['gameInfoChanged', gameID, column, oldValue, rowIndex, homeTeam, awayTeam, date, allDivs[parseInt(gameID.slice(-2))].divisionName]); 
+                    addBackEvent(['gameInfoChanged', gameID, column, oldValue, rowIndex]); 
                 } else {
                     var selector = "." + rowIndex + " > ." + column;
                     $(selector).empty().append(newValue);
@@ -885,8 +862,8 @@ function addGame() {
         var awayTeamID = '' + awayVal;
     }
 
-    var dateVal = $("#addGameDatePicker").val();
-    var date = dateVal.substr(0, 4) + dateVal.substr(5, 2) + dateVal.substr(8, 2);
+    var dateVal = $("#addGameDatePicker")[0].nextElementSibling.nextElementSibling.value;
+    var date = dateVal.substr(6, 4) + dateVal.substr(3, 2) + dateVal.substr(0, 2);
     var dateString = new Date(parseInt(date.substr(0,4)), parseInt(date.substr(4,2)) - 1, parseInt(date.substr(6,2))).toString();
 
     var gameID = date + homeTeamID + awayTeamID + division;

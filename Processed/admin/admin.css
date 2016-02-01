@@ -214,6 +214,14 @@ button.weeknav.active {
 #gameEditorTable td {
   border: 1px black solid;
   padding: 5px;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+}
+
+#gameEditorTable td.date {
+  padding: 0;
 }
 
 #tablePlaceholderText {
@@ -231,9 +239,8 @@ button.weeknav.active {
   display: none;
 }
 
-td {
-  -webkit-user-select: none;
-     -moz-user-select: none;
-      -ms-user-select: none;
-          user-select: none;
+input.datepicker {
+  padding-left: 15px;
+  border: 0;
+  width: 130px;
 }
