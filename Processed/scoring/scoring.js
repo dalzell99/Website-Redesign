@@ -1,5 +1,5 @@
 var backEvents = [];
-const NEVER = 100000;
+var NEVER = 100000;
 var counter = 0;
 var allTeams = [];
 var allDivs = [];
@@ -62,7 +62,6 @@ $(document).ready(function () {
         }
     });
 });
-
 // Catch browser back button event
 window.onpopstate = function(event) {
     var state = event.state;
@@ -231,11 +230,13 @@ function addBackEvent(eventArray) {
             gameID: eventArray[1]
         };
     }
-    history.replaceState(stateObj, "", "");
-    history.pushState(stateObj, "", "");
-    var backEvents = JSON.parse(sessionStorage.backEvents);
-    backEvents.push(eventArray);
-    sessionStorage.backEvents = JSON.stringify(backEvents);
+    if (history.replaceState){
+        history.replaceState(stateObj, "", "");
+        history.pushState(stateObj, "", "");
+        var backEvents = JSON.parse(sessionStorage.backEvents);
+        backEvents.push(eventArray);
+        sessionStorage.backEvents = JSON.stringify(backEvents);
+    }
 }
 
 function setInstructions(page) {
@@ -317,6 +318,7 @@ var startDateArray = [2015, 2, 23];
 var autoUpdateTimer;
 var updateDuration;
 var expandedDivisions = [];
+var gameChangesExpanded = false;
 var timer;
 
 function drawResults(createBackEvent) {
@@ -351,6 +353,11 @@ function toggleWeeks() {
 function toggleGameChanges() {
     $("#gameChanges").toggle();
     localStorage.lastTimeUpdatesChecked = new Date().toUTCString();
+    if (gameChangesExpanded) {
+        gameChangesExpanded = false;
+    } else {
+        gameChangesExpanded = true;
+    }
 }
 
 function generateWeekSelector() {
@@ -360,7 +367,6 @@ function generateWeekSelector() {
 
     html += "<div id='autoUpdateButtonRow'>";
     html += "    Auto Update: ";
-    html += "    <button id='au10' class='autoUpdateButton active' onclick='changeAutoUpdateInterval(10)'>10s</button>";
     html += "    <button id='au30' class='autoUpdateButton' onclick='changeAutoUpdateInterval(30)'>30s</button>";
     html += "    <button id='au60' class='autoUpdateButton' onclick='changeAutoUpdateInterval(60)'>1m</button>";
     html += "    <button id='au300' class='autoUpdateButton' onclick='changeAutoUpdateInterval(300)'>5m</button>";
@@ -374,7 +380,7 @@ function generateWeekSelector() {
     for (var a = 0; a < numWeeks; a += 1) {
         html += "        <button onclick='changeWeeks(" + a + ", true)' class='weeknav week" + (a + 1) + " col-xs-12 col-sm-8 col-md-4'>";
         html += "            <div class='weektitle'>W" + (a + 1) + "</div>";
-        html += "            <div class='date'>" + startDate.toString(false) + " - " + endDate.toString(false) + "</div>";
+        html += "            <div class='date'>" + startDate.toCustomDateString(false) + " - " + endDate.toCustomDateString(false) + "</div>";
         html += "        </button>";
         startDate = startDate.addDays(7);
         endDate = endDate.addDays(7);
@@ -396,7 +402,7 @@ function generateWeekSelector() {
     html += "<div class='row colourLegend'>";
     html += "    <div class='colour col-xs-24'>";
     html += "        <div class='yellowSquare'></div>";
-    html += "        <div class='colourLabel'>Live Scoring Started but Not Finished</div>";
+    html += "        <div class='colourLabel'>Live Scoring Not Completed</div>";
     html += "    </div>";
     html += "    <div class='colour col-xs-24'>";
     html += "        <div class='redSquare'></div>";
@@ -449,7 +455,7 @@ function generateChangedGames(startOfWeek, endOfWeek) {
                         hasAGameBeenChanged = true;
                         if (gameChanges[r][1] == 'date') {
                             var date = gameChanges[r][2];
-                            var changeValue = new Date(date.substr(0, 4), date.substr(4, 2), date.substr(6, 2)).toString(true);
+                            var changeValue = new Date(date.substr(0, 4), date.substr(4, 2), date.substr(6, 2)).toCustomDateString(true);
                         } else {
                             var changeValue = gameChanges[r][2];
                         }
@@ -466,6 +472,10 @@ function generateChangedGames(startOfWeek, endOfWeek) {
 
         if (!hasAGameBeenChanged) {
             $(".changestoggledisplay").hide();
+        }
+        
+        if (gameChangesExpanded) {
+            $("#gameChanges").show();
         }
     } else {
         $("#changedGamesContainer").empty();
@@ -489,7 +499,7 @@ function generateGames() {
                 var gamesInRow = 0;
                 var gameInDivisionThisWeek = false;
                 html += "<div id='div" + allDivs[b].divisionID + "Row' class='row rowfix'>";
-                html += "    <div class='col-sm-48 divtitle' onclick='toggleGames(`div" + allDivs[b].divisionID + "`);'>";
+                html += "    <div class='col-sm-48 divtitle' onclick='toggleGames(\"div" + allDivs[b].divisionID + "\");'>";
                 html += "        <h3>" + allDivs[b].divisionName + "</h3>";
                 html += "    </div><!-- End of divtitle div -->";
                 html += "    <div class='col-xs-48 gamerowcontainer div" + allDivs[b].divisionID + "'>";
@@ -522,7 +532,7 @@ function generateGames() {
                         var timeString = '';
                         var gameSituation = '';
                         if (allGames[c].minutesPlayed == 0) {
-                            timeString = gameDateDate.toString(true) + " " + allGames[c].time;
+                            timeString = gameDateDate.toCustomDateString(true) + " " + allGames[c].time;
                             gameSituation = "notstarted";
                         } else if (allGames[c].minutesPlayed == 80) {
                             timeString = "Full Time";
@@ -666,7 +676,7 @@ function generateGames() {
 
 function changeWeeks(week, createBackEvent) {
     if (createBackEvent) {
-        addBackEvent(['weekChange', parseInt(currentWeek.toString())]);
+        addBackEvent(['weekChange', parseInt(currentWeek.toCustomDateString())]);
     }
     currentWeek = week;
     localStorage.currentWeek = currentWeek;
@@ -726,7 +736,7 @@ Date.prototype.addDays = function (days) {
     return this;
 };
 
-Date.prototype.toString = function (dayOfWeek) {
+Date.prototype.toCustomDateString = function (dayOfWeek) {
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     var dayOfGame = '';
@@ -827,7 +837,7 @@ function generateGameInfo() {
             // If game has had any updates (minutesPlayed == 0) then display when the game is/was to be played
             var minutesOrTime = '';
             if (response[0].minutesPlayed == '0') {
-                minutesOrTime = gameDateDate.toString(true) + " " + response[0].time;
+                minutesOrTime = gameDateDate.toCustomDateString(true) + " " + response[0].time;
             } else if (response[0].minutesPlayed == '80') {
                 minutesOrTime = 'Full Time';
             } else if (response[0].minutesPlayed == '40') {
@@ -1050,7 +1060,7 @@ function generateGameSelection() {
     var html = '';
 
     html += "<div class='row divDropDownRow rowfix'>";
-    html += "    Division:";
+    html += "    Grade:";
     html += "    <select id='teamSelectionDivisionDropDown' onchange='changeTeamDropdowns()'>";
     for (var h = 0; h < allDivs.length; h += 1) {
         html += "<option value=" + allDivs[h].divisionID + ">" + allDivs[h].divisionName + "</option>";
@@ -1111,7 +1121,7 @@ function selectGame() {
     var today = new Date();
     var dd = pad(today.getDate(), 2);
     var mm = pad(today.getMonth() + 1, 2); //January is 0!
-    var yyyy = today.getFullYear().toString();
+    var yyyy = String(today.getFullYear());
     var date = yyyy + mm + dd;
 
     var division = $("#teamSelectionDivisionDropDown").val();
@@ -1244,7 +1254,7 @@ function generateLiveScoring() {
             html += "            <div class='changeScoreFormLabel col-xs-10'>Minutes Played:</div><input class='col-xs-18' type='number' id='newminutesplayed'><br>";
             html += "        </div>";
             html += "        <div class='row changeScoreInputRow rowfix'>";
-            html += "            <input id='changeScoreFormButton' type='submit' onclick='changeScore(" + gameID + ")'>";
+            html += "            <button id='changeScoreFormButton' onclick='changeScore(" + gameID + ")'>Submit New Score</button>";
             html += "        </div>";
             html += "    </div>";
             html += "</div>\n\n";
@@ -1284,20 +1294,20 @@ function generateLiveScoring() {
             // The 4 scoring plays are next. Once clicked, the scoring play will have a 
             // grey background and the previously selected play will be changed to a white background
             html += "<div class='row rowfix scoringPlayInfoLive'>";
-            html += "    <div class='scoringPlayLive hometry col-xs-24' onclick='toggleSelectedScoringPlay(this, `hometry`)'>Try</div>";
-            html += "    <div class='scoringPlayLive awaytry col-xs-24' onclick='toggleSelectedScoringPlay(this, `awaytry`)'>Try</div>";
+            html += "    <div class='scoringPlayLive homeTry col-xs-24' onclick='toggleSelectedScoringPlay(this, `homeTry`)'>Try</div>";
+            html += "    <div class='scoringPlayLive awayTry col-xs-24' onclick='toggleSelectedScoringPlay(this, `awayTry`)'>Try</div>";
             html += "</div>";
             html += "<div class='row rowfix scoringPlayInfoLive'>";
-            html += "    <div class='scoringPlayLive homeconversion col-xs-24' onclick='toggleSelectedScoringPlay(this, `homeconversion`)'>Conversion</div>";
-            html += "    <div class='scoringPlayLive awayconversion col-xs-24' onclick='toggleSelectedScoringPlay(this, `awayconversion`)'>Conversion</div>";
+            html += "    <div class='scoringPlayLive homeConversion col-xs-24' onclick='toggleSelectedScoringPlay(this, `homeConversion`)'>Conversion</div>";
+            html += "    <div class='scoringPlayLive awayConversion col-xs-24' onclick='toggleSelectedScoringPlay(this, `awayConversion`)'>Conversion</div>";
             html += "</div>";
             html += "<div class='row rowfix scoringPlayInfoLive'>";
-            html += "    <div class='scoringPlayLive homepenalty col-xs-24' onclick='toggleSelectedScoringPlay(this, `homepenalty`)'>Penalty</div>";
-            html += "    <div class='scoringPlayLive awaypenalty col-xs-24' onclick='toggleSelectedScoringPlay(this, `awaypenalty`)'>Penalty</div>";
+            html += "    <div class='scoringPlayLive homePenalty col-xs-24' onclick='toggleSelectedScoringPlay(this, `homePenalty`)'>Penalty</div>";
+            html += "    <div class='scoringPlayLive awayPenalty col-xs-24' onclick='toggleSelectedScoringPlay(this, `awayPenalty`)'>Penalty</div>";
             html += "</div>";
             html += "<div class='row rowfix scoringPlayInfoLive'>";
-            html += "    <div class='scoringPlayLive homedropgoal col-xs-24' onclick='toggleSelectedScoringPlay(this, `homedropgoal`)'>Drop Goal</div>";
-            html += "    <div class='scoringPlayLive awaydropgoal col-xs-24' onclick='toggleSelectedScoringPlay(this, `awaydropgoal`)'>Drop Goal</div>";
+            html += "    <div class='scoringPlayLive homeDropGoal col-xs-24' onclick='toggleSelectedScoringPlay(this, `homeDropGoal`)'>Drop Goal</div>";
+            html += "    <div class='scoringPlayLive awayDropGoal col-xs-24' onclick='toggleSelectedScoringPlay(this, `awayDropGoal`)'>Drop Goal</div>";
             html += "</div>\n\n";
 
             // Next are the minutes played, description inputs and the 'Send' button. 
@@ -1504,10 +1514,12 @@ function changeScore(gameID) {
 }
 
 function sendHalfTime(gameID, homeScore, awayScore) {
+    selectedScoringPlay = '';
     uploadPlayLive(gameID, homeScore, awayScore, '40', 'halfTime', '', 'n');
 }
 
 function sendFullTime(gameID, homeScore, awayScore) {
+    selectedScoringPlay = '';
     uploadPlayLive(gameID, homeScore, awayScore, '80', 'fullTime', '', 'y');
 }
 
@@ -1516,26 +1528,26 @@ function uploadScoringPlay(gameID, homeScore, awayScore) {
     play = selectedScoringPlay.substr(4);
     minutesPlayed = document.getElementsByClassName("minutesPlayedInput")[0].value;
     description = document.getElementsByClassName("descriptionInput")[0].value;
-    var result = areInputsValidUpload(team, play, minutesPlayed);
+    var result = areInputsValidUpload(play, minutesPlayed);
     if (result[0]) {
         // Change the current score based on the play and team passed in
         switch (play) {
-            case "try":
+            case "Try":
                 if (team == "home") {
                     homeScore += 5;
                 } else {
                     awayScore += 5;
                 }
                 break;
-            case "penalty":
-            case "dropgoal":
+            case "Penalty":
+            case "DropGoal":
                 if (team == "home") {
                     homeScore += 3;
                 } else {
                     awayScore += 3;
                 }
                 break;
-            case "conversion":
+            case "Conversion":
                 if (team == "home") {
                     homeScore += 2;
                 } else {
@@ -1584,7 +1596,7 @@ function toggleSelectedScoringPlay(elem, play) {
 }
 
 // Checks if all the inputs are valid when uploading a scoring play
-function areInputsValidUpload(team, play, minutesPlayed) {
+function areInputsValidUpload(play, minutesPlayed) {
     var message = "";
     var valid = true;
 
@@ -1724,6 +1736,8 @@ function deleteSelectedPlays() {
                         // Reload page
                         generateLiveScoring();
                     }
+                } else if (response == 'locked') {
+                    alert("This game is locked so it can\'t be updated. If you have uploaded the 'Full Time' play, you can unlock the game by deleting it, otherwise an admin locked the game."); 
                 } else {
                     alert('Error. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)');
                 }
@@ -1872,7 +1886,7 @@ function generateEndScoring() {
     var html = '';
 
     html += "<div class='row divDropDownRowEnd rowfix'>";
-    html += "    <div class='titleEnd'>Division:</div>";
+    html += "    <div class='titleEnd'>Grade:</div>";
     html += "    <select id='endScoringDivisionDropDown' onchange='changeTeamDropdownsEnd()'>";
     for (var l = 0; l < allDivs.length; l += 1) {
         html += "<option value=" + allDivs[l].divisionID + ">" + allDivs[l].divisionName + "</option>";
@@ -1918,7 +1932,21 @@ function generateEndScoring() {
 
     $("#endScoringContainer").empty().append(html);
     $("#endScoringDivisionDropDown").prop('selectedIndex', selectedDivisionIndexEnd);
+    addEventsEnd();
     showEndScoringContainer();
+}
+
+function addEventsEnd() {
+    $("#datePicker").pickadate({
+        format: 'ddd d mmm yy',
+        today: 'Today',
+        clear: 'Clear',
+        close: 'Cancel',
+        labelMonthNext: 'Go to the next month',
+        labelMonthPrev: 'Go to the previous month',
+        formatSubmit: 'dd/mm/yyyy',
+        hiddenPrefix: 'prefix__'
+    });
 }
 
 function changeTeamDropdownsEnd() {
@@ -1966,10 +1994,10 @@ function checkGameEnd(gameID, homeScore, awayScore, scoringPlay, homeTeam, awayT
 }
 
 function submitScore() {
-    var today = $("#datePicker").val();
-    var dd = today.substr(8, 2);
-    var mm = today.substr(5, 2);
-    var yyyy = today.substr(0, 4);
+    var today = $("#datePicker")[0].nextElementSibling.nextElementSibling.value;
+    var dd = today.substr(0, 2);
+    var mm = today.substr(3, 2);
+    var yyyy = today.substr(6, 4);
 
     var division = $("#endScoringDivisionDropDown").val();
 
@@ -2093,6 +2121,9 @@ function submitContactForm() {
             },
             function (response) {
                 if (response == 'success') {
+                    $("#contactFormName").val('');
+                    $("#contactFormEmail").val('');
+                    $("#contactFormMessage").val('');
                     alert('Message sent');
                 } else {
                     alert('Message not sent. Please try again later. If problem persists, send me an email (cfd19@hotmail.co.nz)');

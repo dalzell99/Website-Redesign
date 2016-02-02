@@ -192,7 +192,7 @@ function toggleInstructions() {
     localStorage.instructionsAdmin = localStorage.instructionsAdmin == 'true' ? 'false' : 'true';
 }
 
-Date.prototype.toString = function() {
+Date.prototype.toAddGameDateString = function() {
     var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     return this.getDate() + " " + months[this.getMonth()];
 };
@@ -688,6 +688,7 @@ function addEventsGame() {
         });
         $(this).click();
     });
+    
     $("input[type='date']").pickadate({
         format: 'ddd d mmm yy',
         today: 'Today',
@@ -864,7 +865,7 @@ function addGame() {
 
     var dateVal = $("#addGameDatePicker")[0].nextElementSibling.nextElementSibling.value;
     var date = dateVal.substr(6, 4) + dateVal.substr(3, 2) + dateVal.substr(0, 2);
-    var dateString = new Date(parseInt(date.substr(0,4)), parseInt(date.substr(4,2)) - 1, parseInt(date.substr(6,2))).toString();
+    var dateString = new Date(parseInt(date.substr(0,4)), parseInt(date.substr(4,2)) - 1, parseInt(date.substr(6,2))).toAddGameDateString();
 
     var gameID = date + homeTeamID + awayTeamID + division;
     if (homeText == awayText) {

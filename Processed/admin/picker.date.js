@@ -335,8 +335,8 @@ DatePicker.prototype.navigate = function( type, value, options ) {
         targetDate,
         isTargetArray = $.isArray( value ),
         isTargetObject = $.isPlainObject( value ),
-        viewsetObject = this.item.view/*,
-        safety = 100*/
+        viewsetObject = this.item.view,
+        safety = 100
 
 
     if ( isTargetArray || isTargetObject ) {
@@ -366,12 +366,12 @@ DatePicker.prototype.navigate = function( type, value, options ) {
 
         // If the month we’re going to doesn’t have enough days,
         // keep decreasing the date until we reach the month’s last date.
-        while ( /*safety &&*/ new Date( targetYear, targetMonth, targetDate ).getMonth() !== targetMonth ) {
+        while ( safety && new Date( targetYear, targetMonth, targetDate ).getMonth() !== targetMonth ) {
             targetDate -= 1
-            /*safety -= 1
+            safety -= 1
             if ( !safety ) {
                 throw 'Fell into an infinite loop while navigating to ' + new Date( targetYear, targetMonth, targetDate ) + '.'
-            }*/
+            }
         }
 
         value = [ targetYear, targetMonth, targetDate ]

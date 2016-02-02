@@ -1,9 +1,7 @@
-add 2 columns of scoring plays to live scoring and check upload still works
-chnage division to grade
-test selecting play then half time then submit
-
 TEST EVERYTHING
-
+chnage alerts to inline comments
+add enter to password pages
+PDF stuff to admin
 add ability to favorite games
 add points table
 add overtime to live scoring
