@@ -1,0 +1,221 @@
+/*
+ *--------------------------------------------------------------------------
+ *------------------------------ All Pages ---------------------------------
+ *--------------------------------------------------------------------------
+ */
+
+body
+  font-family: 'Roboto', sans-serif
+  padding-bottom: 50px
+  padding-top: 80px
+
+strong
+  font-weight: bold
+
+#loadingMessage
+  font-size: x-large
+  font-weight: bold
+  text-align: center
+  padding: 25px
+
+#instructions
+  font-size: 110%
+  padding: 15px 25px
+  text-align: justify
+
+nav.row
+  margin: 0 0 20px 0
+  display: none
+
+.navbar-toggle:hover .icon-bar
+  background-color: black
+
+.weektoggledisplay
+  background-color: transparent
+  padding: 10px
+  border: 1px solid #33b5e5
+  border-radius: 10px
+  text-align: center
+  padding: 15px
+  margin: 0 0 20px 1.11%
+  font-weight: bold
+  font-size: 140%
+  
+.weeksexpanded
+  margin-bottom: 15px
+
+button.weeknav
+  background-color: transparent
+  padding: 10px
+  border: 1px solid #33b5e5
+  border-radius: 10px
+
+  &.active
+    background-color: rgba(51, 181, 229, 0.4)
+  
+.weektitle
+  font-size: 85%
+
+.navbar
+  background-color: #33b5e5
+
+#infoButtonMobile
+  float: right
+  height: 40px
+  margin: 5px 20px 0 0
+  display: block
+  
+  @media (min-width: 768px)
+    display: none
+  
+#infoButtonDesktop
+  float: right
+  height: 40px
+  margin: 10px -20px 0 0
+  display: none
+  
+  @media (min-width: 768px)
+    display: block
+
+.footer
+  background: transparent
+  border-color: transparent
+  padding: 10px
+  font-weight: bold
+  font-size: 150%
+
+/*
+ *--------------------------------------------------------------------------
+ *------------------------------- Password ---------------------------------
+ *--------------------------------------------------------------------------
+ */
+
+#passwordContainer
+    display: none
+    
+#passwordInputRow
+  font-size: 200%
+  text-align: center
+  margin-bottom: 20px
+
+#passwordInput
+  max-width: 50%
+  font-size: inherit
+  
+#checkPasswordButton
+  margin-left: 15%
+  width: 70%
+  height: 70px
+  font-size: 160%
+  
+  @media (min-width: 768px)
+    margin-left: 30%
+    width: 40%
+   
+/*
+ *--------------------------------------------------------------------------
+ *----------------------------- Team Editor --------------------------------
+ *--------------------------------------------------------------------------
+ */
+
+#teamEditorContainer
+    display: none
+    
+.teamRow
+  margin: 10px 5px
+  font-size: 120%
+  
+  @media (min-width: 768px)
+    margin: 10px 30px
+    font-size: 180%
+    
+.division, .teamName
+  display: inline-block
+
+.division
+  width: 100px
+  
+  @media (min-width: 768px)
+    width: 180px
+  
+#teamList
+  text-align: left;
+  
+  @media (min-width: 768px)
+    text-align: center;
+
+.teamName
+  @media (min-width: 768px)
+    width: 35%
+    
+#addTeamForm
+  display: none
+
+/*
+ *--------------------------------------------------------------------------
+ *----------------------------- Game Editor --------------------------------
+ *--------------------------------------------------------------------------
+ */
+
+#gameEditorContainer
+  display: none
+
+#gameEditorTable
+  text-align: center
+  border-collapse: collapse
+  background-color: white
+
+#gameEditorTable th
+  border: 1px black solid
+  background-color: #33b5e5
+  color: snow
+  padding: 10px
+  text-align: center
+    
+#gameEditorTable td
+  border: 1px black solid
+  padding: 5px
+  user-select: none;
+
+  &.date
+    padding: 0
+
+#tablePlaceholderText
+  font-size: x-large
+  font-weight: bold
+  text-align: center
+  padding: 25px
+
+.selectedRow
+  background-color: rgba(51, 181, 229, 0.2)
+
+#addGameForm
+  display: none
+
+input.datepicker
+  padding-left: 15px
+  border: 0
+  width: 130px
+
+/*
+ *--------------------------------------------------------------------------
+ *----------------------------- Contact Form -------------------------------
+ *--------------------------------------------------------------------------
+ */
+
+#contactContainer
+  text-align: center
+  font-size: 150%
+
+#contactFormButton
+  height: 50px
+  font-size: 130%
+  width: 40%
+  
+  @media (min-width: 768px)
+    height: 50px
+    font-size: 130%
+    width: 20%
+    
+#contactContainer
+  display: none
