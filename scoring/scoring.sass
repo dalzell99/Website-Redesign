@@ -436,8 +436,8 @@ nav.row
  *--------------------------------------------------------------------------
  */
 
-.homeTeamRowEnd, .homeScoreRowEnd,
-.awayTeamRowEnd, .awayScoreRowEnd, 
+.homeTeamRowEnd, .homeScoreRowEnd, .homeTriesRowEnd,
+.awayTeamRowEnd, .awayScoreRowEnd, .awayTriesRowEnd, 
 .divDropDownRowEnd, .datePickerRowEnd
   font-size: 120%
   margin-bottom: 10px
@@ -455,7 +455,8 @@ input#datePicker
   width: 32%
   display: inline-block
 
-input#homeScore, input#awayScore
+input#homeScore, input#awayScore,
+input#homeTries, input#awayTries
   width: 30%;
   margin-right: 2%
 
@@ -473,8 +474,8 @@ input[type=checkbox]
   -webkit-transform: scale(1.25);
 
 @media (min-width: 768px)
-  .homeTeamRowEnd, .homeScoreRowEnd,
-  .awayTeamRowEnd, .awayScoreRowEnd, 
+  .homeTeamRowEnd, .homeScoreRowEnd, .homeTriesRowEnd,
+  .awayTeamRowEnd, .awayScoreRowEnd, .awayTriesRowEnd,
   .divDropDownRowEnd, .datePickerRowEnd
     font-size: 160%
     margin-bottom: 10px
@@ -492,7 +493,8 @@ input[type=checkbox]
     width: 25%
     display: inline-block
     
-  input#homeScore, input#awayScore
+  input#homeScore, input#awayScore,
+  input#homeTries, input#awayTries
     width: 50%;
     margin-right: 3%
   

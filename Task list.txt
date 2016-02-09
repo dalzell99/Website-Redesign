@@ -1,9 +1,9 @@
+Test all the changes made by tries
+add points table
+comment everything
 pulse games (until user responds) that have changed on auto update
 add ability to favorite games
-add points table
 add overtime to live scoring
-transistions
 change to minified files
 open draw/results to this week
 Make it look prettier!!!!!!
-[["1","strtGame","0"],["16","homeTry","1"],["33","awayTry","2"],["34","awayConversion","3"],["36","updt1507","4"],["40","homeTry","5"],["40","halfTime","6"],["60","homeTry","7"],["60","homeConversion","8"],["65","updt3515","9"],["79","homeTry","10"],["80","fullTime","11"]]

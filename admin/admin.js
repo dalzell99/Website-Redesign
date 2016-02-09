@@ -623,8 +623,10 @@ function generateGameTable(startDate, endDate) {
     html += "            <th id='tableHeaderDivision'>Division</th>";
     html += "            <th id='tableHeaderHomeTeam'>Home Team</th>";
     html += "            <th id='tableHeaderHomeScore'>Home Score</th>";
+    html += "            <th id='tableHeaderHomeTries'>Home Tries</th>";
     html += "            <th id='tableHeaderAwayTeam'>Away Team</th>";
     html += "            <th id='tableHeaderAwayScore'>Away Score</th>";
+    html += "            <th id='tableHeaderAwayTries'>Away Tries</th>";
     html += "            <th id='tableHeaderTime'>Time</th>";
     html += "            <th id='tableHeaderLocation'>Location</th>";
     html += "            <th id='tableHeaderRef'>Ref</th>";
@@ -671,8 +673,10 @@ function generateGameTable(startDate, endDate) {
                 html += "            <td class='divisionName' sorttable_customkey='" + divID + "'>" + division + "</td>";
                 html += "            <td class='homeTeamName'>" + homeTeamName + "</td>";
                 html += "            <td class='homeTeamScore' contenteditable='true'>" + game.homeTeamScore + "</td>";
+                html += "            <td class='homeTeamTries' contenteditable='true'>" + game.homeTeamTries + "</td>";
                 html += "            <td class='awayTeamName'>" + awayTeamName + "</td>";
                 html += "            <td class='awayTeamScore' contenteditable='true'>" + game.awayTeamScore + "</td>";
+                html += "            <td class='awayTeamTries' contenteditable='true'>" + game.awayTeamTries + "</td>";
                 html += "            <td class='time' contenteditable='true'>" + game.time + "</td>";
                 html += "            <td class='location' contenteditable='true'>" + game.location + "</td>";
                 html += "            <td class='ref' contenteditable='true'>" + game.ref + "</td>";
@@ -985,7 +989,7 @@ function addGame() {
             function (response) {
                 if (response == 'success') {
                     // add game to local game array if it doesn't already exist
-                    allGames[parseInt(gameID.slice(-2))].push({GameID: gameID, assRef1: '', assRef2: '', awayTeamName: awayText, awayTeamScore: '0', homeTeamName: homeText, homeTeamScore: '0', lastTimeScore: "2016-01-01 11:11:11", liveScored: 'n', location: '', minutesPlayed: '0', ref: '', scoringPlays: '[]', time: '', changed: '', locked: 'n', changes: '[]', userID: ''});
+                    allGames[parseInt(gameID.slice(-2))].push({GameID: gameID, assRef1: '', assRef2: '', awayTeamName: awayText, awayTeamScore: '0', homeTeamName: homeText, homeTeamScore: '0', lastTimeScore: "2016-01-01 11:11:11", liveScored: 'n', location: '', minutesPlayed: '0', ref: '', scoringPlays: '[]', time: '', changed: '', locked: 'n', changes: '[]', userID: '', homeTeamTries: '', awayTeamTries: ''});
                     addBackEvent(['addGame', gameID, homeText, awayText, dateString, allDivs[selectedDivisionIndex].divisionName]);
                     filterDates();
                     alertSuccess("#alertDiv", "Game has been successfully added");

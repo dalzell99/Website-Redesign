@@ -16,11 +16,22 @@ $indexes = json_decode($_POST['indexes']);
 $time = date("Y-m-d H:i:s");
 
 // Retrieve all scoring plays from database to an array by decoding json string
-$result = mysqli_query($con, " SELECT scoringPlays, locked FROM Game WHERE GameID = '$gameID' ");
+$result = mysqli_query($con, " SELECT scoringPlays, locked, homeTeamTries, awayTeamTries FROM Game WHERE GameID = '$gameID' ");
 $row = mysqli_fetch_assoc($result);
 $allScoringPlays = json_decode($row['scoringPlays'], false);
+$homeTeamTries = $row['homeTeamTries'];
+$awayTeamTries = $row['awayTeamTries'];
 
 foreach ($indexes as $index) {
+    if (substr($allScoringPlays[$index][1], 0, 4) == 'home') {
+        if (substr($allScoringPlays[$index][1], 4) == 'Try') {
+            $homeTeamTries -= 1;
+        }
+    } else {
+        if (substr($allScoringPlays[$index][1], 4) == 'Try') {
+            $awayTeamTries -= 1;
+        }
+    }
     // Remove element at specified index
     array_splice($allScoringPlays, $index, 1);
 }
@@ -29,7 +40,7 @@ foreach ($indexes as $index) {
 $updatedScoringPlays = json_encode($allScoringPlays);
 
 // Update game element with new values
-$update = " UPDATE Game SET homeTeamScore = '$homeScore', awayTeamScore = '$awayScore', scoringPlays = '$updatedScoringPlays', lastTimeScored = '$time' WHERE GameID = '$gameID' ";
+$update = " UPDATE Game SET homeTeamScore = '$homeScore', awayTeamScore = '$awayScore', scoringPlays = '$updatedScoringPlays', lastTimeScored = '$time', homeTeamTries = '$homeTeamTries', awayTeamTries = '$awayTeamTries' WHERE GameID = '$gameID' ";
 
 if ($row['locked'] == 'y') {
     echo 'locked';

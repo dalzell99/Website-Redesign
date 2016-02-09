@@ -2002,6 +2002,10 @@ function generateEndScoring() {
     html += "    <div class='titleEnd'>Home Score</div> <input type='number' id='homeScore'>";
     html += "    Defaulted <input type='checkbox' id='homeCheckbox' onchange='toggleScoreInputs()'>";
     html += "</div>";
+    
+    html += "<div class='row homeTriesRowEnd rowfix'>";
+    html += "    <div class='titleEnd'>Home Tries</div> <input type='number' id='homeTries'>";
+    html += "</div>";
 
     html += "<div class='row awayTeamRowEnd rowfix'>";
     html += "    <div class='titleEnd'>Away Team</div>";
@@ -2015,6 +2019,10 @@ function generateEndScoring() {
     html += "<div class='row awayScoreRowEnd rowfix'>";
     html += "    <div class='titleEnd'>Away Score</div> <input type='number' id='awayScore'>";
     html += "    Defaulted <input type='checkbox' id='awayCheckbox' onchange='toggleScoreInputs()'>";
+    html += "</div>";
+    
+    html += "<div class='row awayTriesRowEnd rowfix'>";
+    html += "    <div class='titleEnd'>Away Tries</div> <input type='number' id='awayTries'>";
     html += "</div>";
 
     html += "<div class='row datePickerRowEnd rowfix'>";
@@ -2051,7 +2059,7 @@ function toggleScoreInputs() {
     }
 }
 
-function checkGameEnd(gameID, homeScore, awayScore, scoringPlay, homeTeam, awayTeam) {
+function checkGameEnd(gameID, homeScore, awayScore, scoringPlay, homeTeam, awayTeam, homeTries, awayTries) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/checkgame.php', {
             gameID: gameID,
             homeTeam: homeTeam,
@@ -2059,7 +2067,7 @@ function checkGameEnd(gameID, homeScore, awayScore, scoringPlay, homeTeam, awayT
         },
         function (response) {
             if (response == 'success') {
-                uploadPlayEnd(gameID, homeScore, awayScore, scoringPlay);
+                uploadPlayEnd(gameID, homeScore, awayScore, scoringPlay, homeTries, awayTries);
             } else if (response == 'beingscored') {
                 alertError("#alertDiv", "This game is already being live scored. Please try again later or select another game.");
             } else if (response == 'locked') {
@@ -2095,8 +2103,10 @@ function submitScore() {
     var awayCheckbox = document.getElementById("awayCheckbox").checked;
     var homeScore = document.getElementById("homeScore").value;
     var awayScore = document.getElementById("awayScore").value;
+    var homeTries = $("#homeTries").val();
+    var awayTries = $("#awayTries").val();
 
-    var result = areInputsValidEnd(homeVal, awayVal, homeCheckbox, awayCheckbox, homeScore, awayScore, today);
+    var result = areInputsValidEnd(homeVal, awayVal, homeCheckbox, awayCheckbox, homeScore, awayScore, today, homeTries, awayTries);
     if (result[0]) {
         var gameID = String(yyyy) + String(mm) + String(dd) + homeTeamID + awayTeamID + division;
 
@@ -2110,14 +2120,14 @@ function submitScore() {
 
         var scoringPlay = 'updt' + pad(homeScore, 3) + pad(awayScore, 3);
 
-        checkGameEnd(gameID, homeScore, awayScore, scoringPlay, homeText, awayText);
+        checkGameEnd(gameID, homeScore, awayScore, scoringPlay, homeText, awayText, homeTries, awayTries);
     } else {
         alertError("#alertDiv", result[1]);
     }
 }
 
 // Checks if input are valid when submitting end game score
-function areInputsValidEnd(homeValue, awayValue, homeCheckbox, awayCheckbox, homeScore, awayScore, date) {
+function areInputsValidEnd(homeValue, awayValue, homeCheckbox, awayCheckbox, homeScore, awayScore, date, homeTries, awayTries) {
     var message = "";
     var valid = true;
 
@@ -2147,11 +2157,23 @@ function areInputsValidEnd(homeValue, awayValue, homeCheckbox, awayCheckbox, hom
         message += "Please enter a date.<br>";
         valid = false;
     }
+    
+    if ((isNaN(homeTries) || !(parseInt(Number(homeTries)) == homeTries) ||
+            isNaN(parseInt(homeTries, 10)) || parseInt(homeTries) < 0 || parseInt(homeTries) > 40)) {
+        message += "Please enter a valid number of home tries.<br>";
+        valid = false;
+    }
+    
+    if ((isNaN(awayTries) || !(parseInt(Number(awayTries)) == awayTries) ||
+            isNaN(parseInt(awayTries, 10)) || parseInt(awayTries) < 0 || parseInt(awayTries) > 40)) {
+        message += "Please enter a valid number of away tries.<br>";
+        valid = false;
+    }
 
     return [valid, message];
 }
 
-function uploadPlayEnd(gameID, homeScore, awayScore, scoringPlay) {
+function uploadPlayEnd(gameID, homeScore, awayScore, scoringPlay, homeTries, awayTries) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/uploadplay.php', {
             gameID: gameID,
             homeScore: homeScore,
@@ -2159,7 +2181,9 @@ function uploadPlayEnd(gameID, homeScore, awayScore, scoringPlay) {
             minutesPlayed: '80',
             scoringPlay: scoringPlay,
             description: '',
-            locked: 'y'
+            locked: 'y',
+            homeTries: homeTries, 
+            awayTries: awayTries
         },
         function (response) {
             if (response == 'success') {
