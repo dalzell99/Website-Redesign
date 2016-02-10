@@ -323,6 +323,45 @@ function alertNotification(selector, message) {
     setTimeout(function() { $(selector).next().remove(); }, 5000);
 }
 
+Date.prototype.addDays = function (days) {
+    this.setDate(this.getDate() + parseInt(days));
+    return this;
+};
+
+Date.prototype.toCustomDateString = function (dayOfWeek) {
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    var dayOfGame = '';
+    if (dayOfWeek) {
+        dayOfGame = daysOfWeek[this.getDay()];
+    }
+    return dayOfGame + " " + this.getDate() + " " + months[this.getMonth()];
+};
+
+Date.prototype.toChangesString = function () {
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    if (this.getHours() == 0) {
+        var hours = 'Midnight';
+    } else if (this.getHours() > 12) {
+        var hours = (this.getHours() - 12) + "pm";
+    } else if (this.getHours() == 12) {
+        var hours = 'Noon';
+    } else {
+        var hours = this.getHours() + 'am';
+    }
+    
+    if (new Date() > this.addDays(6)) {
+        this.addDays(-6);
+        var date = this.getDate() + " " + months[this.getMonth()];
+    } else {
+        this.addDays(-6);
+        var date = '';
+    }
+    
+    return hours + " " + daysOfWeek[this.getDay()] + date;
+};
+
 /* 
 --------------------------------------------------------------------------
 ----------------------------- Draw/Results -------------------------------
@@ -519,9 +558,12 @@ function generateGames() {
             var gamesInRow = 0;
             var gameInDivisionThisWeek = false;
             html += "<div id='div" + allDivs[b].divisionID + "Row' class='row rowfix'>";
-            html += "    <div class='col-sm-48 divtitle' onclick='toggleGames(\"div" + allDivs[b].divisionID + "\");'>";
+            html += "    <div class='col-sm-34 divtitle' onclick='toggleGames(\"div" + allDivs[b].divisionID + "\");'>";
             html += "        <h3>" + allDivs[b].divisionName + "</h3>";
             html += "    </div><!-- End of divtitle div -->";
+            html += "    <div class='col-sm-14 divtitle'>";
+            html += "        <button id='pointsTableButton' onclick='showPointsTable(" + allDivs[b].divisionID + ")'>Points Table</button>";
+            html += "    </div>";
             html += "    <div class='col-xs-48 gamerowcontainer div" + allDivs[b].divisionID + "'>";
             html += "        <div class='row gamerow'>";
 
@@ -764,44 +806,9 @@ function stopAutoUpdateTimer() {
     clearTimeout(autoUpdateTimer);
 }
 
-Date.prototype.addDays = function (days) {
-    this.setDate(this.getDate() + parseInt(days));
-    return this;
-};
-
-Date.prototype.toCustomDateString = function (dayOfWeek) {
-    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    var daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    var dayOfGame = '';
-    if (dayOfWeek) {
-        dayOfGame = daysOfWeek[this.getDay()];
-    }
-    return dayOfGame + " " + this.getDate() + " " + months[this.getMonth()];
-};
-
-Date.prototype.toChangesString = function () {
-    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    var daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    if (this.getHours() == 0) {
-        var hours = 'Midnight';
-    } else if (this.getHours() > 12) {
-        var hours = (this.getHours() - 12) + "pm";
-    } else if (this.getHours() == 12) {
-        var hours = 'Noon';
-    } else {
-        var hours = this.getHours() + 'am';
-    }
+function showPointsTable(divID) {
     
-    if (new Date() > this.addDays(6)) {
-        this.addDays(-6);
-        var date = this.getDate() + " " + months[this.getMonth()];
-    } else {
-        this.addDays(-6);
-        var date = '';
-    }
-    
-    return hours + " " + daysOfWeek[this.getDay()] + date;
-};
+}
 
 /* 
 --------------------------------------------------------------------------
@@ -2053,9 +2060,13 @@ function toggleScoreInputs() {
     if (homeCheckbox || awayCheckbox) {
         document.getElementById('homeScore').disabled = true;
         document.getElementById('awayScore').disabled = true;
+        document.getElementById('homeTries').disabled = true;
+        document.getElementById('awayTries').disabled = true;
     } else {
         document.getElementById('homeScore').disabled = false;
         document.getElementById('awayScore').disabled = false;
+        document.getElementById('homeTries').disabled = false;
+        document.getElementById('awayTries').disabled = false;
     }
 }
 
@@ -2113,9 +2124,13 @@ function submitScore() {
         if (homeCheckbox) {
             homeScore = 1;
             awayScore = 2;
+            homeTries = 0;
+            awayTries = 0;
         } else if (awayCheckbox) {
             homeScore = 2;
             awayScore = 1;
+            homeTries = 0;
+            awayTries = 0;
         }
 
         var scoringPlay = 'updt' + pad(homeScore, 3) + pad(awayScore, 3);
@@ -2158,13 +2173,13 @@ function areInputsValidEnd(homeValue, awayValue, homeCheckbox, awayCheckbox, hom
         valid = false;
     }
     
-    if ((isNaN(homeTries) || !(parseInt(Number(homeTries)) == homeTries) ||
+    if (!(homeCheckbox || awayCheckbox) && (isNaN(homeTries) || !(parseInt(Number(homeTries)) == homeTries) ||
             isNaN(parseInt(homeTries, 10)) || parseInt(homeTries) < 0 || parseInt(homeTries) > 40)) {
         message += "Please enter a valid number of home tries.<br>";
         valid = false;
     }
     
-    if ((isNaN(awayTries) || !(parseInt(Number(awayTries)) == awayTries) ||
+    if (!(homeCheckbox || awayCheckbox) && (isNaN(awayTries) || !(parseInt(Number(awayTries)) == awayTries) ||
             isNaN(parseInt(awayTries, 10)) || parseInt(awayTries) < 0 || parseInt(awayTries) > 40)) {
         message += "Please enter a valid number of away tries.<br>";
         valid = false;

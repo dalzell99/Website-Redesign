@@ -3,7 +3,10 @@ var allDivs = [];
 var allTeams = [];
 var allGames = [];
 
+// Stuff to run on page load
 $(document).ready(function () {    
+    // Get all the games, teams and divisions from the database. The teams and games 
+    // from store within an array with the index of the division they are in
     var post = $.post('http://ccrscoring.co.nz/scripts/php/getallinfo.php', {},
         function (response) {
             var teams = response[0];
@@ -28,10 +31,11 @@ $(document).ready(function () {
         }, 'json');
 
     post.fail(function (request, textStatus, errorThrown) {
-        alertCustom("#alertDiv", "Error while retrieving info from database. Please try again later. If problem persists, use the contact form");
+        alertError("#alertDiv", "Error while retrieving info from database. Please try again later. If problem persists, use the contact form");
     });
     
     post.always(function () {
+        // If the user can't use Web Storage then the website won't work
         if (typeof (Storage) !== "undefined") {
             if (localStorage.instructionsAdmin == null) {
                 localStorage.instructionsAdmin = 'true';
@@ -39,8 +43,6 @@ $(document).ready(function () {
                 $("#instructions").hide();
             }
             if (sessionStorage.password == "correct") {
-                // I used not equal to gameEditor because the scoring pages also use sessionStorage.currentPage
-                // so the start page should only be gameEditor if sessionStorage.currentPage is set to 'gameEditor'
                 if (sessionStorage.currentPage == "teamEditor" || sessionStorage.currentPage == null) {
                     teamEditor(true);
                 } else if (sessionStorage.currentPage == "gameEditor") {
@@ -52,7 +54,7 @@ $(document).ready(function () {
                 showPassword();
             }
         } else {
-            alertCustom("#alertDiv", "Sorry, you can't use this website. The minimum browser versions are:\nInternet Explorer 9\nFirefox 3.5\nSafari 4\nGoogle Chrome 5\nOpera 10.50");
+            alertError("#alertDiv", "Sorry, you can't use this website. The minimum browser versions are:\nInternet Explorer 9\nFirefox 3.5\nSafari 4\nGoogle Chrome 5\nOpera 10.50");
         }
     })
 });
@@ -88,6 +90,7 @@ function showPassword() {
     $("#passwordContainer").show();
 }
 
+// Capture enter button press and click submit button
 function addEventPassword() {
     $("#passwordContainer").on({
         keydown: function (event) {
@@ -118,7 +121,7 @@ function checkPassword() {
         },
         function (response) {
             if (response == 'correct') {
-                // Correct password. Hide password and generate team lists
+                // Correct password. Hide password and go to last visited page
                 if (typeof (Storage) !== "undefined") {
                     sessionStorage.password = "correct";
                     if (sessionStorage.currentPage == "teamEditor" || sessionStorage.currentPage == null) {
@@ -131,17 +134,18 @@ function checkPassword() {
                 }
             } else if (response == 'incorrect') {
                 // Incorrect password. Do nothing
-                alertCustom("#alertDiv", "Incorrect password. Please try again.")
+                alertError("#alertDiv", "Incorrect password. Please try again.")
                 $("#passwordInput").val = "";
             } else {
                 // Error
-                alertCustom("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
             }
         }).fail(function () {
-        alertCustom("#alertDiv", "Error while checking password. Please try again later. If problem persists, use the contact form");
+        alertError("#alertDiv", "Error while checking password. Please try again later. If problem persists, use the contact form");
     })
 }
 
+// Set the highlighted page in nav
 function setActivePage() {
     $("li.active").removeClass("active");
     $("." + sessionStorage.currentPage).addClass("active");
@@ -149,6 +153,7 @@ function setActivePage() {
     $('.navbar-collapse.in').removeClass('in').prop('aria-expanded', false);
 }
 
+// Add event to browser back button
 function addBackEvent(eventArray) {
     if (eventArray[0] == 'startTeamEditor' || eventArray[0] == 'startGameEditor') {
         var stateObj = { 
@@ -185,6 +190,7 @@ function addBackEvent(eventArray) {
     history.pushState(stateObj, "", "");
 }
 
+// Change the instruction based on the page
 function setInstructions(page) {
     var text = '';
     switch (page) {
@@ -202,11 +208,13 @@ function setInstructions(page) {
     $("#instructions").text(text);
 }
 
+// Show or hide instructions
 function toggleInstructions() {
     $("#instructions").toggle();
     localStorage.instructionsAdmin = localStorage.instructionsAdmin == 'true' ? 'false' : 'true';
 }
 
+// Get the name of a team based on teamID and divisionID
 function getTeamName(teamID, divID) {
     teamID = String(parseInt(teamID));
     divID = parseInt(divID);
@@ -220,11 +228,13 @@ function getTeamName(teamID, divID) {
     return '';
 }
 
+// Return string with date and short month
 Date.prototype.toAddGameDateString = function() {
     var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
     return this.getDate() + " " + months[this.getMonth()];
 };
 
+// Return string with short day of week, date, short month and 2 digit year
 Date.prototype.toInitialString = function() {
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -232,6 +242,7 @@ Date.prototype.toInitialString = function() {
     return dayOfGame + " " + this.getDate() + " " + months[this.getMonth()] + " " + String(this.getFullYear()).substr(2, 2);
 };
 
+// Return string with short day of week, date and short month
 Date.prototype.toPDFString = function() {
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -239,6 +250,7 @@ Date.prototype.toPDFString = function() {
     return dayOfGame + " " + this.getDate() + " " + months[this.getMonth()];
 };
 
+// // Return string with number padding with leadng zeros to certain length
 function pad(value, length) {
     // Convert to string
     value = '' + value;
@@ -252,18 +264,21 @@ function pad(value, length) {
     return value;
 }
 
-function alertCustom(selector, message) {
+// Display Bootstrap error alert in footer
+function alertError(selector, message) {
     $(selector).after("<div class='alert alert-danger' role='alert'>" + message + "</div>");
     $(selector).next().delay(4000).fadeOut(600);
     setTimeout(function() { $(selector).next().remove(); }, 5000);
 }
 
+// Display Bootstrap success alert in footer
 function alertSuccess(selector, message) {
     $(selector).after("<div class='alert alert-success' role='alert'>" + message + "</div>");
     $(selector).next().delay(4000).fadeOut(600);
     setTimeout(function() { $(selector).next().remove(); }, 5000);
 }
 
+// Display Bootstrap info alert in footer
 function alertNotification(selector, message) {
     $(selector).after("<div class='alert alert-info' role='alert'>" + message + "</div>");
     $(selector).next().delay(4000).fadeOut(600);
@@ -276,6 +291,7 @@ function alertNotification(selector, message) {
 --------------------------------------------------------------------------
 */
 
+// Start team editor
 function teamEditor(backEvent) {
     if (sessionStorage.password == "correct") {
         if (backEvent) {
@@ -340,6 +356,7 @@ function generateTeamList() {
     addEventsTeam();
 }
 
+// Sort team list in alphabetical order
 function sortTeamList() {
     for (var i = 0; i < allTeams.length; i += 1) {
         allTeams[i].sort(function(a, b) {
@@ -350,6 +367,7 @@ function sortTeamList() {
     }
 }
 
+// Add events to elements on team editor page
 function addEventsTeam() {
     $(".teamName").on({
         blur: function () {
@@ -393,12 +411,12 @@ function changeTeamName(teamID, newName, divisionID, backEvent) {
                 alertSuccess("alertDiv", "Team name has been changed");
             } else {
                 // Error
-                alertCustom("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
             }
         });
 
     post.fail(function (request, textStatus, errorThrown) {
-        alertCustom("#alertDiv", "Error while changing the teams name. Please try again later. If problem persists, use the contact form");
+        alertError("#alertDiv", "Error while changing the teams name. Please try again later. If problem persists, use the contact form");
     })
 }
 
@@ -429,19 +447,20 @@ function addTeam() {
                     generateTeamList();
                 } else {
                     // Error
-                    alertCustom("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+                    alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
                 }
             }, 'json');
 
         post.fail(function (request, textStatus, errorThrown) {
-            alertCustom("#alertDiv", "Error while adding new team. Please try again later. If problem persists, use the contact form");
+            alertError("#alertDiv", "Error while adding new team. Please try again later. If problem persists, use the contact form");
         });
     } else {
         var alertMessage = teamName + " already exists in " + allDivs[parseInt(divisionID)].divisionName;
-        alertCustom("#alertDiv", alertMessage); 
+        alertError("#alertDiv", alertMessage); 
     }
 }
 
+// Delete team that was just created
 function deleteTeam(teamName, divisionID) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/deleteteam.php', {
             teamName: teamName,
@@ -461,15 +480,16 @@ function deleteTeam(teamName, divisionID) {
                 alertSuccess("#alertDiv", "Team has been deleted");
             } else {
                 // Error
-                alertCustom("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
             }
         });
 
     post.fail(function (request, textStatus, errorThrown) {
-        alertCustom("#alertDiv", "Error while deleting team. Please try again later. If problem persists, use the contact form");
+        alertError("#alertDiv", "Error while deleting team. Please try again later. If problem persists, use the contact form");
     })
 }
 
+// Remove team from competition without deleting them
 function disableTeam(teamID, division) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/disableteam.php', {
             teamID: teamID
@@ -487,15 +507,16 @@ function disableTeam(teamID, division) {
                 alertSuccess("#alertDiv", "Team has been removed from competition");
             } else {
                 // Error
-                alertCustom("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
             }
         });
 
     post.fail(function (request, textStatus, errorThrown) {
-        alertCustom("#alertDiv", "Error while removing team. Please try again later. If problem persists, use the contact form");
+        alertError("#alertDiv", "Error while removing team. Please try again later. If problem persists, use the contact form");
     })
 }
 
+// Add team back into competition
 function enableTeam(teamID, division) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/enableteam.php', {
             teamID: teamID
@@ -513,12 +534,12 @@ function enableTeam(teamID, division) {
                 alertSuccess("#alertDiv", "Team has been added back into competition");
             } else {
                 // Error
-                alertCustom("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
             }
         });
 
     post.fail(function (request, textStatus, errorThrown) {
-        alertCustom("#alertDiv", "Error while readding team. Please try again later. If problem persists, use the contact form");
+        alertError("#alertDiv", "Error while readding team. Please try again later. If problem persists, use the contact form");
     })
 }
 
@@ -534,6 +555,7 @@ var numGamesDeleted = 0;
 var numGamesLocked = 0;
 var datePickers = [];
 
+// Start game editor
 function gameEditor(backEvent) {
     if (sessionStorage.password == "correct") {
         if (backEvent) {
@@ -556,10 +578,12 @@ function showGameEditorContainer() {
     $("#gameEditorContainer").show();
 }
 
+// Show/hide add game form
 function toggleAddGameForm() {
     $("#addGameForm").toggle();
 }
 
+// Generate the buttons and add game form and add to toolbar container
 function generateToolbar() {
     var html = '';
 
@@ -569,6 +593,7 @@ function generateToolbar() {
     html += "    <button id='lockSelectedGameButton' onclick='lockSelectedGames()'>Lock Selected Games</button>";
     html += "    <button id='unlockSelectedGameButton' onclick='unlockSelectedGames()'>Unlock Selected Games</button>";
     html += "    <button id='createPDFButton' onclick='createPDF()'>Create PDF</button>";
+    html += "    <button id='updatePointsTable' onclick='updatePointsTable()'>Update Point Tables</button>";
     html += "</div>";
 
     html += "<div id='addGameForm'>";
@@ -612,6 +637,7 @@ function generateToolbar() {
     $("#addGameDivisionDropDown").prop('selectedIndex', selectedDivisionIndex);
 }
 
+// Generate the table with games between the start and end dates
 function generateGameTable(startDate, endDate) {
     var html = '';
     $("#gameEditorTable").empty().append("<div id='tablePlaceholderText'>Table is being created</div>");
@@ -708,6 +734,7 @@ function generateGameTable(startDate, endDate) {
     selectedRowGameID = [];
 }
 
+// Regenerate game table with new dates
 function filterDates() {
     var startDateString = $("#dateFilterStart")[0].nextElementSibling.nextElementSibling.value;
     if (startDateString != "") {
@@ -732,6 +759,7 @@ function filterDates() {
     generateGameTable(startDate, endDate);
 }
 
+// Add events to elements on game editor page
 function addEventsGame() {
     $("input.datepicker").click(function() {
         $(this).off('click');
@@ -759,12 +787,12 @@ function addEventsGame() {
                         // do nothing
                     } else {
                         // Error
-                        alertCustom("#alertDiv", "Error while changing date. Please refresh page and try again. If problem persists, use the contact form");
+                        alertError("#alertDiv", "Error while changing date. Please refresh page and try again. If problem persists, use the contact form");
                     }
                 });
 
                 post.fail(function (request, textStatus, errorThrown) {
-                    alertCustom("#alertDiv", "Error while changing date. Please refresh page and try again. If problem persists, use the contact form");
+                    alertError("#alertDiv", "Error while changing date. Please refresh page and try again. If problem persists, use the contact form");
                 });
             }
         });
@@ -845,8 +873,8 @@ function addEventsGame() {
     });
 }
 
+// Upload changed data to the database
 function changeGameInfo(gameID, column, newValue, oldValue, rowIndex, backEvent, homeTeam, awayTeam, date) {
-    // add to unsaved changes list if content changed
     var post = $.post('http://ccrscoring.co.nz/scripts/php/uploadchange.php', {
             gameID: gameID,
             column: column,
@@ -872,21 +900,23 @@ function changeGameInfo(gameID, column, newValue, oldValue, rowIndex, backEvent,
                 alertSuccess("#alertDiv", "The change has been saved");
             } else {
                 // Error
-                alertCustom("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
             }
         });
 
     post.fail(function (request, textStatus, errorThrown) {
-        alertCustom("#alertDiv", "Error while saving change. Please try again later. If problem persists, use the contact form");
+        alertError("#alertDiv", "Error while saving change. Please try again later. If problem persists, use the contact form");
     });
 }
 
+// Set a row as selected (used when selecting multiple rows)
 function addRowSelection(elem) {
     var gameID = elem.classList.item(1);
     selectedRowGameID.push(gameID);
     elem.classList.add('selectedRow');
 }
 
+// Show/hide row selection (used when selecting single row)
 function toggleRowSelection(elem) {
     var gameID = elem.classList.item(1);
     if (selectedRowGameID.indexOf(gameID) == -1) {
@@ -898,6 +928,7 @@ function toggleRowSelection(elem) {
     }
 }
 
+// Deleted the games that have been selected
 function deleteSelectedGames() {
     if (confirm("Are you sure you want to delete the selected games? They will be gone forever if deleted")) {
         var post = $.post('http://ccrscoring.co.nz/scripts/php/deletegame.php', {
@@ -922,34 +953,38 @@ function deleteSelectedGames() {
                 alertSuccess("#alertDiv", "The selected games have been deleted");
             } else {
                 // Error
-                alertCustom("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
             }
         });
 
         post.fail(function (request, textStatus, errorThrown) {
-            alertCustom("#alertDiv", "Error while deleting game. Please try again later. If problem persists, use the contact form");
+            alertError("#alertDiv", "Error while deleting game. Please try again later. If problem persists, use the contact form");
         })
     }
 }
 
+// Lock the selected games
 function lockSelectedGames() {
     for (var n = 0; n < selectedRowGameID.length; n += 1) {
         lockGame(selectedRowGameID[n]);
     }
 }
 
+// Unlock the selected games
 function unlockSelectedGames() {
     for (var n = 0; n < selectedRowGameID.length; n += 1) {
         unlockGame(selectedRowGameID[n]);
     }
 }
 
+// Change the team names in the home and away drop downs menus
 function changeTeamDropDowns() {
     selectedDivisionIndex = parseInt($("#addGameDivisionDropDown").val());
     generateToolbar();
     $("#addGameForm").show();
 }
 
+// Add a new game to the database
 function addGame() {
     var division = (('' + selectedDivisionIndex).length == 1 ? '0' + selectedDivisionIndex : '' + selectedDivisionIndex);
 
@@ -979,7 +1014,7 @@ function addGame() {
 
     var gameID = date + homeTeamID + awayTeamID + division;
     if (homeText == awayText) {
-        alertCustom("#alertDiv", "Please change one of the teams as they can't play themselves");
+        alertError("#alertDiv", "Please change one of the teams as they can't play themselves");
     } else if (gameID.length == 16) {
         var post = $.post('http://ccrscoring.co.nz/scripts/php/addgame.php', {
                 gameID: gameID,
@@ -989,25 +1024,26 @@ function addGame() {
             function (response) {
                 if (response == 'success') {
                     // add game to local game array if it doesn't already exist
-                    allGames[parseInt(gameID.slice(-2))].push({GameID: gameID, assRef1: '', assRef2: '', awayTeamName: awayText, awayTeamScore: '0', homeTeamName: homeText, homeTeamScore: '0', lastTimeScore: "2016-01-01 11:11:11", liveScored: 'n', location: '', minutesPlayed: '0', ref: '', scoringPlays: '[]', time: '', changed: '', locked: 'n', changes: '[]', userID: '', homeTeamTries: '', awayTeamTries: ''});
+                    allGames[parseInt(gameID.slice(-2))].push({GameID: gameID, assRef1: '', assRef2: '', awayTeamName: awayText, awayTeamScore: '0', homeTeamName: homeText, homeTeamScore: '0', lastTimeScore: "2016-01-01 11:11:11", liveScored: 'n', location: '', minutesPlayed: '0', ref: '', scoringPlays: '[]', time: '', changed: '', locked: 'n', changes: '[]', userID: '', homeTeamTries: '', awayTeamTries: '', processed: 'n'});
                     addBackEvent(['addGame', gameID, homeText, awayText, dateString, allDivs[selectedDivisionIndex].divisionName]);
                     filterDates();
                     alertSuccess("#alertDiv", "Game has been successfully added");
                 } else {
-                    alertCustom("#alertDiv", 'Game already exists');
+                    alertError("#alertDiv", 'Game already exists');
                 }
             });
 
         post.fail(function (xhr, textStatus, errorThrown) {
-            alertCustom("#alertDiv", "Error while adding game. Please try again later. If problem persists, use the contact form");
+            alertError("#alertDiv", "Error while adding game. Please try again later. If problem persists, use the contact form");
         })
     } else if (gameID.length == 8) {
-        alertCustom("#alertDiv", "Please enter a date for the game");
+        alertError("#alertDiv", "Please enter a date for the game");
     } else {
-        alertCustom("#alertDiv", "Error while creating gameID. Please use the contact form informing me of this error")
+        alertError("#alertDiv", "Error while creating gameID. Please use the contact form informing me of this error")
     }
 }
 
+// Lock a single game
 function lockGame(gameID) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/lockgame.php', {
             gameID: gameID
@@ -1030,15 +1066,16 @@ function lockGame(gameID) {
                 }
             } else {
                 // Error
-                alertCustom("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
             }
         });
 
     post.fail(function (request, textStatus, errorThrown) {
-        alertCustom("#alertDiv", "Error while deleting game. Please try again later. If problem persists, use the contact form");
+        alertError("#alertDiv", "Error while deleting game. Please try again later. If problem persists, use the contact form");
     })
 }
 
+// Unlock a single game
 function unlockGame(gameID) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/unlockgame.php', {
             gameID: gameID
@@ -1061,15 +1098,16 @@ function unlockGame(gameID) {
                 }
             } else {
                 // Error
-                alertCustom("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
             }
         });
 
     post.fail(function (request, textStatus, errorThrown) {
-        alertCustom("#alertDiv", "Error while deleting game. Please try again later. If problem persists, use the contact form");
+        alertError("#alertDiv", "Error while deleting game. Please try again later. If problem persists, use the contact form");
     })
 }
 
+// Place the caret at the end of the info in the cell
 function placeCaretAtEnd(el) {
     el.focus();
     if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
@@ -1087,6 +1125,7 @@ function placeCaretAtEnd(el) {
     }
 }
 
+// Create a pdf with the games in the game table
 function createPDF() {
     var startDateString = $("#dateFilterStart")[0].nextElementSibling.nextElementSibling.value;
     if (startDateString != "") {
@@ -1188,12 +1227,26 @@ function createPDF() {
     pdfMake.createPdf(docDefinition).download('rugbydrawfor' + startDate.toAddGameDateString() + '-' + endDate.toAddGameDateString() + '.pdf');
 }
 
+// Update the points tables
+function updatePointsTable() {
+    var post = $.post('http://ccrscoring.co.nz/scripts/php/updatepointstable.php', {},
+    function (response) {
+        // return games that need to be updated before being processed and filter the list to show them
+        alertSuccess("#alertDiv", "Points tables have been updated");
+    });
+
+    post.fail(function (xhr, textStatus, errorThrown) {
+        alertError("#alertDiv", "Error while updating the points table. Please try again later. If problem persists, use the contact form");
+    });
+}
+
 /* 
 --------------------------------------------------------------------------
 ------------------------------- Contact ----------------------------------
 --------------------------------------------------------------------------
 */
 
+// Show the contact form container
 function showContactContainer() {
     hideAllContainers();
     setInstructions('contact');
@@ -1204,6 +1257,7 @@ function showContactContainer() {
     $("#contactContainer").show();
 }
 
+// Add events to elements on the contact page
 function addEventsContact() {
     $("#contactContainer").on({
         keydown: function (event) {
@@ -1216,6 +1270,7 @@ function addEventsContact() {
     });
 }
 
+// Submit the cotact form
 function submitContactForm() {
     var name = $("#contactFormName").val();
     var email = $("#contactFormEmail").val();

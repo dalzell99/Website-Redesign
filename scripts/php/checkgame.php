@@ -36,7 +36,7 @@ if ($result = mysqli_query($con, "SELECT * FROM Game WHERE GameID = '" . $gameID
         $awayTeam = $_POST['awayTeam'];
 
         // Create insert string using default values and variables given
-        $sql = "INSERT INTO Game VALUES ('" . $gameID . "', '" . $homeTeam . "', '0', '" . $awayTeam . "', '0', '1', '', '', '', '" . $homeTeam . "', '12pm', '[[\"1\", \"strtGame\", \"\"]]', 'n', '[]', 'y', '" . $userID . "', '" . $time . "', 'n', '', '')";
+        $sql = "INSERT INTO Game VALUES ('" . $gameID . "', '" . $homeTeam . "', '0', '" . $awayTeam . "', '0', '1', '', '', '', '" . $homeTeam . "', '12pm', '[[\"1\", \"strtGame\", \"\"]]', 'n', '[]', 'y', '" . $userID . "', '" . $time . "', 'n', '', '', 'n')";
 
         // Execute insert query
         if (mysqli_query($con, $sql)) {
