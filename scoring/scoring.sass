@@ -238,6 +238,45 @@ nav.row
 #gameChanges
   display: none
 
+#pointsTableTable
+  text-align: center
+  border-bottom: 1px solid black
+  font-size: 75%
+
+  @media (min-width: 768px)
+    font-size: 100%
+
+#pointsTableTable th, #pointsTableTable td
+  border-left: 1px solid black
+  border-right: 1px solid black
+  padding: 5px
+
+  @media (min-width: 768px)
+    padding: 10px
+  
+#pointsTableTable th
+  border: 1px solid black
+  text-align: center
+
+.playoff
+  background-color: #ffffd2
+
+  &.last
+    border-bottom: 2px solid red
+
+@media (max-width: 767px)
+  .desktopHeader
+    display: none
+
+@media (min-width: 768px)
+  .mobileHeader
+    display: none
+
+.ui-dialog .ui-dialog-content
+  padding: 10px 2px
+
+  @media (min-width: 768px)
+    padding: .5em 1em
 /*
  *--------------------------------------------------------------------------
  *------------------------------ Game Info ---------------------------------

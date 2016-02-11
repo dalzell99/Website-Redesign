@@ -562,7 +562,7 @@ function generateGames() {
             html += "        <h3>" + allDivs[b].divisionName + "</h3>";
             html += "    </div><!-- End of divtitle div -->";
             html += "    <div class='col-sm-14 divtitle'>";
-            html += "        <button id='pointsTableButton' onclick='showPointsTable(" + allDivs[b].divisionID + ")'>Points Table</button>";
+            html += "        <button id='pointsTableButton' onclick='showPointsTable(\"" + allDivs[b].divisionID + "\")'>Points Table</button>";
             html += "    </div>";
             html += "    <div class='col-xs-48 gamerowcontainer div" + allDivs[b].divisionID + "'>";
             html += "        <div class='row gamerow'>";
@@ -807,7 +807,90 @@ function stopAutoUpdateTimer() {
 }
 
 function showPointsTable(divID) {
+    var html = '';
     
+    var post = $.post("http://ccrscoring.co.nz/scripts/php/getpointstable.php", {
+        divisionID: divID
+    }, 
+    function(response) {
+        response.sort(function(a, b) {
+            // If competition points are equal
+            if (a.compPoints == b.compPoints) {
+                // Then sort by points diff. If points diff equal
+                if (a.pointsDiff == b.pointsDiff) {
+                    // Then sort team name alphabetically
+                    return getTeamName(b.teamID, b.divID) - getTeamName(a.teamID, a.divID)
+                } else {
+                    return b.pointsDiff - a.pointsDiff;
+                }
+            } else {
+                return b.compPoints - a.compPoints;
+            }
+        });
+        
+        html += "<table id='pointsTableTable'>";
+        html += "    <thead>";
+        html += "        <tr>";
+        html += "            <th class='desktopHeader'>Team</th>";
+        html += "            <th class='desktopHeader'>Played</th>";
+        html += "            <th class='desktopHeader'>Won</th>";
+        html += "            <th class='desktopHeader'>Drawn</th>";
+        html += "            <th class='desktopHeader'>Lost</th>";
+        html += "            <th class='desktopHeader'>Points For</th>";
+        html += "            <th class='desktopHeader'>Points Against</th>";
+        html += "            <th class='desktopHeader'>Points Diff</th>";
+        html += "            <th class='desktopHeader'>4 Try Bonus</th>";
+        html += "            <th class='desktopHeader'>7 Point Bonus</th>";
+        html += "            <th class='desktopHeader'>Points</th>";
+        html += "            <th class='mobileHeader'>Team</th>";
+        html += "            <th class='mobileHeader'>P</th>";
+        html += "            <th class='mobileHeader'>W</th>";
+        html += "            <th class='mobileHeader'>D</th>";
+        html += "            <th class='mobileHeader'>L</th>";
+        html += "            <th class='mobileHeader'>PF</th>";
+        html += "            <th class='mobileHeader'>PA</th>";
+        html += "            <th class='mobileHeader'>PD</th>";
+        html += "            <th class='mobileHeader'>B1</th>";
+        html += "            <th class='mobileHeader'>B2</th>";
+        html += "            <th class='mobileHeader'>CP</th>";
+        html += "        </tr>";
+        html += "    </thead>";
+        html += "    <tbody>";
+        for (var q = 0; q < response.length; q += 1) {
+            var team = response[q];
+            html += "    <tr class='" + (q < 3 ? 'playoff' : q == 3 ? 'playoff last' : '') + "'>";
+            html += "        <td>" + getTeamName(team.teamID, team.divisionID) + "</td>";
+            html += "        <td>" + team.gamesPlayed + "</td>";
+            html += "        <td>" + team.gamesWon + "</td>";
+            html += "        <td>" + team.gamesDrawn + "</td>";
+            html += "        <td>" + team.gamesLost + "</td>";
+            html += "        <td>" + team.pointsFor + "</td>";
+            html += "        <td>" + team.pointsAgainst + "</td>";
+            html += "        <td>" + team.pointsDiff + "</td>";
+            html += "        <td>" + team.fourTryBonus + "</td>";
+            html += "        <td>" + team.sevenPointBonus + "</td>";
+            html += "        <td>" + team.compPoints + "</td>";
+            html += "    </tr>";
+        }
+        html += "    </tbody>";
+        html += "    <tfoot></tfoot>"
+        html += "</table>";
+        
+        
+        $("#pointsTableDialog").empty().append(html);
+        $('#pointsTableDialog').dialog({
+            buttons: {
+                "Close": function() {
+                    $('#pointsTableDialog').dialog('close');
+                }
+            },
+            modal: true,
+            resizable: true,
+            draggable: true,
+            height: 'auto',
+            width: 'auto'
+        });
+    }, 'json');
 }
 
 /* 
