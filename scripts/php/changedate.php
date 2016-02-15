@@ -22,7 +22,28 @@ if ($result = mysqli_query($con, "SELECT * FROM Game WHERE GameID = '" . $oldGam
     $updatedChanges = json_encode($allChanges);
 
     
-    $newSQL = "INSERT INTO Game VALUES ('" . $newGameID . "', '" . mysqli_real_escape_string($con, $row['homeTeamName']) . "', '" . $row['homeTeamScore'] . "', '" . mysqli_real_escape_string($con, $row['awayTeamName']) . "', '" . $row['awayTeamScore'] . "', '" . $row['minutesPlayed'] . "', '" . mysqli_real_escape_string($con, $row['ref']) . "', '" . mysqli_real_escape_string($con, $row['assRef1']) . "', '" . mysqli_real_escape_string($con, $row['assRef2']) . "', '" . mysqli_real_escape_string($con, $row['location']) . "', '" . $row['time'] . "', '" . mysqli_real_escape_string($con, $row['scoringPlays']) . "', 'y', '" . $updatedChanges . "', '" . $row['liveScored'] . "', '" . $row['userID'] . "', '" . $row['lastTimeScored'] . "', '" . $row['locked'] . "')";
+    $newSQL = "INSERT INTO Game VALUES (
+    '" . $newGameID . "', 
+    '" . mysqli_real_escape_string($con, $row['homeTeamName']) . "', 
+    '" . $row['homeTeamScore'] . "', 
+    '" . mysqli_real_escape_string($con, $row['awayTeamName']) . "', 
+    '" . $row['awayTeamScore'] . "', 
+    '" . $row['minutesPlayed'] . "', 
+    '" . mysqli_real_escape_string($con, $row['ref']) . "', 
+    '" . mysqli_real_escape_string($con, $row['assRef1']) . "', 
+    '" . mysqli_real_escape_string($con, $row['assRef2']) . "', 
+    '" . mysqli_real_escape_string($con, $row['location']) . "', 
+    '" . $row['time'] . "', 
+    '" . mysqli_real_escape_string($con, $row['scoringPlays']) . "', 
+    'y', 
+    '" . $updatedChanges . "', 
+    '" . $row['liveScored'] . "', 
+    '" . $row['userID'] . "', 
+    '" . $row['lastTimeScored'] . "', 
+    '" . $row['locked'] . "', 
+    '" . $row['homeTeamTries'] . "', 
+    '" . $row['awayTeamTries'] . "', 
+    '" . $row['processed'] . "')";
 
     if (mysqli_query($con, $newSQL)) {
         if (mysqli_query($con, "DELETE FROM Game WHERE GameID = '" . $oldGameID . "'")) {

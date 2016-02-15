@@ -1,7 +1,7 @@
-points table make sure it looks good everywhere
+add game cancellations
 comment everything
-Make it look prettier!!!!!!
 change to minified files
+Make it look prettier!!!!!!
 pulse games (until user responds) that have changed on auto update
 add ability to favorite games
 change errors to send email with user entering a description of what they were doing

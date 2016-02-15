@@ -8,6 +8,26 @@ body
   font-family: 'Roboto', sans-serif
   padding-bottom: 50px
   padding-top: 80px
+  
+select, input, textarea
+  background-color: transparent
+  border-radius: 6px
+  cursor: pointer
+  font-weight: bold
+  padding: 6px 24px
+  border: 1px solid black
+  
+button
+  background-color:#33bdef
+  border-radius:6px
+  cursor:pointer
+  color:#ffffff
+  font-weight:bold
+  padding:6px 24px
+  border: 0
+  
+  &:hover
+    background-color:#019ad2
 
 strong
   font-weight: bold
@@ -83,6 +103,7 @@ button.weeknav
   padding: 10px
   font-weight: bold
   font-size: 150%
+  display: none
 
 /*
  *--------------------------------------------------------------------------
@@ -151,6 +172,13 @@ button.weeknav
 #addTeamForm
   display: none
 
+#addTeamForm,
+#addTeamFormToggle
+  margin: 10px 0 0 10px
+
+.picker__footer button
+    color: black
+
 /*
  *--------------------------------------------------------------------------
  *----------------------------- Game Editor --------------------------------
@@ -164,6 +192,7 @@ button.weeknav
   text-align: center
   border-collapse: collapse
   background-color: white
+  margin: 0 1px
 
 #gameEditorTable th
   border: 1px black solid
@@ -195,7 +224,12 @@ button.weeknav
 input.datepicker
   padding-left: 15px
   border: 0
-  width: 130px
+  width: 145px
+
+.gameEditorToolbarButtons,
+#addGameForm,
+#dateFilter
+  margin: 10px
 
 /*
  *--------------------------------------------------------------------------

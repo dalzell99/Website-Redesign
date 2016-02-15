@@ -4,7 +4,9 @@ var counter = 0;
 var allTeams = [];
 var allDivs = [];
 
+// When page first loads get team and division info, initialise some web storage variables and go to last visited page
 $(document).ready(function () {
+    // Get all the teams and divisions from database
     var post = $.post('http://ccrscoring.co.nz/scripts/php/getteamsdivs.php', {},
         function (response) {
             var teams = response[0];
@@ -18,7 +20,9 @@ $(document).ready(function () {
             }
 
             for (var n = 0; n < teams.length; n += 1) {
-                allTeams[parseInt(teams[n].division)].push(teams[n]);
+                if (teams[n].enabled == 'y') {
+                    allTeams[parseInt(teams[n].division)].push(teams[n]);
+                }
             }
         }, 'json');
 
@@ -27,6 +31,7 @@ $(document).ready(function () {
     });
 
     post.always(function () {
+        // If Web Storage not supported, display message informing user
         if (typeof (Storage) !== "undefined") {
             if (localStorage.instructions == 'false') {
                 $("#instructions").hide();
@@ -190,6 +195,7 @@ function hideAllContainers() {
     $("#contactContainer").hide();
 }
 
+// Set the highlighted page in nav
 function setActivePage() {
     $("li.active").removeClass("active");
     var currentPage = sessionStorage.currentPage == 'gameSelection' ? 'liveScoring' : sessionStorage.currentPage;
@@ -198,6 +204,7 @@ function setActivePage() {
     $('.navbar-collapse.in').removeClass('in').prop('aria-expanded', false);
 }
 
+// Return string with number padding with leadng zeros to certain length
 function pad(value, length) {
     // Convert to string
     value = '' + value;
@@ -211,6 +218,7 @@ function pad(value, length) {
     return value;
 }
 
+// Add event to browser back button
 function addBackEvent(eventArray) {
     if (eventArray[0] == 'startDrawResults' || 
         eventArray[0] == 'startGameSelection' || 
@@ -240,6 +248,7 @@ function addBackEvent(eventArray) {
     }
 }
 
+// Change the instruction based on the page
 function setInstructions(page) {
     var text = '';
     switch (page) {
@@ -266,11 +275,13 @@ function setInstructions(page) {
     $("#instructions").text(text);
 }
 
+// Show or hide instructions
 function toggleInstructions() {
     $("#instructions").toggle();
     localStorage.instructions = localStorage.instructions == 'true' ? 'false' : 'true';
 }
 
+// Get the name of a team based on teamID and divisionID
 function getTeamName(teamID, divID) {
     teamID = String(parseInt(teamID));
     divID = parseInt(divID);
@@ -284,6 +295,7 @@ function getTeamName(teamID, divID) {
     return '';
 }
 
+// Return camel case column names
 function columnName(columnName) {
     switch (columnName) {
         case 'homeTeamScore':
@@ -305,29 +317,37 @@ function columnName(columnName) {
     }
 }
 
+// Display Bootstrap error alert in footer
 function alertError(selector, message) {
+    $(".footer").show();
     $(selector).after("<div class='alert alert-danger' role='alert'>" + message + "</div>");
     $(selector).next().delay(4000).fadeOut(600);
-    setTimeout(function() { $(selector).next().remove(); }, 5000);
+    setTimeout(function() { $(selector).next().remove(); $(".footer").hide(); }, 5000);
 }
 
+// Display Bootstrap success alert in footer
 function alertSuccess(selector, message) {
+    $(".footer").show();
     $(selector).after("<div class='alert alert-success' role='alert'>" + message + "</div>");
     $(selector).next().delay(4000).fadeOut(600);
-    setTimeout(function() { $(selector).next().remove(); }, 5000);
+    setTimeout(function() { $(selector).next().remove(); $(".footer").hide(); }, 5000);
 }
 
+// Display Bootstrap info alert in footer
 function alertNotification(selector, message) {
+    $(".footer").show();
     $(selector).after("<div class='alert alert-info' role='alert'>" + message + "</div>");
     $(selector).next().delay(4000).fadeOut(600);
-    setTimeout(function() { $(selector).next().remove(); }, 5000);
+    setTimeout(function() { $(selector).next().remove(); $(".footer").hide(); }, 5000);
 }
 
+// Add specifed days to a date
 Date.prototype.addDays = function (days) {
     this.setDate(this.getDate() + parseInt(days));
     return this;
 };
 
+// Return string with short day of week (if wanted), date, short month
 Date.prototype.toCustomDateString = function (dayOfWeek) {
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -338,6 +358,7 @@ Date.prototype.toCustomDateString = function (dayOfWeek) {
     return dayOfGame + " " + this.getDate() + " " + months[this.getMonth()];
 };
 
+// Return string with date and short month if date more than 6 days ago and if 6 or less days ago, return hour and short day of week when change was made
 Date.prototype.toChangesString = function () {
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -353,13 +374,19 @@ Date.prototype.toChangesString = function () {
     
     if (new Date() > this.addDays(6)) {
         this.addDays(-6);
-        var date = this.getDate() + " " + months[this.getMonth()];
+        return this.getDate() + " " + months[this.getMonth()];
     } else {
         this.addDays(-6);
-        var date = '';
+        return hours + " " + daysOfWeek[this.getDay()];
     }
     
-    return hours + " " + daysOfWeek[this.getDay()] + date;
+    
+};
+
+// Return string with date and short month
+Date.prototype.toAddGameDateString = function() {
+    var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return this.getDate() + " " + months[this.getMonth()];
 };
 
 /* 
@@ -371,13 +398,14 @@ Date.prototype.toChangesString = function () {
 var currentWeek = 0;
 var numWeeks = 18;
 var allGames = [];
-var startDateArray = [2015, 2, 23];
+var startDateArray = [2016, 1, 8];
 var autoUpdateTimer;
 var updateDuration;
 var expandedDivisions = [];
 var gameChangesExpanded = false;
 var timer;
 
+// Start draw/results page
 function drawResults(createBackEvent) {
     if (localStorage.instructions == null) {
         localStorage.instructions = 'true';
@@ -403,10 +431,12 @@ function showDrawResultsContainer() {
     $("#drawResultsContainer").show();
 }
 
+// Show/hide week list
 function toggleWeeks() {
     $("#weeksList").slideToggle();
 }
 
+// Show/hide game changes
 function toggleGameChanges() {
     $("#gameChanges").toggle();
     localStorage.lastTimeUpdatesChecked = new Date().toUTCString();
@@ -417,11 +447,13 @@ function toggleGameChanges() {
     }
 }
 
+// Generate week list element
 function generateWeekSelector() {
     var startDate = new Date(startDateArray[0], startDateArray[1], startDateArray[2]);
     var endDate = new Date(startDateArray[0], startDateArray[1], startDateArray[2]).addDays(6);
     html = '';
 
+    // Add buttons for selecting update interval
     html += "<div id='autoUpdateButtonRow'>";
     html += "    Auto Update: ";
     html += "    <button id='au30' class='autoUpdateButton' onclick='changeAutoUpdateInterval(30)'>30s</button>";
@@ -431,11 +463,12 @@ function generateWeekSelector() {
     html += "    <button id='au100000' class='autoUpdateButton' onclick='changeAutoUpdateInterval(NEVER)'>Never</button>";
     html += "</div>";
 
+    // Add week list
     html += "<div class='weektoggledisplay col-xs-47'>";
     html += "    <div onclick='toggleWeeks()' class='showweeks'>Show Weeks</div>";
     html += "        <nav id='weeksList' class='row'>";
     for (var a = 0; a < numWeeks; a += 1) {
-        html += "        <button onclick='changeWeeks(" + a + ", true)' class='weeknav week" + (a + 1) + " col-xs-12 col-sm-8 col-md-4'>";
+        html += "        <button onclick='changeWeeks(" + a + ", true)' class='weeknav week" + (a + 1) + " col-xs-12 col-sm-6'>";
         html += "            <div class='weektitle'>W" + (a + 1) + "</div>";
         html += "            <div class='date'>" + startDate.toCustomDateString(false) + " - " + endDate.toCustomDateString(false) + "</div>";
         html += "        </button>";
@@ -446,6 +479,7 @@ function generateWeekSelector() {
     html += "    </div>";
     html += "</div>";
 
+    // Add legend to inform user of the colours used with games
     html += "<div class='row colourLegend'>";
     html += "    <div class='colour col-xs-24'>";
     html += "        <div class='blueSquare'></div>";
@@ -471,52 +505,58 @@ function generateWeekSelector() {
     setActiveWeek();
 }
 
+// Generate game changes element
 function generateChangedGames(startOfWeek, endOfWeek) {
     var lastTimeUpdatesChecked = new Date(localStorage.lastTimeUpdatesChecked);
     var html = '';
     var hasAGameBeenChanged = false;
-    var todaysDate = new Date(2015, 2, 30);
+    var todaysDate = new Date();
     
+    // Only display game changes for this week
     if(todaysDate >= startOfWeek && todaysDate <= endOfWeek) {
         html += "<div class='changestoggledisplay col-xs-47'>";
         html += "    <div onclick='toggleGameChanges()'>Show Game Changes</div>";
         html += "        <div id='gameChanges'>";
         // for each division
-        for (var p = 0; p < allGames.length; p += 1) {
-            // get the date of the game
-            var game = allGames[p];
-            var gameID = game.GameID;
-            var year = parseInt(gameID.substr(0, 4));
-            var month = parseInt(gameID.substr(4, 2)) - 1;
-            var day = parseInt(gameID.substr(6, 2));
-            var gameDateDate = new Date(year, month, day);
-            // check if game happens in the current week
-            if (gameDateDate <= endOfWeek && gameDateDate >= startOfWeek) {
-                // get changes array from game
-                var gameChanges = JSON.parse(allGames[p].changes);
-                // for each change
-                for (var r = 0; r < gameChanges.length; r += 1) {
-                    // get when the change was made
-                    var changeDate = new Date(gameChanges[r][0]);
-                    // check if the change has occured since the user last checked
-                    if (changeDate > lastTimeUpdatesChecked) {
-                        // display the change
-                        var divID = parseInt(gameID.slice(-2));
-                        if (gameID.length == 16) {
-                            var homeTeamName = getTeamName(gameID.substr(8, 3), divID);
-                            var awayTeamName = getTeamName(gameID.substr(11, 3), divID);
-                        } else {
-                            var homeTeamName = game.homeTeamName;
-                            var awayTeamName = game.awayTeamName;
+        if (allGames != null) {
+            for (var p = 0; p < allGames.length; p += 1) {
+                // get the date of the game
+                var game = allGames[p];
+                var gameID = game.GameID;
+                var year = parseInt(gameID.substr(0, 4));
+                var month = parseInt(gameID.substr(4, 2)) - 1;
+                var day = parseInt(gameID.substr(6, 2));
+                var gameDateDate = new Date(year, month, day);
+                // check if game happens in the current week
+                if (gameDateDate <= endOfWeek && gameDateDate >= startOfWeek) {
+                    // get changes array from game
+                    var gameChanges = JSON.parse(allGames[p].changes);
+                    // for each change
+                    for (var r = 0; r < gameChanges.length; r += 1) {
+                        // get when the change was made
+                        var changeDate = new Date(gameChanges[r][0]);
+                        // check if the change has occured since the user last checked
+                        if (changeDate > lastTimeUpdatesChecked) {
+                            // display the change
+                            var divID = parseInt(gameID.slice(-2));
+                            if (gameID.length == 16) {
+                                var homeTeamName = getTeamName(gameID.substr(8, 3), divID);
+                                var awayTeamName = getTeamName(gameID.substr(11, 3), divID);
+                            } else {
+                                // to support legacy gameIDs
+                                var homeTeamName = game.homeTeamName;
+                                var awayTeamName = game.awayTeamName;
+                            }
+                            hasAGameBeenChanged = true;
+                            // If the change is a date change then format the date to look nice.
+                            if (gameChanges[r][1] == 'date') {
+                                var date = gameChanges[r][2];
+                                var changeValue = new Date(date.substr(0, 4), date.substr(4, 2), date.substr(6, 2)).toCustomDateString(true);
+                            } else {
+                                var changeValue = gameChanges[r][2];
+                            }
+                            html += "<div>" + allDivs[divID].divisionName + ") " + homeTeamName + " vs " + awayTeamName + " - " + columnName(gameChanges[r][1]) + " was changed to " + changeValue + " (" + changeDate.toChangesString() + ")</div>"
                         }
-                        hasAGameBeenChanged = true;
-                        if (gameChanges[r][1] == 'date') {
-                            var date = gameChanges[r][2];
-                            var changeValue = new Date(date.substr(0, 4), date.substr(4, 2), date.substr(6, 2)).toCustomDateString(true);
-                        } else {
-                            var changeValue = gameChanges[r][2];
-                        }
-                        html += "<div>" + allDivs[divID].divisionName + ") " + homeTeamName + " vs " + awayTeamName + " - " + columnName(gameChanges[r][1]) + " was changed to " + changeValue + " (" + changeDate.toChangesString() + ")</div>"
                     }
                 }
             }
@@ -539,6 +579,7 @@ function generateChangedGames(startOfWeek, endOfWeek) {
     }
 }
 
+// Generate game elements
 function generateGames() {
     html = '';
     var gameInDivisionThisWeekArray = [];
@@ -557,155 +598,160 @@ function generateGames() {
         for (var b = 0; b < allDivs.length; b += 1) {
             var gamesInRow = 0;
             var gameInDivisionThisWeek = false;
+            
+            // Add Div title and points table button
             html += "<div id='div" + allDivs[b].divisionID + "Row' class='row rowfix'>";
-            html += "    <div class='col-sm-34 divtitle' onclick='toggleGames(\"div" + allDivs[b].divisionID + "\");'>";
-            html += "        <h3>" + allDivs[b].divisionName + "</h3>";
-            html += "    </div><!-- End of divtitle div -->";
-            html += "    <div class='col-sm-14 divtitle'>";
-            html += "        <button id='pointsTableButton' onclick='showPointsTable(\"" + allDivs[b].divisionID + "\")'>Points Table</button>";
+            html += "    <div class='titleRow clearfix'>";
+            html += "        <div class='col-xs-28' onclick='toggleGames(\"div" + allDivs[b].divisionID + "\");'>";
+            html += "            <h3>" + allDivs[b].divisionName + "</h3>";
+            html += "        </div>";
+            html += "        <div class='col-xs-20 pointsTableButtonContainer'>";
+            html += "            <button id='pointsTableButton' onclick='showPointsTable(\"" + allDivs[b].divisionID + "\")'>Points Table</button>";
+            html += "        </div>";
             html += "    </div>";
             html += "    <div class='col-xs-48 gamerowcontainer div" + allDivs[b].divisionID + "'>";
             html += "        <div class='row gamerow'>";
-
-            for (var c = 0; c < allGames.length; c += 1) {
-                var gameID = allGames[c].GameID;
-                var divID = parseInt(gameID.slice(-2));
-                var gameDateString = gameID.substr(0, 8);
-                var year = parseInt(gameDateString.substr(0, 4));
-                var month = parseInt(gameDateString.substr(4, 2)) - 1;
-                var day = parseInt(gameDateString.substr(6, 2));
-                var gameDateDate = new Date(year, month, day);
-                if (gameDateDate <= endOfWeek && gameDateDate >= startOfWeek && gameID.slice(-2) == allDivs[b].divisionID) {
-                    gameInDivisionThisWeek = true;
-                    if (gameID.length == 16) {
-                        var teams = allTeams[divID];
-                        for (var k = 0; k < teams.length; k += 1) {
-                            if (parseInt(gameID.substr(8, 3)) == parseInt(teams[k].teamID)) {
-                                var homeTeamName = teams[k].teamName;
-                            } else if (parseInt(gameID.substr(11, 3)) == parseInt(teams[k].teamID)) {
-                                var awayTeamName = teams[k].teamName;
-                            }
+            if (allGames != null) {
+                for (var c = 0; c < allGames.length; c += 1) {
+                    var gameID = allGames[c].GameID;
+                    var divID = parseInt(gameID.slice(-2));
+                    var gameDateString = gameID.substr(0, 8);
+                    var year = parseInt(gameDateString.substr(0, 4));
+                    var month = parseInt(gameDateString.substr(4, 2)) - 1;
+                    var day = parseInt(gameDateString.substr(6, 2));
+                    var gameDateDate = new Date(year, month, day);
+                    // If game is in the current week and current division then proceed
+                    if (gameDateDate <= endOfWeek && gameDateDate >= startOfWeek && gameID.slice(-2) == allDivs[b].divisionID) {
+                        gameInDivisionThisWeek = true;
+                        if (gameID.length == 16) {
+                            var homeTeamName = getTeamName(gameID.substr(8, 3), gameID.slice(-2));
+                            var awayTeamName = getTeamName(gameID.substr(11, 3), gameID.slice(-2));
+                        } else {
+                            // Support for legacy gameIDs
+                            var homeTeamName = allGames[c].homeTeamName;
+                            var awayTeamName = allGames[c].awayTeamName;
                         }
-                    } else {
-                        var homeTeamName = allGames[c].homeTeamName;
-                        var awayTeamName = allGames[c].awayTeamName;
-                    }
 
-                    var timeString = '';
-                    var gameSituation = '';
-                    if (allGames[c].minutesPlayed == 0) {
-                        timeString = gameDateDate.toCustomDateString(true) + " " + allGames[c].time;
-                        gameSituation = "notstarted";
-                    } else if (allGames[c].minutesPlayed == 80) {
-                        timeString = "Full Time";
-                        gameSituation = "finished";
-                    } else if (allGames[c].minutesPlayed == 40 && allGames[c].liveScored == 'y') {
-                        timeString = "Half Time";
-                        gameSituation = "inprogress";
-                    } else if (allGames[c].minutesPlayed == 40 && allGames[c].liveScored == 'n') {
-                        timeString = "Half Time";
-                        gameSituation = "startedbutnotscored";
-                    } else if (allGames[c].liveScored == 'y') {
-                        timeString = allGames[c].minutesPlayed + " mins";
-                        gameSituation = "inprogress";
-                    } else {
-                        timeString = allGames[c].minutesPlayed + " mins";
-                        gameSituation = "startedbutnotscored";
-                    }
+                        var timeString = '';
+                        var gameSituation = '';
+                        if (allGames[c].locked == 'y') {
+                            timeString = "Full Time";
+                            gameSituation = "finished";
+                        } else if (allGames[c].minutesPlayed == 0) { // Game hasn't started
+                            timeString = gameDateDate.toCustomDateString(true) + " " + allGames[c].time;
+                            gameSituation = "notstarted";
+                        } else if (allGames[c].minutesPlayed == 80) { // Game finished
+                            timeString = "Full Time";
+                            gameSituation = "finished";
+                        } else if (allGames[c].minutesPlayed == 40 && allGames[c].liveScored == 'y') { // Half time and still being live scored
+                            timeString = "Half Time";
+                            gameSituation = "inprogress";
+                        } else if (allGames[c].minutesPlayed == 40 && allGames[c].liveScored == 'n') { // Scorer stopped at half time
+                            timeString = "Half Time";
+                            gameSituation = "startedbutnotscored";
+                        } else if (allGames[c].liveScored == 'y') { // Being live scored
+                            timeString = allGames[c].minutesPlayed + " mins";
+                            gameSituation = "inprogress";
+                        } else { // Someone started scoring the game but stopped
+                            timeString = allGames[c].minutesPlayed + " mins";
+                            gameSituation = "startedbutnotscored";
+                        }
 
-                    var homeTeamScore = "";
-                    var awayTeamScore = "";
+                        var homeTeamScore = "";
+                        var awayTeamScore = "";
 
-                    if (allGames[c].homeTeamScore == 2) {
-                        homeTeamScore = "Win";
-                        awayTeamScore = "Defaulted";
-                    } else if (allGames[c].homeTeamScore == 1) {
-                        homeTeamScore = "Defaulted";
-                        awayTeamScore = "Win";
-                    } else {
-                        homeTeamScore = allGames[c].homeTeamScore;
-                        awayTeamScore = allGames[c].awayTeamScore;
-                    }
+                        if (allGames[c].homeTeamScore == 2) {
+                            homeTeamScore = "Win";
+                            awayTeamScore = "Defaulted";
+                        } else if (allGames[c].homeTeamScore == 1) {
+                            homeTeamScore = "Defaulted";
+                            awayTeamScore = "Win";
+                        } else {
+                            homeTeamScore = allGames[c].homeTeamScore;
+                            awayTeamScore = allGames[c].awayTeamScore;
+                        }
 
-                    var winningTeam = "";
-                    if (parseInt(allGames[c].homeTeamScore) > parseInt(allGames[c].awayTeamScore)) {
-                        winningTeam = "home";
-                    } else if (parseInt(allGames[c].awayTeamScore) > parseInt(allGames[c].homeTeamScore)) {
-                        winningTeam = "away";
-                    }
+                        var winningTeam = "";
+                        if (parseInt(allGames[c].homeTeamScore) > parseInt(allGames[c].awayTeamScore)) {
+                            winningTeam = "home";
+                        } else if (parseInt(allGames[c].awayTeamScore) > parseInt(allGames[c].homeTeamScore)) {
+                            winningTeam = "away";
+                        }
 
-                    var refString = "";
-                    var ref = allGames[c].ref;
-                    var assRef1 = allGames[c].assRef1;
-                    var assRef2 = allGames[c].assRef2;
+                        var refString = "";
+                        var ref = allGames[c].ref;
+                        var assRef1 = allGames[c].assRef1;
+                        var assRef2 = allGames[c].assRef2;
 
-                    if (ref != "") {
-                        refString = "Ref: " + ref;
-                        if (assRef1 != "") {
-                            refString = refString + ", Assis. Ref: " + assRef1;
-                            if (assRef2 != "") {
-                                // There is a ref and both first and second assistants
-                                refString = refString + " and " + assRef2;
+                        if (ref != "") {
+                            refString = "Ref: " + ref;
+                            if (assRef1 != "") {
+                                refString = refString + ", Assis. Ref: " + assRef1;
+                                if (assRef2 != "") {
+                                    // There is a ref and both first and second assistants
+                                    refString = refString + " and " + assRef2;
+                                } else {
+                                    // There is a ref and a first assistant but no second
+                                }
                             } else {
-                                // There is a ref and a first assistant but no second
+                                if (assRef2 != "") {
+                                    // There is a ref and a second assistant but no first
+                                    refString = refString + ", Assis. Ref: " + assRef2;
+                                }
                             }
                         } else {
-                            if (assRef2 != "") {
-                                // There is a ref and a second assistant but no first
-                                refString = refString + ", Assis. Ref: " + assRef2;
-                            }
-                        }
-                    } else {
-                        if (assRef1 != "") {
-                            refString = refString + "Assis. Ref: " + assRef1;
-                            if (assRef2 != "") {
-                                // There is no ref and both first and second assistants
-                                refString = refString + " and " + assRef2;
+                            if (assRef1 != "") {
+                                refString = refString + "Assis. Ref: " + assRef1;
+                                if (assRef2 != "") {
+                                    // There is no ref and both first and second assistants
+                                    refString = refString + " and " + assRef2;
+                                } else {
+                                    // There is only the first assistant
+                                }
                             } else {
-                                // There is only the first assistant
-                            }
-                        } else {
-                            if (assRef2 != "") {
-                                // There is only the second assistant
-                                refString = refString + "Assis. Ref: " + assRef2;
+                                if (assRef2 != "") {
+                                    // There is only the second assistant
+                                    refString = refString + "Assis. Ref: " + assRef2;
+                                }
                             }
                         }
-                    }
 
-                    html += "            <div class='col-sm-15 game " + gameSituation + "' onclick='gameInfo(" + allGames[c].GameID + ", true);'>";
-                    html += "                <div class='row'>";
-                    html += "                    <div class='col-xs-48 location'>" + allGames[c].location + " - " + timeString + "</div>";
-                    html += "                </div>";
-                    html += "                <div class='row'>";
-                    html += "                    <div class='col-xs-48 refs'>" + refString + "</div>";
-                    html += "                </div>";
-                    html += "                <div class='row teams hometeam'>";
-                    if (winningTeam == 'home') {
-                        html += "<div class='strong'>";
-                    }
-                    html += "                    <div class='teamname col-xs-20 col-sm-33'>" + homeTeamName + "</div>";
-                    html += "                    <div class='score col-xs-16 col-sm-15'>" + homeTeamScore + "</div>";
-                    if (winningTeam == 'home') {
-                        html += "</div>";
-                    }
-                    html += "                </div>";
-                    html += "                <div class='row teams hometeam'>";
-                    if (winningTeam == 'away') {
-                        html += "<div class='strong'>";
-                    }
-                    html += "                    <div class='teamname col-xs-20 col-sm-33'>" + awayTeamName + "</div>";
-                    html += "                    <div class='score col-xs-16 col-sm-15'>" + awayTeamScore + "</div>";
-                    if (winningTeam == 'away') {
-                        html += "</div>";
-                    }
-                    html += "                </div>";
-                    html += "            </div><!-- End of game div -->";
+                        html += "            <div class='col-sm-15 game " + gameSituation + "' onclick='gameInfo(" + allGames[c].GameID + ", true);'>";
+                        html += "                <div class='row'>";
+                        html += "                    <div class='col-xs-48 location'>" + allGames[c].location + " - " + timeString + "</div>";
+                        html += "                </div>";
+                        html += "                <div class='row'>";
+                        html += "                    <div class='col-xs-48 refs'>" + refString + "</div>";
+                        html += "                </div>";
+                        html += "                <div class='row teams hometeam'>";
+                        if (winningTeam == 'home') {
+                            html += "<div class='strong'>";
+                        }
+                        html += "                    <div class='teamname col-xs-20 col-sm-33'>" + homeTeamName + "</div>";
+                        html += "                    <div class='score col-xs-16 col-sm-15'>" + homeTeamScore + "</div>";
+                        if (winningTeam == 'home') {
+                            html += "</div>";
+                        }
+                        html += "                </div>";
+                        html += "                <div class='row teams hometeam'>";
+                        if (winningTeam == 'away') {
+                            html += "<div class='strong'>";
+                        }
+                        html += "                    <div class='teamname col-xs-20 col-sm-33'>" + awayTeamName + "</div>";
+                        html += "                    <div class='score col-xs-16 col-sm-15'>" + awayTeamScore + "</div>";
+                        if (winningTeam == 'away') {
+                            html += "</div>";
+                        }
+                        html += "                </div>";
+                        html += "            </div><!-- End of game div -->";
 
-                    gamesInRow += 1;
-                    if (gamesInRow == 3) {
-                        html += "    </div><!-- End of gamerow div -->";
-                        html += "    <div class='row gamerow'>";
-                        gamesInRow = 0;
+                        // Only show 3 games in each row
+                        gamesInRow += 1;
+                        if (gamesInRow == 3) {
+                            html += "    </div><!-- End of gamerow div -->";
+                            html += "    <div class='row gamerow'>";
+                            gamesInRow = 0;
+                        }
                     }
                 }
             }
@@ -718,14 +764,21 @@ function generateGames() {
                 gameInDivisionThisWeekArray.push(allDivs[b].divisionID);
             }
         }
+        
+        if (allGames == null) {
+            html += "<div class='noGamesMessage'>No Games For This Week Yet</div>";
+        }
 
         $("#gameContainer").empty().append(html);
 
+        // Hide divisions with no games in them
         for (var f = 0; f < gameInDivisionThisWeekArray.length; f += 1) {
             $("#div" + gameInDivisionThisWeekArray[f] + "Row").hide();
         }
 
+        // This prevents divs from collapsing after auto update
         restoreExpandedDivisions();
+        // Start auto update
         startAutoUpdateTimer();
         setActiveWeek();
     }, 'json');
@@ -735,6 +788,7 @@ function generateGames() {
     })
 }
 
+// Change the displayed week
 function changeWeeks(week, createBackEvent) {
     if (createBackEvent) {
         addBackEvent(['weekChange', parseInt(currentWeek)]);
@@ -745,16 +799,19 @@ function changeWeeks(week, createBackEvent) {
     alertNotification("#alertDiv", "Week Changed");
 }
 
+// Add class the selected week the apply css
 function setActiveWeek() {
     $(".weeknav.active").removeClass("active");
     $(".week".concat(currentWeek + 1)).addClass("active");
 }
 
+// Add class to selected interval to apply css 
 function setActiveUpdateInterval() {
     $(".autoUpdateButton.active").removeClass("active");
     $("#au".concat(updateDuration)).addClass("active");
 }
 
+// Expand the divisions that user had expanded before the page changed (week change/auto update)
 function restoreExpandedDivisions() {
     for (var q = 0; q < expandedDivisions.length; q += 1) {
         $("." + expandedDivisions[q]).show();
@@ -772,11 +829,13 @@ function toggleGames(divID) {
     }
 }
 
+// Start the auto update timer
 function startAutoUpdateTimer() {
     stopAutoUpdateTimer();
     autoUpdateTimer = setTimeout(generateGames, updateDuration * 1000);
 }
 
+// Change the auto update timer interval
 function changeAutoUpdateInterval(interval) {
     if (interval == NEVER) {
         if (updateDuration != NEVER) {
@@ -802,10 +861,12 @@ function changeAutoUpdateInterval(interval) {
     setActiveUpdateInterval();
 }
 
+// Stop the auto update timer
 function stopAutoUpdateTimer() {
     clearTimeout(autoUpdateTimer);
 }
 
+// Show the points able for the division selected
 function showPointsTable(divID) {
     var html = '';
     
@@ -813,7 +874,7 @@ function showPointsTable(divID) {
         divisionID: divID
     }, 
     function(response) {
-        response.sort(function(a, b) {
+        response[0].sort(function(a, b) {
             // If competition points are equal
             if (a.compPoints == b.compPoints) {
                 // Then sort by points diff. If points diff equal
@@ -828,6 +889,7 @@ function showPointsTable(divID) {
             }
         });
         
+        // Add points table headers for both mobile and dektop
         html += "<table id='pointsTableTable'>";
         html += "    <thead>";
         html += "        <tr>";
@@ -856,8 +918,8 @@ function showPointsTable(divID) {
         html += "        </tr>";
         html += "    </thead>";
         html += "    <tbody>";
-        for (var q = 0; q < response.length; q += 1) {
-            var team = response[q];
+        for (var q = 0; q < response[0].length; q += 1) {
+            var team = response[0][q];
             html += "    <tr class='" + (q < 3 ? 'playoff' : q == 3 ? 'playoff last' : '') + "'>";
             html += "        <td>" + getTeamName(team.teamID, team.divisionID) + "</td>";
             html += "        <td>" + team.gamesPlayed + "</td>";
@@ -876,6 +938,17 @@ function showPointsTable(divID) {
         html += "    <tfoot></tfoot>"
         html += "</table>";
         
+        if (response[1].length > 0) {
+            html += "<div class='pointsTableMissing'>Games missing from points table:</div>";
+            for (var f = 0; f < response[1].length; f += 1) {
+                var gameID = response[1][f].GameID;
+                var year = parseInt(gameID.substr(0, 4));
+                var month = parseInt(gameID.substr(4, 2)) - 1;
+                var day = parseInt(gameID.substr(6, 2));
+                var gameDateString = new Date(year, month, day).toAddGameDateString();
+                html += "<div class='pointsTableMissing'>" + getTeamName(gameID.substr(8, 3), gameID.slice(-2)) + " vs " + getTeamName(gameID.substr(11, 3), gameID.slice(-2)) + " (" + gameDateString + ")</div>";
+            }
+        }
         
         $("#pointsTableDialog").empty().append(html);
         $('#pointsTableDialog').dialog({
@@ -884,9 +957,10 @@ function showPointsTable(divID) {
                     $('#pointsTableDialog').dialog('close');
                 }
             },
+            open: function(event, ui) {
+                $('.ui-dialog').css('top', '70px');
+            },
             modal: true,
-            resizable: true,
-            draggable: true,
             height: 'auto',
             width: 'auto'
         });
@@ -899,6 +973,7 @@ function showPointsTable(divID) {
 --------------------------------------------------------------------------
 */
 
+// Start game info page
 function gameInfo(gameID, backEvent) {
     changeAutoUpdateInterval(NEVER);
     if (backEvent) {
@@ -910,11 +985,13 @@ function gameInfo(gameID, backEvent) {
     showGameInfoContainer();
 }
 
+// Show the game info container
 function showGameInfoContainer() {
     hideAllContainers();
     $("#gameInfoContainer").show();
 }
 
+// Generate the game info for the game selected
 function generateGameInfo() {
     var gameID = sessionStorage.currentGameID;
     html = '';
@@ -937,18 +1014,19 @@ function generateGameInfo() {
                 awayScore = response[0].awayTeamScore;
             }
 
+            html += "<div id='gameInfoHeader'>";
             // Display team names and scores
-            html += "<div class='row teamInfo'>";
-            html += "    <div class='col-xs-22'>";
-            html += "        <div class='row'>" + response[0].homeTeamName + "</div>";
-            html += "        <div class='row'>" + homeScore + "</div>";
+            html += "    <div class='row teamInfo'>";
+            html += "        <div class='col-xs-22'>";
+            html += "            <div class='row'>" + response[0].homeTeamName + "</div>";
+            html += "            <div class='row'>" + homeScore + "</div>";
+            html += "        </div>";
+            html += "        <div class='col-xs-4 versus'>vs</div>";
+            html += "        <div class='col-xs-22'>";
+            html += "            <div class='row'>" + response[0].awayTeamName + "</div>";
+            html += "            <div class='row'>" + awayScore + "</div>";
+            html += "        </div>";
             html += "    </div>";
-            html += "    <div class='col-xs-4 versus'>vs</div>";
-            html += "    <div class='col-xs-22'>";
-            html += "        <div class='row'>" + response[0].awayTeamName + "</div>";
-            html += "        <div class='row'>" + awayScore + "</div>";
-            html += "    </div>";
-            html += "</div>";
 
             // Retrieve game date and time from gameID
             var gameDateString = gameID.substr(0, 8);
@@ -968,9 +1046,10 @@ function generateGameInfo() {
             } else {
                 minutesOrTime = response[0].minutesPlayed + " mins";
             }
-            html += "<div class='row gameInfo'><div class='col-xs-48'>" + response[0].location + "</div></div>";
-            html += "<div class='row gameInfo'><div class='col-xs-48'>" + minutesOrTime + "</div></div>";
-
+            html += "    <div class='row gameInfo'><div class='col-xs-48'>" + response[0].location + "</div></div>";
+            html += "    <div class='row gameInfo'><div class='col-xs-48'>" + minutesOrTime + "</div></div>";
+            html += "</div>"; // End of game info header
+      
             // Next is a list of the previously uploaded plays for this game
             html += "<div class='row scoringPlays rowfix'>\n\n";
             // Decode the json into an array
@@ -1106,6 +1185,7 @@ var selectedScoringPlay = "";
 var selectedPlays = [];
 var lastTimeScored = null;
 
+// Start the live scoring page
 function liveScoring(createBackEvent) {
     changeAutoUpdateInterval(NEVER);
     if (sessionStorage.liveScoringPassword == "correct") {
@@ -1118,6 +1198,7 @@ function liveScoring(createBackEvent) {
     addEventsLive();
 }
 
+// Add events to the elements on the live scoring page
 function addEventsLive() {
     $("#liveScoringPasswordContainer").on({
         keydown: function (event) {
@@ -1165,7 +1246,7 @@ function checkLiveScoringPassword() {
     })
 }
 
-// Show game editor container
+// Show game selection container
 function showGameSelectionContainer() {
     hideAllContainers();
     setInstructions('gameSelection');
@@ -1177,6 +1258,7 @@ function showGameSelectionContainer() {
     lastTimeScored = setInterval(updateLastTimeScored, 30000);
 }
 
+// show the live scoring container
 function showLiveScoringContainer() {
     hideAllContainers();
     setInstructions('liveScoring');
@@ -1188,13 +1270,16 @@ function showLiveScoringContainer() {
     lastTimeScored = setInterval(updateLastTimeScored, 30000);
 }
 
+// Show/hide change score form
 function toggleChangeScoreForm() {
     $(".changeScoreForm").toggle();
 }
 
+// Generate the game selection html
 function generateGameSelection() {
     var html = '';
 
+    // Add drop downs for divisions and home and away teams
     html += "<div class='row divDropDownRow rowfix'>";
     html += "    Grade:";
     html += "    <select id='teamSelectionDivisionDropDown' onchange='changeTeamDropdowns()'>";
@@ -1224,6 +1309,7 @@ function generateGameSelection() {
     html += "    <div class='col-xs-48'><button class='selectGameButton' onClick='selectGame()'>Select Game</button></div>";
     html += "</div>";
     
+    // Add games being live scored by user.
     var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
     html += "<div id='currentScoringContainer' class='col-xs-47'>";
     html += "<div id='currentScoringContainerTitle'>Games you are scoring</div>";
@@ -1243,16 +1329,20 @@ function generateGameSelection() {
     setActivePage();
 }
 
+// If user clicks on 1 of the games they have already started scoring in the game 
+// selection page check to see if they are allowed to proceed
 function startLiveScoring(gameID) {
     sessionStorage.currentGameID = gameID;
     checkGameLive('', '', true);
 }
 
+// Change the teams in the team drop downs
 function changeTeamDropdowns() {
     selectedDivisionIndex = $("#teamSelectionDivisionDropDown").prop('selectedIndex');
     generateGameSelection();
 }
 
+// Check that the game the user has selected can be scored by them
 function selectGame() {
     var today = new Date();
     var dd = pad(today.getDate(), 2);
@@ -1283,6 +1373,7 @@ function selectGame() {
     }
 }
 
+// Checks if game can be scored by user
 function checkGameLive(homeTeam, awayTeam, alreadyScored) {
     var gameID = sessionStorage.currentGameID;
 
@@ -1293,15 +1384,27 @@ function checkGameLive(homeTeam, awayTeam, alreadyScored) {
             userID: localStorage.userID
         },
         function (response) {
+            // Scenario 1: no-one has started scoring this game. Proceed to live scoring
+            // Scenario 2: someone else is scoring this game. Display message saying that and don't proceed
+            // Scenario 3: this user started scoring this game then left the live scoring page but not long enough for cron task to change live scoring value in database to 'n'. Proceed to live scoring.
+            // Scenario 4: this user started scoring this game then left the live scoring page and the cron task changed the live scoring value in database to 'n'. If the scorerID is equal to this users ID then proceed to live scoring. This prevents the user from being locked out of scoring after leaving live scoring page.
+            // Scenario 5: this user started scoring this game then left the live scoring page and the cron task changed the live scoring value in database to 'n'. If the scorerID is not equal to this users ID then someone has taken over scoring duties. Display a message saying that someone is scoring this game and don't proceed.
+            // Scenario 6: the game is locked. Display a message saying this and don't proceed.
+        
+            // Get list of games being scored by user
             var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
+            
             if (response == 'success') {
+                // Game is not being scored by someone else.
                 if (!alreadyScored) {
                     scoringGameIDArray.push([gameID, homeTeam, awayTeam]);
                     sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
                 }
                 generateLiveScoring();
             } else if (response.substr(0, 11) == 'beingscored') {
+                // Get scorersID from reponse
                 var scorersID = response.slice(-8);
+                // If someone else is now scoring the game remove it from this users list of games
                 if (alreadyScored && (scorersID != localStorage.userID)) {
                     for (var a = 0; a < scoringGameIDArray.length; a += 1) {
                         if (scoringGameIDArray[a][0] == gameID) {
@@ -1311,14 +1414,17 @@ function checkGameLive(homeTeam, awayTeam, alreadyScored) {
                         }
                     }
                     generateGameSelection();
-                    alertError("#alertDiv", "This game is already being live scored. Please try again later or select another game.");
+                    alertError("#alertDiv", "Someone has taken over live scoring duties.");
                 } else if (alreadyScored && (scorersID == localStorage.userID)) {
+                    // If the game is being live scored and the scorersID matches the users ID then proceed to live scoring page
                     generateLiveScoring();
                 } else {
-                    alertError("#alertDiv", "This game is already being live scored. Please try again later or select another game.");
+                    // Someone else is scoring this game
+                    alertError("#alertDiv", "This game is already being live scored.");
                 }
             } else if (response == 'locked') {
                 if (alreadyScored) {
+                    // The game was locked after this user started scoring the game. Remove game from users current games.
                     for (var b = 0; b < scoringGameIDArray.length; b += 1) {
                         if (scoringGameIDArray[b][0] == gameID) {
                             scoringGameIDArray.splice(b, 1);
@@ -1340,6 +1446,7 @@ function checkGameLive(homeTeam, awayTeam, alreadyScored) {
     });
 }
 
+// Generate the live scoring html
 function generateLiveScoring() {
     var html = '';
     var gameID = sessionStorage.currentGameID;
@@ -1348,18 +1455,10 @@ function generateLiveScoring() {
         },
         function (response) {
             if (gameID.length == 16) {
-                var divID = parseInt(gameID.slice(-2));
-                for (var k = 0; k < allTeams[divID].length; k += 1) {
-                    var idFromArray = allTeams[divID][k].teamID;
-                    var homeTeamID = '' + parseInt(gameID.substr(8, 3));
-                    var awayTeamID = '' + parseInt(gameID.substr(11, 3));
-                    if (homeTeamID == idFromArray) {
-                        var homeTeamName = allTeams[divID][k].teamName;
-                    } else if (awayTeamID == idFromArray) {
-                        var awayTeamName = allTeams[divID][k].teamName;
-                    }
-                }
+                var homeTeamName = getTeamName(gameID.substr(8, 3), gameID.slice(-2));
+                var awayTeamName = getTeamName(gameID.substr(11, 3), gameID.slice(-2));
             } else {
+                // Support for legacy gameIDs
                 var homeTeamName = response[0].homeTeamName;
                 var awayTeamName = response[0].awayTeamName;
             }
@@ -1591,6 +1690,7 @@ function generateLiveScoring() {
     })
 }
 
+// Set the lastTimeScored value in the database for this game to the current time
 function updateLastTimeScored() {
     var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
     for (var e = 0; e < scoringGameIDArray.length; e += 1) {
@@ -1599,22 +1699,22 @@ function updateLastTimeScored() {
         },
         function (response) {
             if (response == 'success') {
-                if (1) {}
             }
         });
     }
 }
 
+// Set the liveScored variable in the database to n for this game and remove the game from the users list of games being scored.
 function stopScoring(gameID) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/stopscoring.php', {
             gameID: sessionStorage.currentGameID
         },
         function (response) {
-            // go back to game selection
             if (response != 'success') {
                 // Error
                 alertError("#alertDiv", "Error: " + response + ". Please use the contact form informing me of this.");
             } else {
+                // Remove game from users current game list
                 var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
                 for (var g = 0; g < scoringGameIDArray.length; g += 1) {
                     if (scoringGameIDArray[g][0] == gameID) {
@@ -1634,6 +1734,7 @@ function stopScoring(gameID) {
     })
 }
 
+// Check the inputs are valid then upload the update scoring play if they are
 function changeScore(gameID) {
     var homeScore = $('#newhomescore').val();
     var awayScore = $('#newawayscore').val();
@@ -1647,21 +1748,25 @@ function changeScore(gameID) {
     }
 }
 
+// Upload the half time scoring play
 function sendHalfTime(gameID, homeScore, awayScore) {
     selectedScoringPlay = '';
     uploadPlayLive(gameID, homeScore, awayScore, '40', 'halfTime', '', 'n');
 }
 
+// Upload the full time scoring play
 function sendFullTime(gameID, homeScore, awayScore) {
     selectedScoringPlay = '';
     uploadPlayLive(gameID, homeScore, awayScore, '80', 'fullTime', '', 'y');
 }
 
+// Upload a scoring play 
 function uploadScoringPlay(gameID, homeScore, awayScore) {
     team = selectedScoringPlay.substr(0, 4);
     play = selectedScoringPlay.substr(4);
     minutesPlayed = document.getElementsByClassName("minutesPlayedInput")[0].value;
-    description = document.getElementsByClassName("descriptionInput")[0].value;
+    // If the play is a conversion set the description to nothing to prevent duplicate description with the Try
+    description = (play == 'Conversion' ? '' : document.getElementsByClassName("descriptionInput")[0].value);
     var result = areInputsValidUpload(play, minutesPlayed);
     if (result[0]) {
         // Change the current score based on the play and team passed in
@@ -1696,6 +1801,7 @@ function uploadScoringPlay(gameID, homeScore, awayScore) {
     }
 }
 
+// Sends the play info to a php script which updates the database
 function uploadPlayLive(gameID, homeScore, awayScore, minutesPlayed, scoringPlay, description, locked) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/uploadplay.php', {
         gameID: gameID,
@@ -1709,6 +1815,7 @@ function uploadPlayLive(gameID, homeScore, awayScore, minutesPlayed, scoringPlay
     function (response) {
         if (response == 'success') {
             if (selectedScoringPlay.substr(4) == 'Try') {
+                // If the scoring play is a try then ask if the conversion was successful and upload that play if it was
                 $('#dialog').dialog({
                     buttons: {
                         "Yes": function() {
@@ -1990,6 +2097,7 @@ function calcScoresUpdate(team, play, homeScore, awayScore, oldHomeScore, oldAwa
 
 var selectedDivisionIndexEnd = 0;
 
+// Start the end game scoring page
 function endScoring(createBackEvent) {
     changeAutoUpdateInterval(NEVER);
     if (createBackEvent) {
@@ -2004,7 +2112,9 @@ function endScoring(createBackEvent) {
     }
 }
 
+// Add events to the elements on the end game scoring page
 function addEventsEnd() {
+    // the enter button clicks the submit button
     $("#endScoringPasswordContainer").on({
         keydown: function (event) {
             if (event.which == 13) { // Enter
@@ -2015,6 +2125,7 @@ function addEventsEnd() {
         }
     });
     
+    // Add date picker to date input
     $("#datePicker").pickadate({
         format: 'ddd d mmm yy',
         today: 'Today',
@@ -2067,9 +2178,11 @@ function showEndScoringContainer() {
     $("#endScoringContainer").show();
 }
 
+// Generate end game scoring html
 function generateEndScoring() {
     var html = '';
 
+    // Add division drop down
     html += "<div class='row divDropDownRowEnd rowfix'>";
     html += "    <div class='titleEnd'>Grade:</div>";
     html += "    <select id='endScoringDivisionDropDown' onchange='changeTeamDropdownsEnd()'>";
@@ -2079,6 +2192,7 @@ function generateEndScoring() {
     html += "    </select>";
     html += "</div>";
 
+    // Add home team drop down
     html += "<div class='row homeTeamRowEnd rowfix'>";
     html += "    <div class='titleEnd'>Home Team</div>";
     html += "    <select id='endScoringHomeTeamDropDown'>";
@@ -2088,15 +2202,18 @@ function generateEndScoring() {
     html += "    </select>";
     html += "</div>";
 
+    // Add home score input and default checkbox
     html += "<div class='row homeScoreRowEnd rowfix'>";
     html += "    <div class='titleEnd'>Home Score</div> <input type='number' id='homeScore'>";
     html += "    Defaulted <input type='checkbox' id='homeCheckbox' onchange='toggleScoreInputs()'>";
     html += "</div>";
     
+    // Add home tries input
     html += "<div class='row homeTriesRowEnd rowfix'>";
     html += "    <div class='titleEnd'>Home Tries</div> <input type='number' id='homeTries'>";
     html += "</div>";
 
+    // Add away team drop down
     html += "<div class='row awayTeamRowEnd rowfix'>";
     html += "    <div class='titleEnd'>Away Team</div>";
     html += "    <select id='endScoringAwayTeamDropDown'>";
@@ -2106,19 +2223,23 @@ function generateEndScoring() {
     html += "    </select>";
     html += "</div>";
 
+    // Add away team score and default checkbox
     html += "<div class='row awayScoreRowEnd rowfix'>";
     html += "    <div class='titleEnd'>Away Score</div> <input type='number' id='awayScore'>";
     html += "    Defaulted <input type='checkbox' id='awayCheckbox' onchange='toggleScoreInputs()'>";
     html += "</div>";
     
+    // Add away tries input
     html += "<div class='row awayTriesRowEnd rowfix'>";
     html += "    <div class='titleEnd'>Away Tries</div> <input type='number' id='awayTries'>";
     html += "</div>";
 
+    // Add date picker input
     html += "<div class='row datePickerRowEnd rowfix'>";
     html += "    <div class='titleEnd'>Date</div> <input type='date' id='datePicker'>";
     html += "</div>";
 
+    // Add submit button
     html += "<div class='row submitScoreButtonRow rowfix'>";
     html += "    <button class='submitScoreButton' onClick='submitScore()'>Submit Score</button>";
     html += "</div>";
@@ -2129,6 +2250,7 @@ function generateEndScoring() {
     showEndScoringContainer();
 }
 
+// Change the teams in the drop downs
 function changeTeamDropdownsEnd() {
     selectedDivisionIndexEnd = $("#endScoringDivisionDropDown").prop('selectedIndex');
     generateEndScoring();
@@ -2153,6 +2275,7 @@ function toggleScoreInputs() {
     }
 }
 
+// Check if the game info can be uploaded for this game
 function checkGameEnd(gameID, homeScore, awayScore, scoringPlay, homeTeam, awayTeam, homeTries, awayTries) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/checkgame.php', {
             gameID: gameID,
@@ -2177,6 +2300,7 @@ function checkGameEnd(gameID, homeScore, awayScore, scoringPlay, homeTeam, awayT
     })
 }
 
+// Check if inputs are valid and then call check game with reqired info
 function submitScore() {
     var today = $("#datePicker")[0].nextElementSibling.nextElementSibling.value;
     var dd = today.substr(0, 2);
@@ -2271,6 +2395,7 @@ function areInputsValidEnd(homeValue, awayValue, homeCheckbox, awayCheckbox, hom
     return [valid, message];
 }
 
+// Send the game info to a php script which updates the database
 function uploadPlayEnd(gameID, homeScore, awayScore, scoringPlay, homeTries, awayTries) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/uploadplay.php', {
             gameID: gameID,
@@ -2285,6 +2410,7 @@ function uploadPlayEnd(gameID, homeScore, awayScore, scoringPlay, homeTries, awa
         },
         function (response) {
             if (response == 'success') {
+                // clear inputs by recreating container 
                 generateEndScoring();
                 alertSuccess("#alertDiv", "Game successfully uploaded");
             } else {
@@ -2304,6 +2430,7 @@ function uploadPlayEnd(gameID, homeScore, awayScore, scoringPlay, homeTries, awa
 --------------------------------------------------------------------------
 */
 
+// SHow contact form
 function showContactContainer() {
     hideAllContainers();
     setInstructions('contact');
@@ -2314,7 +2441,9 @@ function showContactContainer() {
     $("#contactContainer").show();
 }
 
+// Add events to the elements on the contact page
 function addEventsContact() {
+    // Enter button clicks submit button
     $("#contactContainer").on({
         keydown: function (event) {
             if (event.which == 13) { // Enter
@@ -2326,6 +2455,7 @@ function addEventsContact() {
     });
 }
 
+// Send the form info t o a php script that sends me an email
 function submitContactForm() {
     var name = $("#contactFormName").val();
     var email = $("#contactFormEmail").val();

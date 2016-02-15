@@ -9,7 +9,7 @@ if (mysqli_connect_errno()) {
     echo "Failed to connect to MySQL: " . mysqli_connect_error();
 }
 
-$startOfSeason = date("Ymd", mktime(0, 0, 0, 1, 1, 2016)) . '000000';
+$startOfSeason = date("Ymd", mktime(0, 0, 0, 1, 2, 2016)) . '000000';
 $today = date("Ymd", strtotime("tomorrow")) . '000000';
 $response = [];
 
@@ -108,7 +108,7 @@ if ($result = mysqli_query($con, $sql)) {
             $sqlProcessed = "UPDATE Game SET processed = 'y' WHERE GameID = '$gameID'";
             
             if (!(mysqli_query($con, $sqlHome) && mysqli_query($con, $sqlAway) && mysqli_query($con, $sqlProcessed))) {
-                array_push($response, ['Error', 'Please use contact form to inform me of this.');
+                array_push($response, ['Error', 'Please use contact form to inform me of this.']);
             }
         }
     }

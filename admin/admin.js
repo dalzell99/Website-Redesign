@@ -109,38 +109,34 @@ function hideAllContainers() {
     $("#passwordContainer").hide();
     $("#teamEditorContainer").hide();
     $("#gameEditorContainer").hide();
+    $("#contactContainer").hide();
 }
 
 // Uses jquery ajax to call php script to check password entered is correct
 function checkPassword() {
     var passwordInput = $("#passwordInput").val();
-    $.post(
-        'http://ccrscoring.co.nz/scripts/php/checkpassword.php', {
-            page: 'admin',
-            password: passwordInput
-        },
-        function (response) {
-            if (response == 'correct') {
-                // Correct password. Hide password and go to last visited page
-                if (typeof (Storage) !== "undefined") {
-                    sessionStorage.password = "correct";
-                    if (sessionStorage.currentPage == "teamEditor" || sessionStorage.currentPage == null) {
-                        teamEditor(true);
-                    } else {
-                        gameEditor(true);
-                    }
-                } else {
-                    teamEditor(true);
-                }
-            } else if (response == 'incorrect') {
-                // Incorrect password. Do nothing
-                alertError("#alertDiv", "Incorrect password. Please try again.")
-                $("#passwordInput").val = "";
+    $.post('http://ccrscoring.co.nz/scripts/php/checkpassword.php', {
+        page: 'admin',
+        password: passwordInput
+    },
+    function (response) {
+        if (response == 'correct') {
+            // Correct password. Hide password and go to last visited page
+            sessionStorage.password = "correct";
+            if (sessionStorage.currentPage == "teamEditor" || sessionStorage.currentPage == null) {
+                teamEditor(true);
             } else {
-                // Error
-                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+                gameEditor(true);
             }
-        }).fail(function () {
+        } else if (response == 'incorrect') {
+            // Incorrect password. Display error message and empty pasword input
+            alertError("#alertDiv", "Incorrect password. Please try again.")
+            $("#passwordInput").val = "";
+        } else {
+            // Error
+            alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+        }
+    }).fail(function () {
         alertError("#alertDiv", "Error while checking password. Please try again later. If problem persists, use the contact form");
     })
 }
@@ -150,6 +146,7 @@ function setActivePage() {
     $("li.active").removeClass("active");
     $("." + sessionStorage.currentPage).addClass("active");
 
+    // Close nav bar when user is on mobile
     $('.navbar-collapse.in').removeClass('in').prop('aria-expanded', false);
 }
 
@@ -186,6 +183,7 @@ function addBackEvent(eventArray) {
             gameID: eventArray[1]
         };
     }
+    
     history.replaceState(stateObj, "", "");
     history.pushState(stateObj, "", "");
 }
@@ -250,7 +248,7 @@ Date.prototype.toPDFString = function() {
     return dayOfGame + " " + this.getDate() + " " + months[this.getMonth()];
 };
 
-// // Return string with number padding with leadng zeros to certain length
+// Return string with number padding with leadng zeros to certain length
 function pad(value, length) {
     // Convert to string
     value = '' + value;
@@ -266,23 +264,26 @@ function pad(value, length) {
 
 // Display Bootstrap error alert in footer
 function alertError(selector, message) {
+    $(".footer").show();
     $(selector).after("<div class='alert alert-danger' role='alert'>" + message + "</div>");
     $(selector).next().delay(4000).fadeOut(600);
-    setTimeout(function() { $(selector).next().remove(); }, 5000);
+    setTimeout(function() { $(selector).next().remove(); $(".footer").hide(); }, 5000);
 }
 
 // Display Bootstrap success alert in footer
 function alertSuccess(selector, message) {
+    $(".footer").show();
     $(selector).after("<div class='alert alert-success' role='alert'>" + message + "</div>");
     $(selector).next().delay(4000).fadeOut(600);
-    setTimeout(function() { $(selector).next().remove(); }, 5000);
+    setTimeout(function() { $(selector).next().remove(); $(".footer").hide(); }, 5000);
 }
 
 // Display Bootstrap info alert in footer
 function alertNotification(selector, message) {
+    $(".footer").show();
     $(selector).after("<div class='alert alert-info' role='alert'>" + message + "</div>");
     $(selector).next().delay(4000).fadeOut(600);
-    setTimeout(function() { $(selector).next().remove(); }, 5000);
+    setTimeout(function() { $(selector).next().remove(); $(".footer").hide(); }, 5000);
 }
 
 /* 
@@ -322,10 +323,10 @@ function toggleAddTeam() {
 // Dynamically generates add team stuff
 function generateAddTeam() {
     var html = "";
-    html += "<div id='addTeamFormToggle' onclick='toggleAddTeam()'>Click to add new team</div>";
+    html += "<button id='addTeamFormToggle' onclick='toggleAddTeam()'>Add New Team</button>";
     html += "<div id='addTeamForm'>";
     html += "    Team Name: <input type='text' id='addTeamName'>";
-    html += "    Division: <select id='divisionDropDown'>";
+    html += "    Grade: <select id='divisionDropDown'>";
     for (var j = 0; j < allDivs.length; j += 1) {
         html += "        <option value='" + allDivs[j].divisionID + "'>" + allDivs[j].divisionName + "</option>";
     }
@@ -356,7 +357,7 @@ function generateTeamList() {
     addEventsTeam();
 }
 
-// Sort team list in alphabetical order
+// Sort the team lists for each division in alphabetical order
 function sortTeamList() {
     for (var i = 0; i < allTeams.length; i += 1) {
         allTeams[i].sort(function(a, b) {
@@ -391,29 +392,30 @@ function addEventsTeam() {
 function changeTeamName(teamID, newName, divisionID, backEvent) {
     var oldName = sessionStorage.contenteditable;
     var post = $.post('http://ccrscoring.co.nz/scripts/php/changeteamname.php', {
-            teamID: teamID,
-            newName: newName
-        },
-        function (response) {
-            if (response == 'success') {
-                if (backEvent) {
-                    addBackEvent(['changeTeamName', teamID, oldName, divisionID]);
-                }
-                var teams = allTeams[parseInt(divisionID)];
-                for (var q = 0; q < teams.length; q += 1) {
-                    if (teams[q].teamID == teamID) {
-                        teams[q].teamName = newName;
-                        break;
-                    }
-                }
-                // Name has been changed. Regenerate team list.
-                generateTeamList();
-                alertSuccess("alertDiv", "Team name has been changed");
-            } else {
-                // Error
-                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+        teamID: teamID,
+        newName: newName
+    },
+    function (response) {
+        if (response == 'success') {
+            if (backEvent) {
+                addBackEvent(['changeTeamName', teamID, oldName, divisionID]);
             }
-        });
+            // Change team name in locally storage array
+            var teams = allTeams[parseInt(divisionID)];
+            for (var q = 0; q < teams.length; q += 1) {
+                if (teams[q].teamID == teamID) {
+                    teams[q].teamName = newName;
+                    break;
+                }
+            }
+            // Name has been changed. Regenerate team list.
+            generateTeamList();
+            alertSuccess("alertDiv", "Team name has been changed");
+        } else {
+            // Error
+            alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+        }
+    });
 
     post.fail(function (request, textStatus, errorThrown) {
         alertError("#alertDiv", "Error while changing the teams name. Please try again later. If problem persists, use the contact form");
@@ -426,6 +428,7 @@ function addTeam() {
     var divisionID = $('#divisionDropDown option:selected').val()
     var teamExists = false;
     
+    // Find if team already exists in that division
     var teams = allTeams[parseInt(divisionID)];
     for (var p = 0; p < teams.length; p += 1) {
         if (teams[p].teamName == teamName) {
@@ -436,20 +439,20 @@ function addTeam() {
 
     if (!teamExists) {
         var post = $.post('http://ccrscoring.co.nz/scripts/php/addnewteam.php', {
-                teamName: teamName,
-                divisionID: divisionID
-            },
-            function (response) {
-                if (response[0] == 'success') {
-                    // Name has been changed. Regenerate team list.
-                    addBackEvent(['addTeam', teamName, divisionID]);
-                    allTeams[parseInt(divisionID)].push({division:divisionID, enabled:'y', teamID:response[1], teamName:teamName});
-                    generateTeamList();
-                } else {
-                    // Error
-                    alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
-                }
-            }, 'json');
+            teamName: teamName,
+            divisionID: divisionID
+        },
+        function (response) {
+            if (response[0] == 'success') {
+                // Name has been changed. Regenerate team list.
+                addBackEvent(['addTeam', teamName, divisionID]);
+                allTeams[parseInt(divisionID)].push({division:divisionID, enabled:'y', teamID:response[1], teamName:teamName});
+                generateTeamList();
+            } else {
+                // Error
+                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+            }
+        }, 'json');
 
         post.fail(function (request, textStatus, errorThrown) {
             alertError("#alertDiv", "Error while adding new team. Please try again later. If problem persists, use the contact form");
@@ -463,26 +466,26 @@ function addTeam() {
 // Delete team that was just created
 function deleteTeam(teamName, divisionID) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/deleteteam.php', {
-            teamName: teamName,
-            divisionID: divisionID
-        },
-        function (response) {
-            if (response == 'success') {
-                // Name has been changed. Regenerate team list.
-                var teams = allTeams[parseInt(divisionID)];
-                for (var p = 0; p < teams.length; p += 1) {
-                    if (teams[p].teamName == teamName) {
-                        teams.splice(p, 1);
-                        break;
-                    }
+        teamName: teamName,
+        divisionID: divisionID
+    },
+    function (response) {
+        if (response == 'success') {
+            // Team has been deleted. Remove team from locally storage team list
+            var teams = allTeams[parseInt(divisionID)];
+            for (var p = 0; p < teams.length; p += 1) {
+                if (teams[p].teamName == teamName) {
+                    teams.splice(p, 1);
+                    break;
                 }
-                generateTeamList();
-                alertSuccess("#alertDiv", "Team has been deleted");
-            } else {
-                // Error
-                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
             }
-        });
+            generateTeamList();
+            alertSuccess("#alertDiv", "Team has been deleted");
+        } else {
+            // Error
+            alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+        }
+    });
 
     post.fail(function (request, textStatus, errorThrown) {
         alertError("#alertDiv", "Error while deleting team. Please try again later. If problem persists, use the contact form");
@@ -492,24 +495,24 @@ function deleteTeam(teamName, divisionID) {
 // Remove team from competition without deleting them
 function disableTeam(teamID, division) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/disableteam.php', {
-            teamID: teamID
-        },
-        function (response) {
-            if (response == 'success') {
-                // Name has been changed. Regenerate team list.
-                var teams = allTeams[parseInt(division)];
-                for (var r = 0; r < teams.length; r += 1) {
-                    if (teams[r].teamID == teamID) {
-                        teams[r].enabled = 'n';
-                    }
+        teamID: teamID
+    },
+    function (response) {
+        if (response == 'success') {
+            // Team has been removed from competition. Set that team as disabled in local storage
+            var teams = allTeams[parseInt(division)];
+            for (var r = 0; r < teams.length; r += 1) {
+                if (teams[r].teamID == teamID) {
+                    teams[r].enabled = 'n';
                 }
-                generateTeamList();
-                alertSuccess("#alertDiv", "Team has been removed from competition");
-            } else {
-                // Error
-                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
             }
-        });
+            generateTeamList();
+            alertSuccess("#alertDiv", "Team has been removed from competition");
+        } else {
+            // Error
+            alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+        }
+    });
 
     post.fail(function (request, textStatus, errorThrown) {
         alertError("#alertDiv", "Error while removing team. Please try again later. If problem persists, use the contact form");
@@ -519,24 +522,24 @@ function disableTeam(teamID, division) {
 // Add team back into competition
 function enableTeam(teamID, division) {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/enableteam.php', {
-            teamID: teamID
-        },
-        function (response) {
-            if (response == 'success') {
-                // Name has been changed. Regenerate team list.
-                var teams = allTeams[parseInt(division)];
-                for (var s = 0; s < teams.length; s += 1) {
-                    if (teams[s].teamID == teamID) {
-                        teams[s].enabled = 'y';
-                    }
+        teamID: teamID
+    },
+    function (response) {
+        if (response == 'success') {
+            // Teams has been added back into competition
+            var teams = allTeams[parseInt(division)];
+            for (var s = 0; s < teams.length; s += 1) {
+                if (teams[s].teamID == teamID) {
+                    teams[s].enabled = 'y';
                 }
-                generateTeamList();
-                alertSuccess("#alertDiv", "Team has been added back into competition");
-            } else {
-                // Error
-                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
             }
-        });
+            generateTeamList();
+            alertSuccess("#alertDiv", "Team has been added back into competition");
+        } else {
+            // Error
+            alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+        }
+    });
 
     post.fail(function (request, textStatus, errorThrown) {
         alertError("#alertDiv", "Error while readding team. Please try again later. If problem persists, use the contact form");
@@ -554,6 +557,7 @@ var selectedDivisionIndex = 0;
 var numGamesDeleted = 0;
 var numGamesLocked = 0;
 var datePickers = [];
+var lastRowSelected;
 
 // Start game editor
 function gameEditor(backEvent) {
@@ -587,15 +591,23 @@ function toggleAddGameForm() {
 function generateToolbar() {
     var html = '';
 
-    html += "<div id='gameEditorToolbarButtons'>";
-    html += "    <button id='addGameButton' onclick='toggleAddGameForm()'>Add Games</button>";
-    html += "    <button id='deleteSelectedGameButton' onclick='deleteSelectedGames()'>Delete Selected Games</button>";
-    html += "    <button id='lockSelectedGameButton' onclick='lockSelectedGames()'>Lock Selected Games</button>";
-    html += "    <button id='unlockSelectedGameButton' onclick='unlockSelectedGames()'>Unlock Selected Games</button>";
-    html += "    <button id='createPDFButton' onclick='createPDF()'>Create PDF</button>";
-    html += "    <button id='updatePointsTable' onclick='updatePointsTable()'>Update Point Tables</button>";
+    // Add buttons
+    html += "<div>";
+    html += "    <div class='row gameEditorToolbarButtons'>"
+    html += "        <button id='createDrawPDFButton' onclick='createDrawPDF()'>Create Draw PDF</button>";
+    html += "        <button id='createResultsPDFButton' onclick='createResultsPDF()'>Create Results PDF</button>";
+    html += "        <button id='updatePointsTable' onclick='updatePointsTable()'>Update Point Tables</button>";
+    html += "        <button id='resetTableButton' onclick='filterDates()'>Reset Table</button>";
+    html += "    </div>";
+    html += "    <div class='row gameEditorToolbarButtons'>"
+    html += "        <button id='addGameButton' onclick='toggleAddGameForm()'>Add Games</button>";
+    html += "        <button id='deleteSelectedGameButton' onclick='deleteSelectedGames()'>Delete Selected Games</button>";
+    html += "        <button id='lockSelectedGameButton' onclick='lockSelectedGames()'>Lock Selected Games</button>";
+    html += "        <button id='unlockSelectedGameButton' onclick='unlockSelectedGames()'>Unlock Selected Games</button>";
+    html += "    </div>";
     html += "</div>";
 
+    // Add add game form
     html += "<div id='addGameForm'>";
     html += "    Division: <select id='addGameDivisionDropDown' onchange='changeTeamDropDowns()'>";
     for (var q = 0; q < allDivs.length; q += 1) {
@@ -678,23 +690,19 @@ function generateGameTable(startDate, endDate) {
             var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
             var dateToDisplay = dateFromGameID.substr(6, 2) + "/" + dateFromGameID.substr(4, 2) + "/" + dateFromGameID.substr(0, 4);
 
+            // If game occurs between the dates passed add to table
             if (gameDate >= startDate && gameDate <= endDate) {
                 if (gameID.length == 16) {
-                    var teams = allTeams[divID];
-                    for (var k = 0; k < teams.length; k += 1) {
-                        if (parseInt(gameID.substr(8, 3)) == parseInt(teams[k].teamID)) {
-                            var homeTeamName = teams[k].teamName;
-                        } else if (parseInt(gameID.substr(11, 3)) == parseInt(teams[k].teamID)) {
-                            var awayTeamName = teams[k].teamName;
-                        }
-                    }
+                    var homeTeamName = getTeamName(gameID.substr(8, 3), gameID.slice(-2));
+                    var awayTeamName = getTeamName(gameID.substr(11, 3), gameID.slice(-2));
                 } else {
+                    // Legacy support for old gameIDs
                     var homeTeamName = game.homeTeamName;
                     var awayTeamName = game.awayTeamName;
                 }
 
                 var division = allDivs[divID].divisionName;                
-                html += "        <tr class='gameRow " + gameID + " " + (offset + l) + "'>";
+                html += "        <tr class='gameRow " + gameID + "'>";
                 html += "            <td class='date' sorttable_customkey='" + dateFromGameID + "'><input class='datepicker " + (offset + l) + "' data-value='" + dateToDisplay + "' value='" + gameDate.toInitialString() + "'></td>";
                 html += "            <td class='divisionName' sorttable_customkey='" + divID + "'>" + division + "</td>";
                 html += "            <td class='homeTeamName'>" + homeTeamName + "</td>";
@@ -731,6 +739,7 @@ function generateGameTable(startDate, endDate) {
 
     // Add event listeners for content editable cells after the table has been created
     addEventsGame();
+    setRowIndexes();
     selectedRowGameID = [];
 }
 
@@ -761,8 +770,12 @@ function filterDates() {
 
 // Add events to elements on game editor page
 function addEventsGame() {
+    // Set date picker to only be added once date is clicked. This saves waiting 
+    // for 1300+ datepickers to be initialised before table displays.
     $("input.datepicker").click(function() {
+        // Remove this click event
         $(this).off('click');
+        // Add date picker with it's own click event
         $(this).pickadate({
             format: 'ddd d mmm yy',
             today: 'Today',
@@ -774,6 +787,7 @@ function addEventsGame() {
             hiddenPrefix: 'prefix__',
             onSet: function(context) {
                 var oldGameID = this.$node[0].parentElement.parentElement.classList[1];
+                var index = this.$node[0].parentElement.parentElement.classList[2];
                 var date = this._hidden.value;
                 var newGameID = date.substr(6, 4) + date.substr(3, 2) + date.substr(0, 2) + oldGameID.substr(8, oldGameID.length - 8);
                 // delete game
@@ -784,7 +798,12 @@ function addEventsGame() {
                 },
                 function (response) {
                     if (response == 'success') {
-                        // do nothing
+                        // Change the gameID stored as a class in tr. Then remove and add the index and 
+                        // selectedRow classes to maintain the correct class order
+                        var row = $(".gameRow." + oldGameID);
+                        row.removeClass(oldGameID).addClass(newGameID).removeClass(index).addClass(index);
+                        if (row.hasClass('selectedRow')) { row.removeClass('selectedRow').addClass('selectedRow'); }
+                        alertSuccess("#alertDiv", "Date has been changed");
                     } else {
                         // Error
                         alertError("#alertDiv", "Error while changing date. Please refresh page and try again. If problem persists, use the contact form");
@@ -796,9 +815,11 @@ function addEventsGame() {
                 });
             }
         });
+        // Trigger date pickers click event
         $(this).click();
     });
     
+    // Add datepicker to the filter inputs
     $("input[type='date']").pickadate({
         format: 'ddd d mmm yy',
         today: 'Today',
@@ -810,15 +831,16 @@ function addEventsGame() {
         hiddenPrefix: 'prefix__'
     });
     
+    // Add event to the editable columns of the table. Tab moves tight one cell and shift + tab moves left one cell.
     $("tr > [contenteditable=true]").on({
         keydown: function (event) {
-            if (event.which == 13 && event.shiftKey) { // Shift + enter
+            if (event.which == 13 && event.shiftKey) { // Shift + enter moves up one cell
                 // Stop a line break being added
                 event.preventDefault();
                 // Get the parent of element currently focused, move to previous sibling, get the child with the same class name and focus it.
                 $(this).parent().prev().children("." + this.className).focus();
                 placeCaretAtEnd(document.activeElement);
-            } else if (event.which == 13) { // Enter without shift
+            } else if (event.which == 13) { // Enter without shift moves down one cell
                 // Stop a line break being added
                 event.preventDefault();
                 // Get the parent of element currently focused, move to next sibling, get the child with the same class name and focus it.
@@ -827,6 +849,7 @@ function addEventsGame() {
             }
         },
 
+        // When the user clicks out of a cell.
         blur: function () {
             var oldValue = sessionStorage.contenteditable;
             var gameID = this.parentElement.classList.item(1);
@@ -838,39 +861,71 @@ function addEventsGame() {
             var date = $("." + gameID + " > .date")[0].firstElementChild.value;
             // check if content changed
             if (oldValue != newValue) {
+                // Upload change
                 changeGameInfo(gameID, column, newValue, oldValue, rowIndex, true, homeTeam, awayTeam, date);
             }
         },
 
+        // When user clicks into cell
         focus: function () {
             sessionStorage.contenteditable = this.innerHTML;
         }
     });
     
+    // When user clicks cell.
     $("tr.gameRow").on({
         click: function(event) {
-            if (event.shiftKey) {
-                var startRowGameID = selectedRowGameID[selectedRowGameID.length - 1];
-                var startRowDate = new Date(parseInt(startRowGameID.substr(0, 4)), parseInt(startRowGameID.substr(4, 2)) - 1, parseInt(startRowGameID.substr(6, 2)));
-                var startRowIndex = parseInt($("." + selectedRowGameID[selectedRowGameID.length - 1])[0].classList[2]);
+            // If shift + click, then highlight all cells between the last selected cell and this one.
+            if (event.shiftKey && selectedRowGameID.length > 0) {
+                var startRowIndex = $("." + selectedRowGameID[selectedRowGameID.length - 1])[0].classList[2];
+                var endRowIndex = this.classList[2];
                 
-                var endRowGameID = this.classList[1];
-                var endRowDate = new Date(parseInt(endRowGameID.substr(0, 4)), parseInt(endRowGameID.substr(4, 2)) - 1, parseInt(endRowGameID.substr(6, 2)));
-                var endRowIndex = parseInt(this.classList[2]);
-                
-                if (endRowDate > startRowDate || (endRowDate.toDateString() == startRowDate.toDateString() && endRowIndex > startRowIndex)) {
-                    var endRow = this;
-                    var currentRow = $("." + selectedRowGameID[selectedRowGameID.length - 1])[0].nextElementSibling;
+                if (startRowIndex != endRowIndex) {
+                    if (startRowIndex > endRowIndex) {
+                        var endRow = $("." + selectedRowGameID[selectedRowGameID.length - 1])[0];
+                        var currentRow = this;
+                    } else if (startRowIndex < endRowIndex) {
+                        var endRow = this;
+                        var currentRow = $("." + selectedRowGameID[selectedRowGameID.length - 1])[0].nextElementSibling;
+                    }
+
                     while (currentRow != endRow.nextElementSibling) {
                         addRowSelection(currentRow);
                         currentRow = currentRow.nextElementSibling;
                     }
+                } else {
+                    // clicked on an already selected row
                 }
             } else {
                 toggleRowSelection(this);
             }
         }
     });
+    
+    // When header is clicked, add an index to indicate where that row is located in the table.
+    // Runs after the table has been sorted
+    $("th").on({
+        click: function(event) {
+            // Remove all row selections
+            $(".selectedRow").removeClass("selectedRow");
+            selectedRowGameID = [];
+            // Set new row indexes
+            setRowIndexes();
+        }
+    });
+}
+
+// Set the row indexes
+function setRowIndexes() {
+    var gameRows = $("#gameEditorTable tbody tr");
+    for (var s = 0; s < gameRows.length; s += 1) {
+        if (gameRows[s].classList.length == 3) {
+            // Remove the old index
+            $(gameRows[s]).removeClass(gameRows[s].classList[2]);
+        }
+        // Add new index
+        gameRows[s].className += ' ' + s;
+    }
 }
 
 // Upload changed data to the database
@@ -885,10 +940,13 @@ function changeGameInfo(gameID, column, newValue, oldValue, rowIndex, backEvent,
                 if (backEvent) { 
                     addBackEvent(['gameInfoChanged', gameID, column, oldValue, rowIndex]); 
                 } else {
+                    // If this was called after user clicked browser back button then changed 
+                    // the value in the last cell changed to previous value.
                     var selector = "." + rowIndex + " > ." + column;
                     $(selector).empty().append(newValue);
                 }
                 
+                // Change value in locally storage game array
                 var games = allGames[parseInt(gameID.slice(-2))];
                 for (var v = 0; v < games.length; v += 1) {
                     if (games[v].GameID == gameID) {
@@ -937,7 +995,8 @@ function deleteSelectedGames() {
         function (response) {
             if (response == 'success') {
                 for (var h = 0; h < selectedRowGameID.length; h += 1) {
-                    var games = allGames[parseInt(gameID.slice(-2))];
+                    // Remove game from local game array
+                    var games = allGames[parseInt(selectedRowGameID[h].slice(-2))];
                     for (var w = 0; w < games.length; w += 1) {
                         if (games[w].GameID == selectedRowGameID[h]) {
                             games.splice(w, 1);
@@ -947,6 +1006,7 @@ function deleteSelectedGames() {
                     }
                 }
                 
+                // Clear variables and redisplay table with dates in filter inputs
                 selectedRowGameID = [];
                 numGamesDeleted = 0;
                 filterDates();
@@ -1126,7 +1186,7 @@ function placeCaretAtEnd(el) {
 }
 
 // Create a pdf with the games in the game table
-function createPDF() {
+function createResultsPDF() {
     var startDateString = $("#dateFilterStart")[0].nextElementSibling.nextElementSibling.value;
     if (startDateString != "") {
         var yearStart = parseInt(startDateString.substr(6, 4));
@@ -1147,6 +1207,7 @@ function createPDF() {
         var endDate = new Date(2050, 1, 1);
     }
 
+    // Get list of games between the filter dates
     var gameArray = [];
     for (var y = 0; y < allDivs.length; y += 1) {
         gameArray[parseInt(allDivs[y].divisionID)] = [];
@@ -1160,6 +1221,108 @@ function createPDF() {
         }
     }
     
+    // Create pdf string using format specified on the pdfmake website
+    var body = [];
+    
+    for (var z = 0; z < allDivs.length; z += 1) {
+        body.push([{text: allDivs[z].divisionName, colSpan: 6, style: 'divTitle'}, { text: '' }, { text: '' }, { text: '' }, { text: '' }, { text: '' }]);
+        
+        for (var v = 0; v < gameArray[z].length; v += 1) {
+            var game = gameArray[z][v];
+            var gameID = game.GameID;
+            var gameDateString = new Date(parseInt(gameID.substr(0, 4)), parseInt(gameID.substr(4, 2)) - 1, parseInt(gameID.substr(6, 2))).toPDFString();
+            body.push([
+                {text: gameDateString}, // Date
+                {text: getTeamName(gameID.substr(8, 3), gameID.slice(-2))}, // Home Team Name
+                {text: (game.homeTeamScore == 2 ? 'Win' : game.homeTeamScore == 1 ? 'Defaulted' : game.homeTeamScore)}, // Home Team Score
+                {text: 'vs'}, 
+                {text: getTeamName(gameID.substr(11, 3), gameID.slice(-2))}, // Away Team Name
+                {text: (game.awayTeamScore == 2 ? 'Win' : game.awayTeamScore == 1 ? 'Defaulted' : game.awayTeamScore)}, // Away Team Score
+            ]);
+        }
+        
+        body.push([{ text: '------------------------------------------------------------------------------------------------------------------------------------', colSpan: 6 }, { text: '' }, { text: '' }, { text: '' }, { text: '' }, { text: '' }]);
+    }
+    
+    var docDefinition = {
+        content: [
+            {
+                image: imageBase64, // It's at the bottom of the file
+                style: 'sponsorImage'
+            },
+            { 
+                text: 'Results for ' + startDate.toPDFString() + " to " + endDate.toPDFString(),
+                style: 'dateString'
+            },
+            {
+                table: {
+                    widths: [ 'auto', 'auto', 'auto', 'auto', 'auto', 'auto' ],
+                    body: body
+                }, 
+                layout: 'noBorders', 
+                margin: [0, 0, 0, 0],
+                style: 'table'
+            }
+        ],
+        styles: {
+            divTitle: {
+                fontSize: 16,
+                bold: true		
+            },
+            table: {
+                fontSize: 12
+            },
+            dateString: {
+                fontSize: 14,
+                alignment: 'center',
+                margin: [0, 0, 0, 15]
+            },
+            sponsorImage: {
+                alignment: 'center'
+            }
+        }
+    };
+    
+    pdfMake.createPdf(docDefinition).download('rugbyresultsfor' + startDate.toAddGameDateString() + '-' + endDate.toAddGameDateString() + '.pdf');
+}
+
+// Create a pdf with the games in the game table
+function createDrawPDF() {
+    var startDateString = $("#dateFilterStart")[0].nextElementSibling.nextElementSibling.value;
+    if (startDateString != "") {
+        var yearStart = parseInt(startDateString.substr(6, 4));
+        var monthStart = parseInt(startDateString.substr(3, 2)) - 1;
+        var dayStart = parseInt(startDateString.substr(0, 2));
+        var startDate = new Date(yearStart, monthStart, dayStart);
+    } else {
+        var startDate = new Date(2000, 1, 1);
+    }
+
+    var endDateString = $("#dateFilterEnd")[0].nextElementSibling.nextElementSibling.value;
+    if (endDateString != "") {
+        var yearEnd = parseInt(endDateString.substr(6, 4));
+        var monthEnd = parseInt(endDateString.substr(3, 2)) - 1;
+        var dayEnd = parseInt(endDateString.substr(0, 2));
+        var endDate = new Date(yearEnd, monthEnd, dayEnd);
+    } else {
+        var endDate = new Date(2050, 1, 1);
+    }
+    
+    // Get list of games between the filter dates
+    var gameArray = [];
+    for (var y = 0; y < allDivs.length; y += 1) {
+        gameArray[parseInt(allDivs[y].divisionID)] = [];
+        
+        for (var u = 0; u < allGames[y].length; u += 1) {
+            var gameID = allGames[y][u].GameID;
+            var gameDate = new Date(parseInt(gameID.substr(0, 4)), parseInt(gameID.substr(4, 2)) - 1, parseInt(gameID.substr(6, 2)));
+            if (gameDate >= startDate && gameDate <= endDate) {
+                gameArray[parseInt(gameID.slice(-2))].push(allGames[y][u]);
+            }
+        }
+    }
+    
+    // Create pdf string using format specified on the pdfmake website
     var body = [];
     
     for (var z = 0; z < allDivs.length; z += 1) {
@@ -1169,16 +1332,17 @@ function createPDF() {
             var game = gameArray[z][v];
             var gameID = game.GameID;
             var gameDateString = new Date(parseInt(gameID.substr(0, 4)), parseInt(gameID.substr(4, 2)) - 1, parseInt(gameID.substr(6, 2))).toPDFString();
+            var gameChanges = JSON.parse(game.changes);
             body.push([
-                {text: gameDateString}, // Date
+                {text: gameDateString, color: (isChanged('date', gameChanges) ? 'red' : 'black')}, // Date
                 {text: getTeamName(gameID.substr(8, 3), gameID.slice(-2))}, // Home Team Name
                 {text: 'vs'}, 
                 {text: getTeamName(gameID.substr(11, 3), gameID.slice(-2))}, // Away Team Name
-                {text: game.location}, // Location
-                {text: game.time}, // Time
-                {text: game.ref}, // Ref
-                {text: game.assRef1}, // Ass Ref 1
-                {text: game.assRef2}  // Ass Ref 2
+                {text: game.location, color: (isChanged('location', gameChanges) ? 'red' : 'black')}, // Location
+                {text: game.time, color: (isChanged('time', gameChanges) ? 'red' : 'black')}, // Time
+                {text: game.ref, color: (isChanged('ref', gameChanges) ? 'red' : 'black')}, // Ref
+                {text: game.assRef1, color: (isChanged('assRef1', gameChanges) ? 'red' : 'black')}, // Ass Ref 1
+                {text: game.assRef2, color: (isChanged('assRef2', gameChanges) ? 'red' : 'black')}  // Ass Ref 2
             ]);
         }
         
@@ -1188,7 +1352,7 @@ function createPDF() {
     var docDefinition = {
         content: [
             {
-                image: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAbQAAACcCAYAAAAXvF6pAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QUM0RDg5QjI1MEI4MTFFM0E0M0NFMTk2QzgzQzZEQ0IiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QUM0RDg5QjM1MEI4MTFFM0E0M0NFMTk2QzgzQzZEQ0IiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpBQzREODlCMDUwQjgxMUUzQTQzQ0UxOTZDODNDNkRDQiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpBQzREODlCMTUwQjgxMUUzQTQzQ0UxOTZDODNDNkRDQiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PoS2PXAAACS/SURBVHja7J0JlJzV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',
+                image: imageBase64, // It's at the bottom of the file
                 style: 'sponsorImage'
             },
             { 
@@ -1227,13 +1391,42 @@ function createPDF() {
     pdfMake.createPdf(docDefinition).download('rugbydrawfor' + startDate.toAddGameDateString() + '-' + endDate.toAddGameDateString() + '.pdf');
 }
 
+// Checks whether there has been change to a specific column in game info
+function isChanged(column, gameChanges) {
+    for (var j = 0; j < gameChanges.length; j += 1) {
+        if (gameChanges[j][1] == column) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
 // Update the points tables
 function updatePointsTable() {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/updatepointstable.php', {},
     function (response) {
+        if (response.length > 0) {
+            var gameIDClassList = 'tr.' + response[0][0];
+            for (var x = 1; x < response.length; x += 1) {
+                gameIDClassList += ', tr.' + response[x][0];
+            }
+
+            // Hide all the game rows
+            $("#gameEditorTable tbody tr").css('display', 'none');
+            // Then only show the game rows that need to be updated
+            $(gameIDClassList).css('display', 'table-row');
+            
+            // Highlight cells that need to be updated
+            for (var w = 0; w < response.length; w += 1) {
+                for (var a = 1; a < response[w].length; a += 1) {
+                    $("." + response[w][0] + " ." + response[w][a]).css('background-color', 'LemonChiffon');
+                }
+            }
+        }
         // return games that need to be updated before being processed and filter the list to show them
         alertSuccess("#alertDiv", "Points tables have been updated");
-    });
+    }, 'json');
 
     post.fail(function (xhr, textStatus, errorThrown) {
         alertError("#alertDiv", "Error while updating the points table. Please try again later. If problem persists, use the contact form");
@@ -1300,3 +1493,5 @@ function submitContactForm() {
         alertError("#alertDiv", 'Please enter a message');
     }
 }
+
+var imageBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAbQAAACcCAYAAAAXvF6pAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QUM0RDg5QjI1MEI4MTFFM0E0M0NFMTk2QzgzQzZEQ0IiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QUM0RDg5QjM1MEI4MTFFM0E0M0NFMTk2QzgzQzZEQ0IiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpBQzREODlCMDUwQjgxMUUzQTQzQ0UxOTZDODNDNkRDQiIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpBQzREODlCMTUwQjgxMUUzQTQzQ0UxOTZDODNDNkRDQiIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/PoS2PXAAACS/SURBVHja7J0JlJzV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';

@@ -21,7 +21,8 @@ $row = mysqli_fetch_assoc($result);
 // Retrieve all changes from database to an array by decoding json string
 $allChanges = json_decode($row['changes'], true);
 
-if ($column == 'homeTeamScore' || $column == 'awayTeamScore') {
+if ($column == 'homeTeamScore' || $column == 'awayTeamScore' ||
+    $column == 'homeTeamTries' || $column == 'awayTeamTries') {
     // don't add changes to score
 } else {
     // Add new change
