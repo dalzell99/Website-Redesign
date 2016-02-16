@@ -43,7 +43,8 @@ if ($result = mysqli_query($con, "SELECT * FROM Game WHERE GameID = '" . $oldGam
     '" . $row['locked'] . "', 
     '" . $row['homeTeamTries'] . "', 
     '" . $row['awayTeamTries'] . "', 
-    '" . $row['processed'] . "')";
+    '" . $row['processed'] . "',
+    '" . $row['cancelled'] . "')";
 
     if (mysqli_query($con, $newSQL)) {
         if (mysqli_query($con, "DELETE FROM Game WHERE GameID = '" . $oldGameID . "'")) {

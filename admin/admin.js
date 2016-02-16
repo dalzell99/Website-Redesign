@@ -604,6 +604,8 @@ function generateToolbar() {
     html += "        <button id='deleteSelectedGameButton' onclick='deleteSelectedGames()'>Delete Selected Games</button>";
     html += "        <button id='lockSelectedGameButton' onclick='lockSelectedGames()'>Lock Selected Games</button>";
     html += "        <button id='unlockSelectedGameButton' onclick='unlockSelectedGames()'>Unlock Selected Games</button>";
+    html += "        <button id='cancelSelectedGameButton' onclick='cancelSelectedGames()'>Cancel Selected Games</button>";
+    html += "        <button id='uncancelSelectedGameButton' onclick='uncancelSelectedGames()'>Uncancel Selected Games</button>";
     html += "    </div>";
     html += "</div>";
 
@@ -671,6 +673,7 @@ function generateGameTable(startDate, endDate) {
     html += "            <th id='tableHeaderAssRef1'>Assistant Ref 1</th>";
     html += "            <th id='tableHeaderAssRef2'>Assistant Ref 2</th>";
     html += "            <th id='tableHeaderLocked'>Locked</th>";
+    html += "            <th id='tableHeaderCancelled'>Cancelled</th>";
     html += "        </tr>";
     html += "    </thead>";
     
@@ -717,6 +720,7 @@ function generateGameTable(startDate, endDate) {
                 html += "            <td class='assRef1' contenteditable='true'>" + game.assRef1 + "</td>";
                 html += "            <td class='assRef2' contenteditable='true'>" + game.assRef2 + "</td>";
                 html += "            <td class='locked' contenteditable='true'>" + game.locked + "</td>";
+                html += "            <td class='cancelled' contenteditable='true'>" + game.cancelled + "</td>";
                 html += "        </tr>";
             }
         }
@@ -986,7 +990,7 @@ function toggleRowSelection(elem) {
     }
 }
 
-// Deleted the games that have been selected
+// Delete the games that have been selected
 function deleteSelectedGames() {
     if (confirm("Are you sure you want to delete the selected games? They will be gone forever if deleted")) {
         var post = $.post('http://ccrscoring.co.nz/scripts/php/deletegame.php', {
@@ -1023,18 +1027,72 @@ function deleteSelectedGames() {
     }
 }
 
-// Lock the selected games
-function lockSelectedGames() {
-    for (var n = 0; n < selectedRowGameID.length; n += 1) {
-        lockGame(selectedRowGameID[n]);
-    }
+// Cancel the games that have been selected
+function cancelSelectedGames() {
+    var post = $.post('http://ccrscoring.co.nz/scripts/php/cancelgame.php', {
+        gameIDArray: JSON.stringify(selectedRowGameID)
+    },
+    function (response) {
+        if (response == 'success') {
+            for (var h = 0; h < selectedRowGameID.length; h += 1) {
+                // set cancel to 'y' for game in local game array
+                var games = allGames[parseInt(selectedRowGameID[h].slice(-2))];
+                for (var w = 0; w < games.length; w += 1) {
+                    if (games[w].GameID == selectedRowGameID[h]) {
+                        games[w].cancelled = 'y';
+                        break;
+                    }
+                }
+            }
+
+            // Clear variables and redisplay table with dates in filter inputs
+            selectedRowGameID = [];
+            numGamesDeleted = 0;
+            filterDates();
+            alertSuccess("#alertDiv", "The selected games have been cancelled");
+        } else {
+            // Error
+            alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+        }
+    });
+
+    post.fail(function (request, textStatus, errorThrown) {
+        alertError("#alertDiv", "Error while deleting game. Please try again later. If problem persists, use the contact form");
+    })
 }
 
-// Unlock the selected games
-function unlockSelectedGames() {
-    for (var n = 0; n < selectedRowGameID.length; n += 1) {
-        unlockGame(selectedRowGameID[n]);
-    }
+// Uncancel the games that have been selected
+function uncancelSelectedGames() {
+    var post = $.post('http://ccrscoring.co.nz/scripts/php/uncancelgame.php', {
+        gameIDArray: JSON.stringify(selectedRowGameID)
+    },
+    function (response) {
+        if (response == 'success') {
+            for (var h = 0; h < selectedRowGameID.length; h += 1) {
+                // set cancel to 'n' for game in local game array
+                var games = allGames[parseInt(selectedRowGameID[h].slice(-2))];
+                for (var w = 0; w < games.length; w += 1) {
+                    if (games[w].GameID == selectedRowGameID[h]) {
+                        games[w].cancelled = 'n';
+                        break;
+                    }
+                }
+            }
+
+            // Clear variables and redisplay table with dates in filter inputs
+            selectedRowGameID = [];
+            numGamesDeleted = 0;
+            filterDates();
+            alertSuccess("#alertDiv", "The selected games have been uncancelled");
+        } else {
+            // Error
+            alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+        }
+    });
+
+    post.fail(function (request, textStatus, errorThrown) {
+        alertError("#alertDiv", "Error while deleting game. Please try again later. If problem persists, use the contact form");
+    })
 }
 
 // Change the team names in the home and away drop downs menus
@@ -1084,7 +1142,7 @@ function addGame() {
             function (response) {
                 if (response == 'success') {
                     // add game to local game array if it doesn't already exist
-                    allGames[parseInt(gameID.slice(-2))].push({GameID: gameID, assRef1: '', assRef2: '', awayTeamName: awayText, awayTeamScore: '0', homeTeamName: homeText, homeTeamScore: '0', lastTimeScore: "2016-01-01 11:11:11", liveScored: 'n', location: '', minutesPlayed: '0', ref: '', scoringPlays: '[]', time: '', changed: '', locked: 'n', changes: '[]', userID: '', homeTeamTries: '', awayTeamTries: '', processed: 'n'});
+                    allGames[parseInt(gameID.slice(-2))].push({GameID: gameID, assRef1: '', assRef2: '', awayTeamName: awayText, awayTeamScore: '0', homeTeamName: homeText, homeTeamScore: '0', lastTimeScore: "2016-01-01 11:11:11", liveScored: 'n', location: '', minutesPlayed: '0', ref: '', scoringPlays: '[]', time: '', changed: '', locked: 'n', changes: '[]', userID: '', homeTeamTries: '', awayTeamTries: '', processed: 'n', cancelled: 'n'});
                     addBackEvent(['addGame', gameID, homeText, awayText, dateString, allDivs[selectedDivisionIndex].divisionName]);
                     filterDates();
                     alertSuccess("#alertDiv", "Game has been successfully added");
@@ -1103,27 +1161,29 @@ function addGame() {
     }
 }
 
-// Lock a single game
-function lockGame(gameID) {
+// Lock the games that have been selected
+function lockSelectedGames() {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/lockgame.php', {
             gameID: gameID
         },
         function (response) {
             if (response == 'success') {
-                var games = allGames[parseInt(gameID.slice(-2))];
-                for (var w = 0; w < games.length; w += 1) {
-                    if (games[w].GameID == gameID) {
-                        games[w].locked = 'y';
-                        break;
+                for (var h = 0; h < selectedRowGameID.length; h += 1) {
+                    // set locked to 'y' for game in local game array
+                    var games = allGames[parseInt(selectedRowGameID[h].slice(-2))];
+                    for (var w = 0; w < games.length; w += 1) {
+                        if (games[w].GameID == selectedRowGameID[h]) {
+                            games[w].locked = 'y';
+                            break;
+                        }
                     }
                 }
                 
-                numGamesLocked += 1;
-                if (numGamesLocked == selectedRowGameID.length) {
-                    selectedRowGameID = [];
-                    numGamesLocked = 0;
-                    filterDates();
-                }
+                // Clear variables and redisplay table with dates in filter inputs
+                selectedRowGameID = [];
+                numGamesDeleted = 0;
+                filterDates();
+                alertSuccess("#alertDiv", "The selected games have been deleted");
             } else {
                 // Error
                 alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
@@ -1135,27 +1195,29 @@ function lockGame(gameID) {
     })
 }
 
-// Unlock a single game
-function unlockGame(gameID) {
+// Unlock the games that have been selected
+function unlockSelectedGames() {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/unlockgame.php', {
             gameID: gameID
         },
         function (response) {
             if (response == 'success') {
-                var games = allGames[parseInt(gameID.slice(-2))];
-                for (var w = 0; w < games.length; w += 1) {
-                    if (games[w].GameID == gameID) {
-                        games[w].locked = 'n';
-                        break;
+                for (var h = 0; h < selectedRowGameID.length; h += 1) {
+                    // set locked to 'n' for game in local game array
+                    var games = allGames[parseInt(selectedRowGameID[h].slice(-2))];
+                    for (var w = 0; w < games.length; w += 1) {
+                        if (games[w].GameID == selectedRowGameID[h]) {
+                            games[w].locked = 'n';
+                            break;
+                        }
                     }
                 }
                 
-                numGamesLocked += 1;
-                if (numGamesLocked == selectedRowGameID.length) {
-                    selectedRowGameID = [];
-                    numGamesLocked = 0;
-                    filterDates();
-                }
+                // Clear variables and redisplay table with dates in filter inputs
+                selectedRowGameID = [];
+                numGamesDeleted = 0;
+                filterDates();
+                alertSuccess("#alertDiv", "The selected games have been deleted");
             } else {
                 // Error
                 alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");

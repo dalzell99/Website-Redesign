@@ -9,16 +9,19 @@ if (mysqli_connect_errno()) {
     echo "Failed to connect to MySQL: " . mysqli_connect_error();
 }
 
-$gameID = $_POST['gameID'];
+$gameIDArray = json_decode($_POST['gameIDArray']);
 
-// Update game element with new values
-$update = " UPDATE Game SET locked = 'n' WHERE GameID = '$gameID' ";
-
-if (mysqli_query($con, $update)) {
-    echo 'success';
-} else {
-    echo 'Update query failed';
+foreach ($gameIDArray as $gameID) {
+    if (!mysqli_query($con, "UPDATE Game SET locked = 'n' WHERE GameID = '$gameID'")) {
+        $response = 'Update query failed';
+    }
 }
+
+if ($response != 'Update query failed') {
+    $response = 'success';
+} 
+
+echo $response;
 
 mysqli_close($con);
 ?>

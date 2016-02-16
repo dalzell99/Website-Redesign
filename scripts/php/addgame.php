@@ -14,7 +14,7 @@ $homeTeamName = $_POST['homeTeamName'];
 $awayTeamName = $_POST['awayTeamName'];
 
 // Create insert string using default values and variables given
-$sql = " INSERT INTO Game VALUES ('$gameID', '$homeTeamName', '', '$awayTeamName', '', '0', '', '', '', '', '12pm', '[]', 'n', '[]', 'y', '', '', 'n', '', '', 'n') ";
+$sql = " INSERT INTO Game VALUES ('$gameID', '$homeTeamName', '', '$awayTeamName', '', '0', '', '', '', '', '12pm', '[]', 'n', '[]', 'y', '', '', 'n', '', '', 'n', 'n') ";
 
 if (mysqli_query($con, $sql)) {
     echo "success";

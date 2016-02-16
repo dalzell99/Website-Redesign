@@ -35,7 +35,8 @@ if ($gameresult = mysqli_query($con, "SELECT * FROM Game ORDER BY 'gameID' ASC")
         '" . $row['locked'] . "', 
         '" . $row['homeTeamTries'] . "', 
         '" . $row['awayTeamTries'] . "', 
-        '" . $row['processed'] . "')
+        '" . $row['processed'] . "',
+        '" . $row['cancelled'] . "')
         
         ON DUPLICATE KEY UPDATE 
         GameID = '" . $row['GameID'] . "', 
@@ -58,7 +59,8 @@ if ($gameresult = mysqli_query($con, "SELECT * FROM Game ORDER BY 'gameID' ASC")
         locked = '" . $row['locked'] . "', 
         homeTeamTries = '" . $row['homeTeamTries'] . "', 
         awayTeamTries = '" . $row['awayTeamTries'] . "', 
-        processed = '" . $row['processed'] . "'";
+        processed = '" . $row['processed'] . "',
+        cancelled = '" . $row['cancelled'] . "'";
         
         if (mysqli_query($con, $sql)) {
             

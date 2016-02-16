@@ -204,7 +204,7 @@ function setActivePage() {
     $('.navbar-collapse.in').removeClass('in').prop('aria-expanded', false);
 }
 
-// Return string with number padding with leadng zeros to certain length
+// Return string with number padding with leading zeros to certain length
 function pad(value, length) {
     // Convert to string
     value = '' + value;
@@ -438,13 +438,18 @@ function toggleWeeks() {
 
 // Show/hide game changes
 function toggleGameChanges() {
-    $("#gameChanges").toggle();
+    $("#gameChanges").slideToggle();
     localStorage.lastTimeUpdatesChecked = new Date().toUTCString();
     if (gameChangesExpanded) {
         gameChangesExpanded = false;
     } else {
         gameChangesExpanded = true;
     }
+}
+
+// Show/hide game cancellations
+function toggleGameCancellations()  {
+    $("#gameCancellations").slideToggle();
 }
 
 // Generate week list element
@@ -505,6 +510,57 @@ function generateWeekSelector() {
     setActiveWeek();
 }
 
+// Generate game cancellation element
+function generateGameCancellations(startOfWeek, endOfWeek) {
+    var html = '';
+    var hasAGameBeenCancelled = false;
+    var todaysDate = new Date();
+    
+    // Only display game changes for this week
+    if(todaysDate >= startOfWeek && todaysDate <= endOfWeek) {
+        html += "<div class='cancellationtoggledisplay col-xs-47'>";
+        html += "    <div onclick='toggleGameCancellations()'>Show Game Cancellations</div>";
+        html += "        <div id='gameCancellations'>";
+        // for each division
+        if (allGames != null) {
+            for (var p = 0; p < allGames.length; p += 1) {
+                // get the date of the game
+                var game = allGames[p];
+                var gameID = game.GameID;
+                var year = parseInt(gameID.substr(0, 4));
+                var month = parseInt(gameID.substr(4, 2)) - 1;
+                var day = parseInt(gameID.substr(6, 2));
+                var gameDateDate = new Date(year, month, day);
+                // check if game happens in the current week
+                if (gameDateDate <= endOfWeek && gameDateDate >= startOfWeek && game.cancelled == 'y') {
+                    var divID = parseInt(gameID.slice(-2));
+                    if (gameID.length == 16) {
+                        var homeTeamName = getTeamName(gameID.substr(8, 3), divID);
+                        var awayTeamName = getTeamName(gameID.substr(11, 3), divID);
+                    } else {
+                        // to support legacy gameIDs
+                        var homeTeamName = game.homeTeamName;
+                        var awayTeamName = game.awayTeamName;
+                    }
+                    html += "<div onclick='toggleGameCancellations()'>" + allDivs[divID].divisionName + " - " + homeTeamName + " vs " + awayTeamName + "</div>";
+                    hasAGameBeenCancelled = true;
+                }
+            }
+        }
+        html += "        </div>";
+        html += "    </div>";
+        html += "</div>";
+
+        $("#gameCancellationContainer").empty().append(html);
+
+        if (!hasAGameBeenCancelled) {
+            $(".cancellationtoggledisplay").hide();
+        }
+    } else {
+        $("#gameCancellationContainer").empty();
+    }
+}
+
 // Generate game changes element
 function generateChangedGames(startOfWeek, endOfWeek) {
     var lastTimeUpdatesChecked = new Date(localStorage.lastTimeUpdatesChecked);
@@ -555,7 +611,7 @@ function generateChangedGames(startOfWeek, endOfWeek) {
                             } else {
                                 var changeValue = gameChanges[r][2];
                             }
-                            html += "<div>" + allDivs[divID].divisionName + ") " + homeTeamName + " vs " + awayTeamName + " - " + columnName(gameChanges[r][1]) + " was changed to " + changeValue + " (" + changeDate.toChangesString() + ")</div>"
+                            html += "<div onclick='toggleGameChanges()>" + allDivs[divID].divisionName + ") " + homeTeamName + " vs " + awayTeamName + " - " + columnName(gameChanges[r][1]) + " was changed to " + changeValue + " (" + changeDate.toChangesString() + ")</div>"
                         }
                     }
                 }
@@ -593,6 +649,7 @@ function generateGames() {
     function (response) {
         // put all games into array
         allGames = response;
+        generateGameCancellations(startOfWeek, endOfWeek);
         generateChangedGames(startOfWeek, endOfWeek);
 
         for (var b = 0; b < allDivs.length; b += 1) {
