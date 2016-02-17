@@ -456,7 +456,7 @@ function toggleGameCancellations()  {
 function generateWeekSelector() {
     var startDate = new Date(startDateArray[0], startDateArray[1], startDateArray[2]);
     var endDate = new Date(startDateArray[0], startDateArray[1], startDateArray[2]).addDays(6);
-    html = '';
+    var html = '';
 
     // Add buttons for selecting update interval
     html += "<div id='autoUpdateButtonRow'>";
@@ -637,7 +637,7 @@ function generateChangedGames(startOfWeek, endOfWeek) {
 
 // Generate game elements
 function generateGames() {
-    html = '';
+    var html = '';
     var gameInDivisionThisWeekArray = [];
     var startOfWeek = new Date(startDateArray[0], startDateArray[1], startDateArray[2]).addDays(7 * currentWeek);
     var endOfWeek = new Date(startDateArray[0], startDateArray[1], startDateArray[2]).addDays(6 + 7 * currentWeek);
@@ -946,54 +946,57 @@ function showPointsTable(divID) {
             }
         });
         
-        // Add points table headers for both mobile and dektop
-        html += "<table id='pointsTableTable'>";
-        html += "    <thead>";
-        html += "        <tr>";
-        html += "            <th class='desktopHeader'>Team</th>";
-        html += "            <th class='desktopHeader'>Played</th>";
-        html += "            <th class='desktopHeader'>Won</th>";
-        html += "            <th class='desktopHeader'>Drawn</th>";
-        html += "            <th class='desktopHeader'>Lost</th>";
-        html += "            <th class='desktopHeader'>Points For</th>";
-        html += "            <th class='desktopHeader'>Points Against</th>";
-        html += "            <th class='desktopHeader'>Points Diff</th>";
-        html += "            <th class='desktopHeader'>4 Try Bonus</th>";
-        html += "            <th class='desktopHeader'>7 Point Bonus</th>";
-        html += "            <th class='desktopHeader'>Points</th>";
-        html += "            <th class='mobileHeader'>Team</th>";
-        html += "            <th class='mobileHeader'>P</th>";
-        html += "            <th class='mobileHeader'>W</th>";
-        html += "            <th class='mobileHeader'>D</th>";
-        html += "            <th class='mobileHeader'>L</th>";
-        html += "            <th class='mobileHeader'>PF</th>";
-        html += "            <th class='mobileHeader'>PA</th>";
-        html += "            <th class='mobileHeader'>PD</th>";
-        html += "            <th class='mobileHeader'>B1</th>";
-        html += "            <th class='mobileHeader'>B2</th>";
-        html += "            <th class='mobileHeader'>CP</th>";
-        html += "        </tr>";
-        html += "    </thead>";
-        html += "    <tbody>";
+        // Add points table headers for both mobile and desktop
+        html += "<img id='dialogCloseButton' src='http://www.ccrscoring.co.nz/images/close.png' alt='close' onclick='closePointsTable()'>";
+        html += "<div id='dialogContent'>";
+        //html += "    <img id='dialogCloseButton' src='http://www.ccrscoring.co.nz/images/close.png' alt='close' onclick='closePointsTable()'>";
+        html += "    <table id='pointsTableTable'>";
+        html += "        <thead>";
+        html += "            <tr>";
+        html += "                <th class='desktopHeader'>Team</th>";
+        html += "                <th class='desktopHeader'>Played</th>";
+        html += "                <th class='desktopHeader'>Won</th>";
+        html += "                <th class='desktopHeader'>Drawn</th>";
+        html += "                <th class='desktopHeader'>Lost</th>";
+        html += "                <th class='desktopHeader'>Points For</th>";
+        html += "                <th class='desktopHeader'>Points Against</th>";
+        html += "                <th class='desktopHeader'>Points Diff</th>";
+        html += "                <th class='desktopHeader'>4 Try Bonus</th>";
+        html += "                <th class='desktopHeader'>7 Point Bonus</th>";
+        html += "                <th class='desktopHeader'>Points</th>";
+        html += "                <th class='mobileHeader'>Team</th>";
+        html += "                <th class='mobileHeader'>P</th>";
+        html += "                <th class='mobileHeader'>W</th>";
+        html += "                <th class='mobileHeader'>D</th>";
+        html += "                <th class='mobileHeader'>L</th>";
+        html += "                <th class='mobileHeader'>PF</th>";
+        html += "                <th class='mobileHeader'>PA</th>";
+        html += "                <th class='mobileHeader'>PD</th>";
+        html += "                <th class='mobileHeader'>B1</th>";
+        html += "                <th class='mobileHeader'>B2</th>";
+        html += "                <th class='mobileHeader'>CP</th>";
+        html += "            </tr>";
+        html += "        </thead>";
+        html += "        <tbody>";
         for (var q = 0; q < response[0].length; q += 1) {
             var team = response[0][q];
-            html += "    <tr class='" + (q < 3 ? 'playoff' : q == 3 ? 'playoff last' : '') + "'>";
-            html += "        <td>" + getTeamName(team.teamID, team.divisionID) + "</td>";
-            html += "        <td>" + team.gamesPlayed + "</td>";
-            html += "        <td>" + team.gamesWon + "</td>";
-            html += "        <td>" + team.gamesDrawn + "</td>";
-            html += "        <td>" + team.gamesLost + "</td>";
-            html += "        <td>" + team.pointsFor + "</td>";
-            html += "        <td>" + team.pointsAgainst + "</td>";
-            html += "        <td>" + team.pointsDiff + "</td>";
-            html += "        <td>" + team.fourTryBonus + "</td>";
-            html += "        <td>" + team.sevenPointBonus + "</td>";
-            html += "        <td>" + team.compPoints + "</td>";
-            html += "    </tr>";
+            html += "        <tr class='" + (q < 3 ? 'playoff' : q == 3 ? 'playoff last' : '') + "'>";
+            html += "            <td>" + getTeamName(team.teamID, team.divisionID) + "</td>";
+            html += "            <td>" + team.gamesPlayed + "</td>";
+            html += "            <td>" + team.gamesWon + "</td>";
+            html += "            <td>" + team.gamesDrawn + "</td>";
+            html += "            <td>" + team.gamesLost + "</td>";
+            html += "            <td>" + team.pointsFor + "</td>";
+            html += "            <td>" + team.pointsAgainst + "</td>";
+            html += "            <td>" + team.pointsDiff + "</td>";
+            html += "            <td>" + team.fourTryBonus + "</td>";
+            html += "            <td>" + team.sevenPointBonus + "</td>";
+            html += "            <td>" + team.compPoints + "</td>";
+            html += "        </tr>";
         }
-        html += "    </tbody>";
-        html += "    <tfoot></tfoot>"
-        html += "</table>";
+        html += "        </tbody>";
+        html += "        <tfoot></tfoot>"
+        html += "    </table>";
         
         if (response[1].length > 0) {
             html += "<div class='pointsTableMissing'>Games missing from points table:</div>";
@@ -1007,21 +1010,23 @@ function showPointsTable(divID) {
             }
         }
         
+        html += "    <button id='closePointsTable' onclick='closePointsTable()'>Close</a>";
+        html += "</div>";
+        html += "<div id='blackOverlay'></div>";
+        
         $("#pointsTableDialog").empty().append(html);
-        $('#pointsTableDialog').dialog({
-            buttons: {
-                "Close": function() {
-                    $('#pointsTableDialog').dialog('close');
-                }
-            },
-            open: function(event, ui) {
-                $('.ui-dialog').css('top', '70px');
-            },
-            modal: true,
-            height: 'auto',
-            width: 'auto'
-        });
+        
+        $('#dialogContent').show();
+        $('#blackOverlay').show();
+        if ($('.mobileHeader').css('display') == 'none') { $('#dialogCloseButton').show(); }
+        $('#pointsTableDialog').show();
     }, 'json');
+}
+
+function closePointsTable() {
+    $('#dialogContent').hide();
+    $('#blackOverlay').hide();
+    $('#dialogCloseButton').hide();
 }
 
 /* 
@@ -1051,7 +1056,7 @@ function showGameInfoContainer() {
 // Generate the game info for the game selected
 function generateGameInfo() {
     var gameID = sessionStorage.currentGameID;
-    html = '';
+    var html = '';
 
     var post = $.post('http://ccrscoring.co.nz/scripts/php/getgameinfo.php', {
             gameID: gameID

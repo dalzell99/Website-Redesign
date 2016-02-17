@@ -53,11 +53,23 @@ $(document).ready(function () {
             } else {
                 showPassword();
             }
+            
+            $.loadScript('http://www.ccrscoring.co.nz/scripts/js/pdfmake.min.js', function(){});
+            $.loadScript('http://www.ccrscoring.co.nz/scripts/js/vfs_fonts.js', function(){});
         } else {
             alertError("#alertDiv", "Sorry, you can't use this website. The minimum browser versions are:\nInternet Explorer 9\nFirefox 3.5\nSafari 4\nGoogle Chrome 5\nOpera 10.50");
         }
     })
 });
+
+// Loads script asynchronously in the background
+jQuery.loadScript = function (url, callback) {
+    jQuery.ajax({
+        url: url,
+        dataType: 'script',
+        success: callback
+    });
+}
 
 // Catch browser back button event
 window.onpopstate = function(event) {
@@ -732,7 +744,7 @@ function generateGameTable(startDate, endDate) {
     $("#gameEditorTable").empty().append(html);
 
     // Make the table sortable
-    newTableObject = $("table#gameEditorTable")[0];
+    var newTableObject = $("table#gameEditorTable")[0];
     sorttable.makeSortable(newTableObject);
     // Sort by division
     var divisionTableHeader = $("#tableHeaderDivision")[0];

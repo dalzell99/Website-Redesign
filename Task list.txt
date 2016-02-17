@@ -1,5 +1,4 @@
 comment everything
-change to minified files
 Make it look prettier!!!!!! (game changes and cancellations)
 pulse games (until user responds) that have changed on auto update
 add ability to favorite games
