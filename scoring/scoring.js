@@ -7,7 +7,7 @@ var allDivs = [];
 // When page first loads get team and division info, initialise some web storage variables and go to last visited page
 $(document).ready(function () {
     // Get all the teams and divisions from database
-    var post = $.post('http://ccrscoring.co.nz/scripts/php/getteamsdivs.php', {},
+    var post = $.post('http://www.ccrscoring.co.nz/scripts/php/getteamsdivs.php', {},
         function (response) {
             var teams = response[0];
             var divs = response[1];
@@ -642,7 +642,7 @@ function generateGames() {
     var startOfWeek = new Date(startDateArray[0], startDateArray[1], startDateArray[2]).addDays(7 * currentWeek);
     var endOfWeek = new Date(startDateArray[0], startDateArray[1], startDateArray[2]).addDays(6 + 7 * currentWeek);
 
-    var post = $.post('http://ccrscoring.co.nz/scripts/php/getallgames.php', {
+    var post = $.post('http://www.ccrscoring.co.nz/scripts/php/getallgames.php', {
         start: pad(startOfWeek.getFullYear(), 4) + pad(startOfWeek.getMonth() + 1, 2) + pad(startOfWeek.getDate(), 2),
         end: pad(endOfWeek.getFullYear(), 4) + pad(endOfWeek.getMonth() + 1, 2) + pad(endOfWeek.getDate(), 2)
     },
@@ -927,7 +927,7 @@ function stopAutoUpdateTimer() {
 function showPointsTable(divID) {
     var html = '';
     
-    var post = $.post("http://ccrscoring.co.nz/scripts/php/getpointstable.php", {
+    var post = $.post("http://www.ccrscoring.co.nz/scripts/php/getpointstable.php", {
         divisionID: divID
     }, 
     function(response) {
@@ -1058,7 +1058,7 @@ function generateGameInfo() {
     var gameID = sessionStorage.currentGameID;
     var html = '';
 
-    var post = $.post('http://ccrscoring.co.nz/scripts/php/getgameinfo.php', {
+    var post = $.post('http://www.ccrscoring.co.nz/scripts/php/getgameinfo.php', {
             gameID: gameID
         },
         function (response) {
@@ -1284,7 +1284,7 @@ function showLiveScoringPasswordContainer() {
 function checkLiveScoringPassword() {
     var passwordInput = $("#liveScoringPasswordInput").val();
     $.post(
-        'http://ccrscoring.co.nz/scripts/php/checkpassword.php', {
+        'http://www.ccrscoring.co.nz/scripts/php/checkpassword.php', {
             page: 'liveScoring',
             password: passwordInput
         },
@@ -1439,7 +1439,7 @@ function selectGame() {
 function checkGameLive(homeTeam, awayTeam, alreadyScored) {
     var gameID = sessionStorage.currentGameID;
 
-    var post = $.post('http://ccrscoring.co.nz/scripts/php/checkgame.php', {
+    var post = $.post('http://www.ccrscoring.co.nz/scripts/php/checkgame.php', {
             gameID: gameID,
             homeTeam: homeTeam,
             awayTeam: awayTeam,
@@ -1512,7 +1512,7 @@ function checkGameLive(homeTeam, awayTeam, alreadyScored) {
 function generateLiveScoring() {
     var html = '';
     var gameID = sessionStorage.currentGameID;
-    var post = $.post('http://ccrscoring.co.nz/scripts/php/getgameinfo.php', {
+    var post = $.post('http://www.ccrscoring.co.nz/scripts/php/getgameinfo.php', {
             gameID: gameID
         },
         function (response) {
@@ -1756,7 +1756,7 @@ function generateLiveScoring() {
 function updateLastTimeScored() {
     var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
     for (var e = 0; e < scoringGameIDArray.length; e += 1) {
-        var post = $.post('http://ccrscoring.co.nz/scripts/php/updatelasttimescored.php', {
+        var post = $.post('http://www.ccrscoring.co.nz/scripts/php/updatelasttimescored.php', {
             gameID: scoringGameIDArray[e][0]
         },
         function (response) {
@@ -1768,7 +1768,7 @@ function updateLastTimeScored() {
 
 // Set the liveScored variable in the database to n for this game and remove the game from the users list of games being scored.
 function stopScoring(gameID) {
-    var post = $.post('http://ccrscoring.co.nz/scripts/php/stopscoring.php', {
+    var post = $.post('http://www.ccrscoring.co.nz/scripts/php/stopscoring.php', {
             gameID: sessionStorage.currentGameID
         },
         function (response) {
@@ -1865,7 +1865,7 @@ function uploadScoringPlay(gameID, homeScore, awayScore) {
 
 // Sends the play info to a php script which updates the database
 function uploadPlayLive(gameID, homeScore, awayScore, minutesPlayed, scoringPlay, description, locked) {
-    var post = $.post('http://ccrscoring.co.nz/scripts/php/uploadplay.php', {
+    var post = $.post('http://www.ccrscoring.co.nz/scripts/php/uploadplay.php', {
         gameID: gameID,
         homeScore: homeScore,
         awayScore: awayScore,
@@ -2053,7 +2053,7 @@ function deleteSelectedPlays() {
         }
     }
 
-    var post = $.post('http://ccrscoring.co.nz/scripts/php/deletescoringplay.php', {
+    var post = $.post('http://www.ccrscoring.co.nz/scripts/php/deletescoringplay.php', {
             gameID: gameID,
             indexes: JSON.stringify(indexes),
             homeScore: currentscores[0],
@@ -2211,7 +2211,7 @@ function showEndScoringPasswordContainer() {
 function checkEndScoringPassword() {
     var passwordInput = $("#endScoringPasswordInput").val();
     $.post(
-        'http://ccrscoring.co.nz/scripts/php/checkpassword.php', {
+        'http://www.ccrscoring.co.nz/scripts/php/checkpassword.php', {
             page: 'endScoring',
             password: passwordInput
         },
@@ -2339,7 +2339,7 @@ function toggleScoreInputs() {
 
 // Check if the game info can be uploaded for this game
 function checkGameEnd(gameID, homeScore, awayScore, scoringPlay, homeTeam, awayTeam, homeTries, awayTries) {
-    var post = $.post('http://ccrscoring.co.nz/scripts/php/checkgame.php', {
+    var post = $.post('http://www.ccrscoring.co.nz/scripts/php/checkgame.php', {
             gameID: gameID,
             homeTeam: homeTeam,
             awayTeam: awayTeam
@@ -2459,7 +2459,7 @@ function areInputsValidEnd(homeValue, awayValue, homeCheckbox, awayCheckbox, hom
 
 // Send the game info to a php script which updates the database
 function uploadPlayEnd(gameID, homeScore, awayScore, scoringPlay, homeTries, awayTries) {
-    var post = $.post('http://ccrscoring.co.nz/scripts/php/uploadplay.php', {
+    var post = $.post('http://www.ccrscoring.co.nz/scripts/php/uploadplay.php', {
             gameID: gameID,
             homeScore: homeScore,
             awayScore: awayScore,
@@ -2524,7 +2524,7 @@ function submitContactForm() {
     var message = $("#contactFormMessage").val();
 
     if (message != "") {
-        var post = $.post('http://ccrscoring.co.nz/scripts/php/contactform.php', {
+        var post = $.post('http://www.ccrscoring.co.nz/scripts/php/contactform.php', {
                 name: name,
                 email: email,
                 message: message
