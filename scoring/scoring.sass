@@ -16,18 +16,21 @@ select, input, textarea
   font-weight: bold
   padding: 6px 24px
   border: 1px solid black  
+
+input:disabled
+  background-color: lightgray
   
 button
-  background-color:#33bdef
-  border-radius:6px
-  cursor:pointer
-  color:#ffffff
-  font-weight:bold
-  padding:6px 24px
+  background-color: #33bdef
+  border-radius: 6px
+  cursor: pointer
+  color: #ffffff
+  font-weight: bold
+  padding: 6px 24px
   border: 0
   
   &:hover
-    background-color:#019ad2
+    background-color: #019ad2
   
 .strong
   font-weight: bold
@@ -121,7 +124,7 @@ nav.row
  */
 
 #liveScoringPasswordContainer, #endScoringPasswordContainer
-    display: none
+  display: none
     
 #liveScoringPasswordInputRow, #endScoringPasswordInputRow
   font-size: 200%
@@ -191,8 +194,8 @@ nav.row
     font-size: 150%
 
 #pointsTableButton:active
-  position:relative
-  top:1px
+  position: relative
+  top: 1px
 
 .row h3
   font-size: 250%
@@ -338,11 +341,15 @@ nav.row
 
 .pointsTableMissing    
   font-size: 120%
+  background-color: white
+  width: 100%
 
   &:nth-of-type(1)
     font-weight: bold
     margin-top: 15px
   
+  @media (min-width: 768px)
+    width: 50%
 
 .noGamesMessage
   font-weight: bold
@@ -353,7 +360,7 @@ nav.row
   @media (min-width: 768px)
     font-size: 200%
 
-#blackOverlay
+#blackOverlay, #blackOverlayConversion
   display: none
   position: absolute
   top: 0%
@@ -361,9 +368,9 @@ nav.row
   width: 100%
   height: 100%
   background-color: black
-  z-index:10001
+  z-index: 10001
   -moz-opacity: 0.8
-  opacity:.80
+  opacity: .8
   filter: alpha(opacity=80)
 
 #dialogContent
@@ -380,6 +387,24 @@ nav.row
   text-align: center
   text-align: -webkit-center
   margin: auto
+
+#dialogContentConversion
+  display: none
+  position: absolute
+  top: 0
+  bottom: 0
+  left: 0
+  right: 0
+  padding: 16px
+  z-index: 10002
+  overflow: auto
+  text-align: center
+  text-align: -webkit-center
+  margin: auto
+  background-color: white
+  height: 150px
+  width: 300px
+  border: black 1px solid
   
 #closePointsTable
   margin-top: 10px
@@ -402,8 +427,7 @@ nav.row
  *--------------------------------------------------------------------------
  */
 
-/* Background for team info
-  #gameInfoHeader:before
+#gameInfoHeader:before
   content: ' '
   display: block
   position: absolute
@@ -417,7 +441,7 @@ nav.row
   background-repeat: no-repeat
   background-position: 50% 0
   background-size: cover
- */
+
 
 .teamInfo
   font-size: x-large
@@ -680,7 +704,7 @@ input[type=checkbox]
     width: 40%
 
 .picker__footer button
-    color: black
+  color: black
     
 /*
  *--------------------------------------------------------------------------
@@ -704,3 +728,132 @@ input[type=checkbox]
     
 #contactContainer
   display: none
+
+/*
+ *--------------------------------------------------------------------------
+ *----------------------------- Button Flip --------------------------------
+ *--------------------------------------------------------------------------
+ */
+
+$transition-duration: 0.8s
+$transition-easing: cubic-bezier(0.230, 1.000, 0.320, 1.000)
+$bounce-easing: cubic-bezier(0.175, 0.885, 0.320, 1.275)
+$closed-width: 200px
+$closed-height: 50px
+$opened-width: 400px
+$opened-height: 160px
+
+.description 
+  margin-top: 50px
+  text-align: center
+  color: #999
+  transition: opacity 0.3s ease
+
+.description a 
+  color: #4A9DF6
+  text-decoration: none
+
+.btn.is-open ~ .description 
+  opacity: 0
+
+.btn 
+  display: block
+  position: relative
+  //width: $closed-width
+  height: $closed-height
+  transition: width $transition-duration $transition-easing, height $transition-duration $transition-easing, transform $transition-duration $bounce-easing
+  transform-style: preserve-3d
+  transform-origin: 50% 50%
+  text-align: center
+  padding: 0
+
+.btn-front 
+  position: absolute
+  display: block
+  width: 100%
+  height: 100%
+  //line-height: $closed-height
+  backface-visibility: hidden
+  -webkit-tap-highlight-color: rgba( 0, 0, 0, 0 )
+  transition: background 0.15s ease, line-height $transition-duration $transition-easing
+  background-color: #33bdef
+  border-radius: 6px
+  cursor: pointer
+  color: #ffffff
+  font-weight: bold
+  padding: 10px 24px
+  border: 0
+  font-size: 160%
+
+.btn-front:hover 
+  background-color: #019ad2
+
+.btn.is-open .btn-front 
+  pointer-events: none
+  line-height: $opened-height
+
+.btn-back 
+  position: absolute
+  width: 100%
+  height: 100%
+  background-color: #eee
+  color: #222
+  transform: translateZ(-2px) rotateX(180deg)
+  overflow: hidden
+  transition: box-shadow $transition-duration ease
+
+.btn-back p 
+  margin-top: 27px
+  margin-bottom: 25px
+
+.btn-back button 
+  padding: 12px 20px
+  width: 30%
+  margin: 0 5px
+  background-color: transparent
+  border: 0
+  border-radius: 2px
+  font-size: 1em
+  cursor: pointer
+  -webkit-appearance: none
+  -webkit-tap-highlight-color: rgba( 0, 0, 0, 0 )
+  transition: background 0.15s ease
+  
+  &:focus 
+    outline: 0
+  
+  &.yes 
+    background-color: #2196F3
+    color: #fff
+    
+    &:hover 
+      background-color: lighten(#2196F3, 10%)
+
+  &.no 
+    color: #2196F3
+    
+    &:hover 
+      background-color: #ddd
+    
+.btn.is-open .btn-back 
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4)
+
+.btn[data-direction="left"] .btn-back,
+.btn[data-direction="right"] .btn-back 
+  transform: translateZ(-2px) rotateY(180deg)
+
+.btn.is-open 
+  //width: $opened-width
+  height: $opened-height
+
+.btn[data-direction="top"].is-open 
+  transform: rotateX(180deg)
+
+.btn[data-direction="right"].is-open 
+  transform: rotateY(180deg)
+
+.btn[data-direction="bottom"].is-open 
+  transform: rotateX(-180deg)
+
+.btn[data-direction="left"].is-open 
+  transform: rotateY(-180deg)

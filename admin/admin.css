@@ -1,3 +1,34 @@
-body{font-family:'Roboto', sans-serif;padding-bottom:50px;padding-top:80px}select,input,textarea{background-color:transparent;border-radius:6px;cursor:pointer;font-weight:bold;padding:6px 24px;border:1px solid black}button{background-color:#33bdef;border-radius:6px;cursor:pointer;color:#ffffff;font-weight:bold;padding:6px 24px;border:0}button:hover{background-color:#019ad2}strong{font-weight:bold}#loadingMessage{font-size:x-large;font-weight:bold;text-align:center;padding:25px}#instructions{font-size:110%;padding:15px 25px;text-align:justify}nav.row{margin:0 0 20px 0;display:none}.navbar-toggle:hover .icon-bar{background-color:black}.weektoggledisplay{background-color:transparent;padding:10px;border:1px solid #33b5e5;border-radius:10px;text-align:center;padding:15px;margin:0 0 20px 1.11%;font-weight:bold;font-size:140%}.weeksexpanded{margin-bottom:15px}button.weeknav{background-color:transparent;padding:10px;border:1px solid #33b5e5;border-radius:10px}button.weeknav.active{background-color:rgba(51,181,229,0.4)}.weektitle{font-size:85%}.navbar{background-color:#33b5e5}#infoButtonMobile{float:right;height:40px;margin:5px 20px 0 0;display:block}@media (min-width: 768px){#infoButtonMobile{display:none}}#infoButtonDesktop{float:right;height:40px;margin:10px -20px 0 0;display:none}@media (min-width: 768px){#infoButtonDesktop{display:block}}.footer{background:transparent;border-color:transparent;padding:10px;font-weight:bold;font-size:150%;display:none}.navbar-default .navbar-nav>.active>a,.navbar-default .navbar-nav>.active>a:hover,.navbar-default .navbar-nav>.active>a:focus{color:#81A594;background-color:#e7e7e7;border-bottom:3px solid}.navbar-default .navbar-nav>li>a:hover,.navbar-default .navbar-nav>li>a:focus{color:#333333;background-color:transparent}.navbar-default .navbar-nav>li>a{color:white;font-weight:700;font-size:larger;padding-top:19px}#passwordContainer{display:none}#passwordInputRow{font-size:200%;text-align:center;margin-bottom:20px}#passwordInput{max-width:50%;font-size:inherit}#checkPasswordButton{margin-left:15%;width:70%;height:70px;font-size:160%}@media (min-width: 768px){#checkPasswordButton{margin-left:30%;width:40%}}#teamEditorContainer{display:none}.teamRow{margin:10px 5px;font-size:120%}@media (min-width: 768px){.teamRow{margin:10px 30px;font-size:180%}}.division,.teamName{display:inline-block}.division{width:100px}@media (min-width: 768px){.division{width:180px}}#teamList{text-align:left}@media (min-width: 768px){#teamList{text-align:center}}@media (min-width: 768px){.teamName{width:35%}}#addTeamForm{display:none}#addTeamForm,#addTeamFormToggle{margin:10px 0 0 10px}.picker__footer button{color:black}#gameEditorContainer{display:none}#gameEditorTable{text-align:center;border-collapse:collapse;background-color:white;margin:0 1px}#gameEditorTable th{border:1px black solid;background-color:#33b5e5;color:snow;padding:10px;text-align:center}#gameEditorTable td{border:1px black solid;padding:5px;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}#gameEditorTable td.date{padding:0}#tablePlaceholderText{font-size:x-large;font-weight:bold;text-align:center;padding:25px}.selectedRow{background-color:rgba(51,181,229,0.2)}#addGameForm{display:none}input.datepicker{padding-left:15px;border:0;width:145px}.gameEditorToolbarButtons,#addGameForm,#dateFilter{margin:10px}#contactContainer{text-align:center;font-size:150%}#contactFormButton{height:50px;font-size:130%;width:40%}@media (min-width: 768px){#contactFormButton{height:50px;font-size:130%;width:20%}}#contactContainer{display:none}
+/*
+Error: The line was indented 2 levels deeper than the previous line.
+        on line 130 of I:\App Stuff\Website Redesign\admin\admin.sass
 
-/*# sourceMappingURL=admin.css.map */
+125:  *------------------------------- Password ---------------------------------
+126:  *--------------------------------------------------------------------------
+127:  *\/
+128: 
+129: #passwordContainer
+130:     display: none
+131:     
+132: #passwordInputRow
+133:   font-size: 200%
+134:   text-align: center
+135:   margin-bottom: 20px
+
+Backtrace:
+I:\App Stuff\Website Redesign\admin\admin.sass:130
+C:/Program Files (x86)/Koala/rubygems/gems/sass-3.4.9/lib/sass/engine.rb:509:in `tree'
+C:/Program Files (x86)/Koala/rubygems/gems/sass-3.4.9/lib/sass/engine.rb:396:in `_to_tree'
+C:/Program Files (x86)/Koala/rubygems/gems/sass-3.4.9/lib/sass/engine.rb:368:in `_render_with_sourcemap'
+C:/Program Files (x86)/Koala/rubygems/gems/sass-3.4.9/lib/sass/engine.rb:285:in `render_with_sourcemap'
+C:/Program Files (x86)/Koala/rubygems/gems/sass-3.4.9/lib/sass/exec/sass_scss.rb:396:in `run'
+C:/Program Files (x86)/Koala/rubygems/gems/sass-3.4.9/lib/sass/exec/sass_scss.rb:62:in `process_result'
+C:/Program Files (x86)/Koala/rubygems/gems/sass-3.4.9/lib/sass/exec/base.rb:52:in `parse'
+C:/Program Files (x86)/Koala/rubygems/gems/sass-3.4.9/lib/sass/exec/base.rb:19:in `parse!'
+C:/Program Files (x86)/Koala/rubygems/gems/sass-3.4.9/bin/sass:13:in `<top (required)>'
+C:/Program Files (x86)/Koala/bin/sass:18:in `load'
+C:/Program Files (x86)/Koala/bin/sass:18:in `<main>'
+*/
+body:before {
+  white-space: pre;
+  font-family: monospace;
+  content: "Error: The line was indented 2 levels deeper than the previous line.\A         on line 130 of I:\App Stuff\Website Redesign\admin\admin.sass\A \A 125:  *------------------------------- Password ---------------------------------\A 126:  *--------------------------------------------------------------------------\A 127:  */\A 128: \A 129: #passwordContainer\A 130:     display: none\A 131:     \A 132: #passwordInputRow\A 133:   font-size: 200%\A 134:   text-align: center\A 135:   margin-bottom: 20px"; }

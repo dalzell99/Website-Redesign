@@ -1010,7 +1010,7 @@ function showPointsTable(divID) {
             }
         }
         
-        html += "    <button id='closePointsTable' onclick='closePointsTable()'>Close</a>";
+        html += "    <button id='closePointsTable' onclick='closePointsTable()'>Close</button>";
         html += "</div>";
         html += "<div id='blackOverlay'></div>";
         
@@ -1391,123 +1391,6 @@ function generateGameSelection() {
     setActivePage();
 }
 
-// If user clicks on 1 of the games they have already started scoring in the game 
-// selection page check to see if they are allowed to proceed
-function startLiveScoring(gameID) {
-    sessionStorage.currentGameID = gameID;
-    checkGameLive('', '', true);
-}
-
-// Change the teams in the team drop downs
-function changeTeamDropdowns() {
-    selectedDivisionIndex = $("#teamSelectionDivisionDropDown").prop('selectedIndex');
-    generateGameSelection();
-}
-
-// Check that the game the user has selected can be scored by them
-function selectGame() {
-    var today = new Date();
-    var dd = pad(today.getDate(), 2);
-    var mm = pad(today.getMonth() + 1, 2); //January is 0!
-    var yyyy = String(today.getFullYear());
-    var date = yyyy + mm + dd;
-
-    var division = $("#teamSelectionDivisionDropDown").val();
-
-    var homeText = $("#teamSelectionHomeTeamDropDown option:selected").text();
-    var homeVal = $("#teamSelectionHomeTeamDropDown").val();
-    var homeTeamID = pad(homeVal, 3);
-
-    var awayText = $("#teamSelectionAwayTeamDropDown option:selected").text();
-    var awayVal = $("#teamSelectionAwayTeamDropDown").val();
-    var awayTeamID = pad(awayVal, 3);
-
-    var gameID = date + homeTeamID + awayTeamID + division;
-    if (homeText == awayText) {
-        alertError("#alertDiv", "Please change one of the teams as they can't play themselves");
-    } else if (gameID.length == 16) {
-        sessionStorage.currentGameID = gameID;
-        checkGameLive(homeText, awayText, false);
-    } else if (gameID.length == 8) {
-        alertError("#alertDiv", "Please enter a date for the game");
-    } else {
-        alertError("#alertDiv", "Error while creating gameID. Please use the contact form informing me of this error")
-    }
-}
-
-// Checks if game can be scored by user
-function checkGameLive(homeTeam, awayTeam, alreadyScored) {
-    var gameID = sessionStorage.currentGameID;
-
-    var post = $.post('http://www.ccrscoring.co.nz/scripts/php/checkgame.php', {
-            gameID: gameID,
-            homeTeam: homeTeam,
-            awayTeam: awayTeam,
-            userID: localStorage.userID
-        },
-        function (response) {
-            // Scenario 1: no-one has started scoring this game. Proceed to live scoring
-            // Scenario 2: someone else is scoring this game. Display message saying that and don't proceed
-            // Scenario 3: this user started scoring this game then left the live scoring page but not long enough for cron task to change live scoring value in database to 'n'. Proceed to live scoring.
-            // Scenario 4: this user started scoring this game then left the live scoring page and the cron task changed the live scoring value in database to 'n'. If the scorerID is equal to this users ID then proceed to live scoring. This prevents the user from being locked out of scoring after leaving live scoring page.
-            // Scenario 5: this user started scoring this game then left the live scoring page and the cron task changed the live scoring value in database to 'n'. If the scorerID is not equal to this users ID then someone has taken over scoring duties. Display a message saying that someone is scoring this game and don't proceed.
-            // Scenario 6: the game is locked. Display a message saying this and don't proceed.
-        
-            // Get list of games being scored by user
-            var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
-            
-            if (response == 'success') {
-                // Game is not being scored by someone else.
-                if (!alreadyScored) {
-                    scoringGameIDArray.push([gameID, homeTeam, awayTeam]);
-                    sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
-                }
-                generateLiveScoring();
-            } else if (response.substr(0, 11) == 'beingscored') {
-                // Get scorersID from reponse
-                var scorersID = response.slice(-8);
-                // If someone else is now scoring the game remove it from this users list of games
-                if (alreadyScored && (scorersID != localStorage.userID)) {
-                    for (var a = 0; a < scoringGameIDArray.length; a += 1) {
-                        if (scoringGameIDArray[a][0] == gameID) {
-                            scoringGameIDArray.splice(a, 1);
-                            a -= 1;
-                            sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
-                        }
-                    }
-                    generateGameSelection();
-                    alertError("#alertDiv", "Someone has taken over live scoring duties.");
-                } else if (alreadyScored && (scorersID == localStorage.userID)) {
-                    // If the game is being live scored and the scorersID matches the users ID then proceed to live scoring page
-                    generateLiveScoring();
-                } else {
-                    // Someone else is scoring this game
-                    alertError("#alertDiv", "This game is already being live scored.");
-                }
-            } else if (response == 'locked') {
-                if (alreadyScored) {
-                    // The game was locked after this user started scoring the game. Remove game from users current games.
-                    for (var b = 0; b < scoringGameIDArray.length; b += 1) {
-                        if (scoringGameIDArray[b][0] == gameID) {
-                            scoringGameIDArray.splice(b, 1);
-                            b -= 1;
-                            sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
-                        }
-                    }
-                    generateGameSelection();
-                }
-                alertError("#alertDiv", "This game is locked so it can\'t be updated.");
-            } else {
-                // Error
-                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
-            }
-        });
-
-    post.fail(function (request, textStatus, errorThrown) {
-        alertError("#alertDiv", "Error while checking game status. Please try again later. If problem persists, use the contact form");
-    });
-}
-
 // Generate the live scoring html
 function generateLiveScoring() {
     var html = '';
@@ -1618,7 +1501,15 @@ function generateLiveScoring() {
             html += "</div>\n\n";
 
             html += "<div class='row deletePlayButtonRow rowfix'>";
-            html += "    <button class='deletePlayButton col-xs-48' type='button' onclick='deleteSelectedPlays()'>Delete Selected Plays</button>";
+            //html += "    <button class='deletePlayButton col-xs-48' type='button' onclick='deleteSelectedPlays()'>Delete Selected Plays</button>";
+            html += "    <div class='btn col-xs-48'>";
+            html += "        <div class='btn-back'>";
+            html += "            <p>Are you sure you want to delete the selected plays?</p>";
+            html += "            <button class='yes'>Yes</button>";
+            html += "            <button class='no'>No</button>";
+            html += "        </div>";
+            html += "        <div class='btn-front col-xs-48'>Delete Selected Plays</div>";
+            html += "    </div>";
             html += "</div>\n\n";
 
             // Next is a list of the previously uploaded plays for this game
@@ -1745,11 +1636,129 @@ function generateLiveScoring() {
             sessionStorage.currentPage = "liveScoring";
             setActivePage();
             addBackEvent(['startLiveScoring']);
+            initButtonFlip();
         }, 'json');
 
     post.fail(function (request, textStatus, errorThrown) {
         alertError("#alertDiv", "Error while adding game. Please try again later. If problem persists, use the contact form");
     })
+}
+
+// If user clicks on 1 of the games they have already started scoring in the game 
+// selection page check to see if they are allowed to proceed
+function startLiveScoring(gameID) {
+    sessionStorage.currentGameID = gameID;
+    checkGameLive('', '', true);
+}
+
+// Change the teams in the team drop downs
+function changeTeamDropdowns() {
+    selectedDivisionIndex = $("#teamSelectionDivisionDropDown").prop('selectedIndex');
+    generateGameSelection();
+}
+
+// Check that the game the user has selected can be scored by them
+function selectGame() {
+    var today = new Date();
+    var dd = pad(today.getDate(), 2);
+    var mm = pad(today.getMonth() + 1, 2); //January is 0!
+    var yyyy = String(today.getFullYear());
+    var date = yyyy + mm + dd;
+
+    var division = $("#teamSelectionDivisionDropDown").val();
+
+    var homeText = $("#teamSelectionHomeTeamDropDown option:selected").text();
+    var homeVal = $("#teamSelectionHomeTeamDropDown").val();
+    var homeTeamID = pad(homeVal, 3);
+
+    var awayText = $("#teamSelectionAwayTeamDropDown option:selected").text();
+    var awayVal = $("#teamSelectionAwayTeamDropDown").val();
+    var awayTeamID = pad(awayVal, 3);
+
+    var gameID = date + homeTeamID + awayTeamID + division;
+    if (homeText == awayText) {
+        alertError("#alertDiv", "Please change one of the teams as they can't play themselves");
+    } else if (gameID.length == 16) {
+        sessionStorage.currentGameID = gameID;
+        checkGameLive(homeText, awayText, false);
+    } else if (gameID.length == 8) {
+        alertError("#alertDiv", "Please enter a date for the game");
+    } else {
+        alertError("#alertDiv", "Error while creating gameID. Please use the contact form informing me of this error")
+    }
+}
+
+// Checks if game can be scored by user
+function checkGameLive(homeTeam, awayTeam, alreadyScored) {
+    var gameID = sessionStorage.currentGameID;
+
+    var post = $.post('http://www.ccrscoring.co.nz/scripts/php/checkgame.php', {
+            gameID: gameID,
+            homeTeam: homeTeam,
+            awayTeam: awayTeam,
+            userID: localStorage.userID
+        },
+        function (response) {
+            // Scenario 1: no-one has started scoring this game. Proceed to live scoring
+            // Scenario 2: someone else is scoring this game. Display message saying that and don't proceed
+            // Scenario 3: this user started scoring this game then left the live scoring page but not long enough for cron task to change live scoring value in database to 'n'. Proceed to live scoring.
+            // Scenario 4: this user started scoring this game then left the live scoring page and the cron task changed the live scoring value in database to 'n'. If the scorerID is equal to this users ID then proceed to live scoring. This prevents the user from being locked out of scoring after leaving live scoring page.
+            // Scenario 5: this user started scoring this game then left the live scoring page and the cron task changed the live scoring value in database to 'n'. If the scorerID is not equal to this users ID then someone has taken over scoring duties. Display a message saying that someone is scoring this game and don't proceed.
+            // Scenario 6: the game is locked. Display a message saying this and don't proceed.
+        
+            // Get list of games being scored by user
+            var scoringGameIDArray = JSON.parse(sessionStorage.scoringGameID);
+            
+            if (response == 'success') {
+                // Game is not being scored by someone else.
+                if (!alreadyScored) {
+                    scoringGameIDArray.push([gameID, homeTeam, awayTeam]);
+                    sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
+                }
+                generateLiveScoring();
+            } else if (response.substr(0, 11) == 'beingscored') {
+                // Get scorersID from reponse
+                var scorersID = response.slice(-8);
+                // If someone else is now scoring the game remove it from this users list of games
+                if (alreadyScored && (scorersID != localStorage.userID)) {
+                    for (var a = 0; a < scoringGameIDArray.length; a += 1) {
+                        if (scoringGameIDArray[a][0] == gameID) {
+                            scoringGameIDArray.splice(a, 1);
+                            a -= 1;
+                            sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
+                        }
+                    }
+                    generateGameSelection();
+                    alertError("#alertDiv", "Someone has taken over live scoring duties.");
+                } else if (alreadyScored && (scorersID == localStorage.userID)) {
+                    // If the game is being live scored and the scorersID matches the users ID then proceed to live scoring page
+                    generateLiveScoring();
+                } else {
+                    // Someone else is scoring this game
+                    alertError("#alertDiv", "This game is already being live scored.");
+                }
+            } else if (response == 'locked') {
+                if (alreadyScored) {
+                    // The game was locked after this user started scoring the game. Remove game from users current games.
+                    for (var b = 0; b < scoringGameIDArray.length; b += 1) {
+                        if (scoringGameIDArray[b][0] == gameID) {
+                            scoringGameIDArray.splice(b, 1);
+                            b -= 1;
+                            sessionStorage.scoringGameID = JSON.stringify(scoringGameIDArray);
+                        }
+                    }
+                    generateGameSelection();
+                }
+                alertError("#alertDiv", "This game is locked so it can\'t be updated.");
+            } else {
+                // Error
+                alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
+            }
+        });
+
+    post.fail(function (request, textStatus, errorThrown) {
+        alertError("#alertDiv", "Error while checking game status. Please try again later. If problem persists, use the contact form");
+    });
 }
 
 // Set the lastTimeScored value in the database for this game to the current time
@@ -1878,24 +1887,20 @@ function uploadPlayLive(gameID, homeScore, awayScore, minutesPlayed, scoringPlay
         if (response == 'success') {
             if (selectedScoringPlay.substr(4) == 'Try') {
                 // If the scoring play is a try then ask if the conversion was successful and upload that play if it was
-                $('#dialog').dialog({
-                    buttons: {
-                        "Yes": function() {
-                            selectedScoringPlay = selectedScoringPlay.substr(0, 4) + "Conversion";
-                            uploadScoringPlay(gameID, homeScore, awayScore);
-                            $('#dialog').dialog('close');
-                        },
-                        "No":  function() {
-                            selectedScoringPlay = '';
-                            generateLiveScoring();
-                            alertSuccess("#alertDiv", "Play successfully uploaded");
-                            $('#dialog').dialog('close');
-                        }
-                    }, 
-                    modal: true,
-                    resizable: false,
-                    draggable: false
-                });
+                var html = '';
+                html += "<div id='dialogContentConversion'>";
+                html += "    <p>Was the conversion successful?</p>";
+                html += "    <button id='conversionYesButton' onclick='uploadConversion(" + gameID + "," + homeScore + "," + awayScore + ")'>Yes</button>";
+                html += "    <button id='conversionNoButton' onclick='closeConversionDialog()'>No</button>";
+                html += "</div>";
+                html += "<div id='blackOverlayConversion'></div>";
+                
+                $("#dialogConversion").empty().append(html);
+                
+                window.scrollTo(0, 0);
+                $("#dialogContentConversion").show();
+                $('#dialogConversion').show();
+                $('#blackOverlayConversion').show();
             } else {
                 selectedScoringPlay = '';
                 generateLiveScoring();
@@ -1913,6 +1918,20 @@ function uploadPlayLive(gameID, homeScore, awayScore, minutesPlayed, scoringPlay
     post.fail(function (request, textStatus, errorThrown) {
         alertError("#alertDiv", "Error while uploading play. Please try again later. If problem persists, use the contact form");
     })
+}
+
+function uploadConversion(gameID, homeScore, awayScore) {
+    selectedScoringPlay = selectedScoringPlay.substr(0, 4) + "Conversion";
+    uploadScoringPlay(gameID, homeScore, awayScore);
+    closeConversionDialog();
+}
+
+function closeConversionDialog() {
+    $('#dialogContentConversion').hide();
+    $('#blackOverlayConversion').hide();
+    $("#dialogConversion").hide();
+    generateLiveScoring();
+    alertSuccess("#alertDiv", "Play successfully uploaded");
 }
 
 // Changes background of selected scoring play to light grey and the rest to transparent
@@ -2546,4 +2565,58 @@ function submitContactForm() {
     } else {
         alertError("#alertDiv", 'Please enter a message');
     }
+}
+
+/* 
+--------------------------------------------------------------------------
+----------------------------- Button Flip --------------------------------
+--------------------------------------------------------------------------
+Website: http://lab.hakim.se/flipside/
+Author: Hakim El Hattab
+*/
+
+function initButtonFlip() {
+    var btn = document.querySelector( '.btn' );
+
+    var btnFront = btn.querySelector( '.btn-front' ),
+        btnYes = btn.querySelector( '.btn-back .yes' ),
+        btnNo = btn.querySelector( '.btn-back .no' );
+
+    btnFront.addEventListener( 'click', function( event ) {
+      var mx = event.clientX - btn.offsetLeft,
+          my = event.clientY - btn.offsetTop;
+
+      var w = btn.offsetWidth,
+          h = btn.offsetHeight;
+
+      var directions = [
+        { id: 'top', x: w/2, y: 0 },
+        { id: 'right', x: w, y: h/2 },
+        { id: 'bottom', x: w/2, y: h },
+        { id: 'left', x: 0, y: h/2 }
+      ];
+
+      directions.sort( function( a, b ) {
+        return distance( mx, my, a.x, a.y ) - distance( mx, my, b.x, b.y );
+      } );
+
+      btn.setAttribute( 'data-direction', directions.shift().id );
+      btn.classList.add( 'is-open' );
+
+    } );
+
+    btnYes.addEventListener( 'click', function( event ) {	
+      btn.classList.remove( 'is-open' );
+      deleteSelectedPlays();
+    } );
+
+    btnNo.addEventListener( 'click', function( event ) {
+      btn.classList.remove( 'is-open' );
+    } );
+}
+
+function distance( x1, y1, x2, y2 ) {
+  var dx = x1-x2;
+  var dy = y1-y2;
+  return Math.sqrt( dx*dx + dy*dy );
 }

@@ -1,3 +1,4 @@
+create code generator for club websites
 comment everything
 Make it look prettier!!!!!!
 pulse games (until user responds) that have changed on auto update

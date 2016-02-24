@@ -25,8 +25,10 @@ $(document).ready(function () {
                 allTeams[parseInt(teams[n].division)].push(teams[n]);
             }
         
-            for (var o = 0; o < games.length; o += 1) {
-                allGames[parseInt(games[o].GameID.slice(-2))].push(games[o]);
+            if (games != null) {
+                for (var o = 0; o < games.length; o += 1) {
+                    allGames[parseInt(games[o].GameID.slice(-2))].push(games[o]);
+                }
             }
         }, 'json');
 
@@ -661,6 +663,18 @@ function generateToolbar() {
     }
 
     $("#addGameDivisionDropDown").prop('selectedIndex', selectedDivisionIndex);
+    
+    // Add datepicker to the filter inputs
+    $("input[type='date']").pickadate({
+        format: 'ddd d mmm yy',
+        today: 'Today',
+        clear: 'Clear',
+        close: 'Cancel',
+        labelMonthNext: 'Go to the next month',
+        labelMonthPrev: 'Go to the previous month',
+        formatSubmit: 'dd/mm/yyyy',
+        hiddenPrefix: 'prefix__'
+    });
 }
 
 // Generate the table with games between the start and end dates
@@ -833,18 +847,6 @@ function addEventsGame() {
         });
         // Trigger date pickers click event
         $(this).click();
-    });
-    
-    // Add datepicker to the filter inputs
-    $("input[type='date']").pickadate({
-        format: 'ddd d mmm yy',
-        today: 'Today',
-        clear: 'Clear',
-        close: 'Cancel',
-        labelMonthNext: 'Go to the next month',
-        labelMonthPrev: 'Go to the previous month',
-        formatSubmit: 'dd/mm/yyyy',
-        hiddenPrefix: 'prefix__'
     });
     
     // Add event to the editable columns of the table. Tab moves tight one cell and shift + tab moves left one cell.

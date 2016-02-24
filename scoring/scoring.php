@@ -7,7 +7,8 @@
         <link rel="stylesheet" type="text/css" href="http://www.ccrscoring.co.nz/scripts/css/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="http://www.ccrscoring.co.nz/scripts/css/classic.min.css">
         <link rel="stylesheet" type="text/css" href="http://www.ccrscoring.co.nz/scripts/css/classic.date.min.css">
-        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:500">
+        <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Roboto:500">
+        <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Montserrat">
         <link rel="stylesheet" type="text/css" href="http://www.ccrscoring.co.nz/scoring/scoring.css">
         <?php echo '<link rel="stylesheet" type="text/css" href="http://www.ccrscoring.co.nz/scoring/scoring.css?' . filemtime('scoring.css') . '" />'; ?>
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
@@ -44,7 +45,7 @@
             </nav>
         </header>
         
-        <main>
+        <main>            
             <!-- Span used to display instructions on each page. Javascript will be used to populate this. -->
             <div id="instructions"></div>
 
@@ -81,7 +82,7 @@
             <div id="liveScoringContainer">
             </div>
             
-            <div id="dialog" style="display: none">Was the conversion successful?</div>
+            <div id="dialogConversion"></div>
 
             <!-----------------------------------------------------------------
             ------------------- End Game Scoring Containers -------------------
