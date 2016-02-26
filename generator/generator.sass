@@ -1,3 +1,6 @@
+body
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif
+
 #teamListContainer, 
 #cssEditorContainer,
 #codePreviewContainer, 
@@ -8,14 +11,23 @@
 
 #teamDropDownEditor,
 #drawResultsButtonsEditor,
-#drawResultsListEditor
+#drawResultsTableEditor
   display: none
 
-button
-  background-color: #c0c0c0
+button:not(.drawResultsButton)
+  background-color: #33bdef
+  border-radius: 6px
+  cursor: pointer
+  color: #ffffff
+  font-weight: bold
+  padding: 6px 24px
+  border: 0
+  
+  &:hover
+    background-color: lighten(#33bdef, 15%)
   
   &.active
-    background-color: lighten(#c0c0c0, 20%)
+    background-color: darken(#33bdef, 15%)
     
 .inputs
   margin: 5px
@@ -25,6 +37,10 @@ select.inputs
 
 h1 
   margin: 0.3em 0
+  font-size: 1.7em
 
 h4
   margin: 0 0 1em 0
+
+.drawResultsTable
+  border-collapse: collapse

@@ -55,7 +55,7 @@ if ($row['locked'] == 'y') {
     array_push($allScoringPlays, $newScoringPlay);
 
     // Reencode allScoringPlays
-    $updatedScoringPlays = json_encode($allScoringPlays);
+    $updatedScoringPlays = mysqli_real_escape_string($con, json_encode($allScoringPlays));
 
     $time = date("Y-m-d H:i:s");
 
@@ -65,7 +65,7 @@ if ($row['locked'] == 'y') {
     if (mysqli_query($con, $update)) {
         echo 'success';
     } else {
-        echo 'update query failed';
+        echo 'update query failed' . $update;
     }
 }
 mysqli_close($con);

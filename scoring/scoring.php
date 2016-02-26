@@ -9,13 +9,12 @@
         <link rel="stylesheet" type="text/css" href="http://www.ccrscoring.co.nz/scripts/css/classic.date.min.css">
         <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Roboto:500">
         <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Montserrat">
-        <link rel="stylesheet" type="text/css" href="http://www.ccrscoring.co.nz/scoring/scoring.css">
         <?php echo '<link rel="stylesheet" type="text/css" href="http://www.ccrscoring.co.nz/scoring/scoring.css?' . filemtime('scoring.css') . '" />'; ?>
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script type="text/javascript" src="http://www.ccrscoring.co.nz/scripts/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="http://www.ccrscoring.co.nz/scripts/js/picker.min.js"></script>
         <script type="text/javascript" src="http://www.ccrscoring.co.nz/scripts/js/picker.date.min.js"></script>
-        <?php echo '<script type="text/javascript" src="http://www.ccrscoring.co.nz/scoring/scoring.min.js?' . filemtime('scoring.min.js') . '"></script>'; ?>
+        <?php echo '<script type="text/javascript" src="http://www.ccrscoring.co.nz/scoring/scoring.js?' . filemtime('scoring.min.js') . '"></script>'; ?>
     </head>
     <body>
         <header>

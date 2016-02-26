@@ -12,7 +12,7 @@ if (mysqli_connect_errno()) {
 $gameIDArray = json_decode($_POST['gameIDArray']);
 
 foreach ($gameIDArray as $gameID) {
-    if (!mysqli_query($con, "UPDATE Game SET locked = 'y' WHERE GameID = '$gameID'")) {
+    if (!mysqli_query($con, "UPDATE Game SET locked = 'y', minutesPlayed = '80' WHERE GameID = '$gameID'")) {
         $response = 'Update query failed';
     }
 }

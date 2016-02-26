@@ -895,7 +895,7 @@ function startAutoUpdateTimer() {
 // Change the auto update timer interval
 function changeAutoUpdateInterval(interval) {
     if (interval == NEVER) {
-        if (updateDuration != NEVER) {
+        if (updateDuration != NEVER && updateDuration != undefined) {
             updateDuration = NEVER;
             stopAutoUpdateTimer();
             alertSuccess("#alertDiv", "Games won't automatically update anymore");
@@ -1078,7 +1078,7 @@ function generateGameInfo() {
 
             html += "<div id='gameInfoHeader'>";
             // Display team names and scores
-            html += "    <div class='row teamInfo'>";
+            html += "    <div class='row teamInfo rowfix'>";
             html += "        <div class='col-xs-22'>";
             html += "            <div class='row'>" + response[0].homeTeamName + "</div>";
             html += "            <div class='row'>" + homeScore + "</div>";
@@ -1108,8 +1108,8 @@ function generateGameInfo() {
             } else {
                 minutesOrTime = response[0].minutesPlayed + " mins";
             }
-            html += "    <div class='row gameInfo'><div class='col-xs-48'>" + response[0].location + "</div></div>";
-            html += "    <div class='row gameInfo'><div class='col-xs-48'>" + minutesOrTime + "</div></div>";
+            html += "    <div class='row gameInfo rowfix'><div class='col-xs-48'>" + response[0].location + "</div></div>";
+            html += "    <div class='row gameInfo rowfix'><div class='col-xs-48'>" + minutesOrTime + "</div></div>";
             html += "</div>"; // End of game info header
       
             // Next is a list of the previously uploaded plays for this game

@@ -1,4 +1,6 @@
 create code generator for club websites
+test everything
+change admin navigation to shift arrows
 comment everything
 Make it look prettier!!!!!!
 pulse games (until user responds) that have changed on auto update

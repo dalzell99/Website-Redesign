@@ -17,10 +17,10 @@ if (mysqli_connect_errno()) {
 }
 
 $teamList = json_decode($_POST['teamList']);
-$sql = "SELECT * FROM Game WHERE GameID LIKE '2016_______" . pad($teamList[0][1]) . "__' OR GameID LIKE '2016____" . pad($teamList[0][1]) . "_____'";
+$sql = "SELECT GameID, homeTeamName, homeTeamScore, homeTeamTries, awayTeamName, awayTeamScore, awayTeamTries, minutesPlayed, ref, assRef1, assRef2, location, time, scoringPlays, changes, cancelled FROM Game WHERE GameID LIKE '2016_______" . pad($teamList[0][1]) . "__' OR GameID LIKE '2016____" . pad($teamList[0][1]) . "_____'";
 
 for ($i = 1; $i < count($teamList); $i += 1) {
-    $sql .= " OR GameID LIKE '2016____" . pad($teamList[$i][1]) . "_____' OR GameID LIKE '2016_______" . pad($teamList[$i][1]) . "_____'";
+    $sql .= " OR GameID LIKE '2016____" . pad($teamList[$i][1]) . "_____' OR GameID LIKE '2016_______" . pad($teamList[$i][1]) . "__'";
 }
 
 if ($result = mysqli_query($con, $sql)) {

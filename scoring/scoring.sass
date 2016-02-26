@@ -5,7 +5,7 @@
  */
 
 body
-  padding-bottom: 50px
+  //padding-bottom: 50px
   padding-top: 80px
   font-family: 'Roboto', sans-serif
   
@@ -427,6 +427,7 @@ nav.row
  *--------------------------------------------------------------------------
  */
 
+
 #gameInfoHeader:before
   content: ' '
   display: block
@@ -435,9 +436,9 @@ nav.row
   top: 0
   width: 100%
   height: 100%
-  z-index: 0
+  z-index: -1
   opacity: 0.4
-  background-image: url('https://roundthebendpart1.files.wordpress.com/2015/10/img_20151002_103326941-large1.jpg')
+  background-image: url('http://ccrscoring.co.nz/images/gameinfobg.jpg')
   background-repeat: no-repeat
   background-position: 50% 0
   background-size: cover
@@ -455,6 +456,9 @@ nav.row
   font-size: 120%
   background-color: white
   border-bottom: 1px grey solid
+
+#gameInfoContainer .scoringPlays
+  opacity: .7
 
 .homeScoringPlay
   text-align: left

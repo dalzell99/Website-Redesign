@@ -75,6 +75,17 @@ function getTeamName(teamID, divID) {
     return '';
 }
 
+// Return string with short day of week (if wanted), date, short month
+Date.prototype.toCustomDateString = function (dayOfWeek) {
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    var dayOfGame = '';
+    if (dayOfWeek) {
+        dayOfGame = daysOfWeek[this.getDay()];
+    }
+    return dayOfGame + " " + this.getDate() + " " + months[this.getMonth()];
+};
+
 // Generate game elements
 function generateTeamList() {
     var html = '';
@@ -159,7 +170,7 @@ function generateCSSEditor() {
     html += "    <button id='layoutButton' class='active' onclick='changeEditor(\"layoutCSSEditor\", this)'>General Layout</button>";
     html += "    <button id='teamDropDownButton' onclick='changeEditor(\"teamDropDownEditor\", this)'>Team Dropdown</button>";
     html += "    <button id='drawResultButtons' onclick='changeEditor(\"drawResultsButtonsEditor\", this)'>Draw and Results Buttons</button>";
-    html += "    <button id='drawResultListButton' onclick='changeEditor(\"drawResultsListEditor\", this)'>Draw and Results Lists</button>";
+    html += "    <button id='drawResultTableButton' onclick='changeEditor(\"drawResultsTableEditor\", this)'>Draw and Results Tables</button>";
     html += "</div>";
     
     // layout
@@ -211,11 +222,12 @@ function generateCSSEditor() {
         // font colour
         // margin
         // padding
-    html += "<div id='drawResultsListEditor'>";
-    html += "   Padding: <input class='inputs' type='number' min='0' id='drawResultsListPaddingInput' value='0'>px<br>";
-    html += "   Margin: <input class='inputs' type='number' min='0' id='drawResultsListMarginInput' value='0'>px<br>";
-    html += "   Font Size: <input class='inputs' type='number' min='0' id='drawResultsListFontSizeInput' value='14'>px<br>";
-    html += "   Font Colour: <select class='inputs' id='drawResultsListFontColourInput'>" + colourOption + "</select><br>";
+    html += "<div id='drawResultsTableEditor'>";
+    html += "   Table Cell Padding: <input class='inputs' type='number' min='0' id='drawResultsTableCellPaddingInput' value='10'>px<br>";
+    html += "   Table Cell Border Width: <input class='inputs' type='number' min='0' id='drawResultsTableCellBorderWidthInput' value='1'>px<br>";
+    html += "   Table Cell Border Colour: <select class='inputs' id='drawResultsTableCellBorderColourInput'>" + colourOption + "</select><br>";
+    html += "   Table Margin: <input class='inputs' type='number' min='0' id='drawResultsTableMarginInput' value='0'>px<br>";
+    html += "   Font Size: <input class='inputs' type='number' min='0' id='drawResultsTableFontSizeInput' value='14'>px<br>";
     html += "</div>";
     
     
@@ -282,8 +294,8 @@ function addEvents() {
 
     $("#teamDropDownFontSizeInput").on({
         change: function() {
-            $("#teamSelectorContainer").css('fontSize', $("#teamDropDownFontSizeInput").val() + 'px');
-            addToCSSArray("#teamSelectorContainer", 'fontSize', $("#teamDropDownFontSizeInput").val() + 'px');
+            $("#teamSelectorContainer, #teamInfoDropDown").css('fontSize', $("#teamDropDownFontSizeInput").val() + 'px');
+            addToCSSArray("#teamSelectorContainer, #teamInfoDropDown", 'fontSize', $("#teamDropDownFontSizeInput").val() + 'px');
         }
     });
 
@@ -376,34 +388,48 @@ function addEvents() {
         }
     });
 
-    $("#drawResultsListPaddingInput").on({
+    $("#drawResultsTablePaddingInput").on({
         change: function() {
-            $("#teamInfoContainer").css('padding', $("#drawResultsListPaddingInput").val() + 'px');
-            addToCSSArray("#teamInfoContainer", 'padding', $("#drawResultsListPaddingInput").val() + 'px');
+            $("#teamInfoContainer").css('padding', $("#drawResultsTablePaddingInput").val() + 'px');
+            addToCSSArray("#teamInfoContainer", 'padding', $("#drawResultsTablePaddingInput").val() + 'px');
         }
     });
 
-    $("#drawResultsListMarginInput").on({
+    $("#drawResultsTableMarginInput").on({
         change: function() {
-            $("#teamInfoContainer").css('margin', $("#drawResultsListMarginInput").val() + 'px');
-            addToCSSArray("#teamInfoContainer", 'margin', $("#drawResultsListMarginInput").val() + 'px');
+            $("#teamInfoContainer").css('margin', $("#drawResultsTableMarginInput").val() + 'px');
+            addToCSSArray("#teamInfoContainer", 'margin', $("#drawResultsTableMarginInput").val() + 'px');
         }
     });
 
-    $("#drawResultsListFontSizeInput").on({
+    $("#drawResultsTableFontSizeInput").on({
         change: function() {
-            $("#teamInfoContainer").css('fontSize', $("#drawResultsListFontSizeInput").val() + 'px');
-            addToCSSArray("#teamInfoContainer", 'fontSize', $("#drawResultsListFontSizeInput").val() + 'px');
+            $("#teamInfoContainer").css('fontSize', $("#drawResultsTableFontSizeInput").val() + 'px');
+            addToCSSArray("#teamInfoContainer", 'fontSize', $("#drawResultsTableFontSizeInput").val() + 'px');
         }
     });
 
-    $("#drawResultsListFontColourInput").on({
+    $("#drawResultsTableCellBorderColourInput").on({
         change: function() {
-            $("#drawResultsListFontColourInput").css('backgroundColor', $("#drawResultsListFontColourInput").val());
-            $("#teamInfoContainer").css('color', $("#drawResultsListFontColourInput").val());
-            addToCSSArray("#teamInfoContainer", 'color', $("#drawResultsListFontColourInput").val());
+            $("#drawResultsTableCellBorderColourInput").css('backgroundColor', $("#drawResultsTableCellBorderColourInput").val());
+            $(".drawResultsTable th, .drawResultsTable td").css('borderColor', $("#drawResultsTableCellBorderColourInput").val());
+            addToCSSArray(".drawResultsTable th, .drawResultsTable td", 'borderColor', $("#drawResultsTableCellBorderColourInput").val());
         }
-    });   
+    }); 
+    
+    $("#drawResultsTableCellBorderWidthInput").on({
+        change: function() {
+            $(".drawResultsTable th, .drawResultsTable td").css('borderWidth', $("#drawResultsTableCellBorderWidthInput").val() + 'px');
+            addToCSSArray(".drawResultsTable th, .drawResultsTable td", 'borderWidth', $("#drawResultsTableCellBorderWidthInput").val() + 'px');
+        }
+    });
+    
+    $("#drawResultsTableCellPaddingInput").on({
+        change: function() {
+            $(".drawResultsTable th, .drawResultsTable td").css('padding', $("#drawResultsTableCellPaddingInput").val() + 'px');
+            addToCSSArray(".drawResultsTable th, .drawResultsTable td", 'padding', $("#drawResultsTableCellPaddingInput").val() + 'px');
+        }
+    });
 }
 
 function addToCSSArray(selector, css, value) {
@@ -489,8 +515,8 @@ function generateTeamSelector() {
     html += "    </select>"
     html += "</div>";
     
-    html += "<button id='resultsButton' class='drawResultsButton' onclick='toggleResults()'>Results</button>";
-    html += "<button id='drawButton' class='drawResultsButton' onclick='toggleResults()'>Draw</button>";
+    html += "<button id='resultsButton' class='drawResultsButton' onclick='toggleResults(true)'>Results</button>";
+    html += "<button id='drawButton' class='drawResultsButton' onclick='toggleResults(false)'>Draw</button>";
     
     html += "<div id='teamInfoContainer'></div>";
     
@@ -508,32 +534,44 @@ function generateTeamInfo() {
     if (teamListInfo != null) {
         if (results) {
             // display results for team
+            html += "<table class='drawResultsTable'>";
             for (var c = 0; c < teamListInfo.length; c += 1) {
                 var game = teamListInfo[c];
                 var gameID = game.GameID;
                 if ((gameID.substr(8, 3) == teamID || gameID.substr(11, 3) == teamID) && game.minutesPlayed != 0) {
+                    var dateString = new Date(parseInt(gameID.substr(0, 4)), parseInt(gameID.substr(4, 2)), parseInt(gameID.substr(6, 2))).toCustomDateString();
                     html += 
-                        "<div>" + 
-                        getTeamName(gameID.substr(8, 3), divID) + " " + game.homeTeamScore + 
-                        " - " + 
-                        getTeamName(gameID.substr(11, 3), divID) + " " + game.awayTeamScore + 
-                        "</div>";
+                        "<tr>" + 
+                        "<td>" + dateString + "</td>" +
+                        "<td>" + getTeamName(gameID.substr(8, 3), divID) + "</td>" +
+                        "<td>" + game.homeTeamScore + "</td>" +
+                        "<td>" + getTeamName(gameID.substr(11, 3), divID) + "</td>" +
+                        "<td>" + game.awayTeamScore + "</td>" +
+                        "</tr>";
                 }
             }
+            html += "</table>";
         } else {
             // display draw for team
+            html += "<table class='drawResultsTable'>";
+            html += "<tr><th>Game Time</th><th>Teams</th><th>Location</th><th>Ref</th><th colspan='2'>Assistant Refs</th></tr>";
             for (var d = 0; d < teamListInfo.length; d += 1) {
                 var game = teamListInfo[d];
                 var gameID = game.GameID;
                 if ((gameID.substr(8, 3) == teamID || gameID.substr(11, 3) == teamID) && game.minutesPlayed == 0) {
+                    var dateString = new Date(parseInt(gameID.substr(0, 4)), parseInt(gameID.substr(4, 2)), parseInt(gameID.substr(6, 2))).toCustomDateString();
                     html += 
-                        "<div>" + 
-                        getTeamName(gameID.substr(8, 3), divID) + 
-                        " vs " + 
-                        getTeamName(gameID.substr(11, 3), divID) + 
-                        "</div>";
+                        "<tr>" +
+                            "<td>" + dateString + " " + game.time + "</td>" +
+                            "<td>" + getTeamName(gameID.substr(8, 3), divID) + " vs " + getTeamName(gameID.substr(11, 3), divID) + "</td>" +
+                            "<td>" + game.location + "</td>" +
+                            "<td>" + game.ref + "</td>" +
+                            "<td>" + game.assRef1 + "</td>" +
+                            "<td>" + game.assRef2 + "</td>" +
+                        "</tr>";
                 }
             }
+            html += "</table>";
         }
     }
     
@@ -541,8 +579,8 @@ function generateTeamInfo() {
     generateCode();
 }
 
-function toggleResults() {
-    results = (results == true ? false : true);
+function toggleResults(a) {
+    results = a;
     generateTeamInfo();
 }
 
@@ -574,6 +612,9 @@ function generateCode() {
     generatedhtml += "<div id='codePreviewContainer'></div>\n\n";
     
     generatedhtml += "<style>\n";
+    generatedhtml += ".drawResultsTable {\n";
+    generatedhtml += "  border-collapse: collapse;\n";
+    generatedhtml += "}\n\n";
     for (var h = 0; h < cssArray.length; h += 1) {
         generatedhtml += "    " + cssArray[h][0] + " {\n";
         for (var g = 1; g < cssArray[h].length; g += 1) {
@@ -597,7 +638,8 @@ function generateCode() {
         generatedhtml += ", [" + selectedTeams[v][0] + ", " + selectedTeams[v][1] + "]";
     }
     generatedhtml += "]; // Format: [[divID1, teamID1], [divID2, teamID2], ...]\n";
-    generatedhtml += "    var allTeams = []; // Stores all the team names in database. There are n (n = num of divisions) arrays inside this one.  Each team is an object containing teamID, division and name. Format: [[All teams with divID of 0], [All teams with divID of 1], ...].\n";
+    generatedhtml += "    var allTeams = []; // Stores all the team names in database. There are n (n = num of divisions) arrays inside this one.  Each team is an object containing\n";
+    generatedhtml += "                       // teamID, division and name. Format: [[All teams with divID of 0], [All teams with divID of 1], ...].\n";
     generatedhtml += "    var allDivs = []; // Stores all the divisions in database. Each division is an object containing divisionID and divisionName.\n";
     generatedhtml += "    var teamListInfo = []; // Stores all the game elements in which one or more of the above teams was involved\n";
     generatedhtml += "    var results = true; // true = display results for teams chosen, false = display upcoming games for chosen teams\n";
@@ -642,6 +684,17 @@ function generateCode() {
     generatedhtml += "        generateTeamSelector();\n";
     generatedhtml += "    }\n\n";
     
+    generatedhtml += "    // Return string with short day of week (if wanted), date, short month\n";
+    generatedhtml += "    Date.prototype.toCustomDateString = function (dayOfWeek) {\n";
+    generatedhtml += "        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];\n";
+    generatedhtml += "        var daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];\n";
+    generatedhtml += "        var dayOfGame = '';\n";
+    generatedhtml += "        if (dayOfWeek) {\n";
+    generatedhtml += "            dayOfGame = daysOfWeek[this.getDay()];\n";
+    generatedhtml += "        }\n";
+    generatedhtml += "        return dayOfGame + ' ' + this.getDate() + ' ' + months[this.getMonth()];\n";
+    generatedhtml += "    };\n\n";
+    
     generatedhtml += "    // Retrieve team and division info from database then retrieve game elements where one of the chosen teams is involved then start generating the team selector.\n";
     generatedhtml += "    function init() {\n";
     generatedhtml += "        // Get all the teams and divisions from database\n";
@@ -665,7 +718,7 @@ function generateCode() {
     generatedhtml += "            },\n";
     generatedhtml += "            function (response) {\n";
     generatedhtml += "                // response format: [game1, game2, ...]. Each game is an object containing:\n";
-    generatedhtml += "                // GameID: 16 numbers long. YYYYMMDDTTTHHHKK (YYYY = year, MM = month (not zero indexed), DD = date, TTT = home team ID, HHH = away team ID, KK = division ID)\n";
+    generatedhtml += "                // GameID: YYYYMMDDTTTHHHKK (YYYY = year, MM = month (not zero indexed), DD = date, TTT = home team ID, HHH = away team ID, KK = division ID)\n";
     generatedhtml += "                // homeTeamName: the home teams name when game created (DON'T USE. Use getTeamName(gameObject.GameID.substr(8, 3)) instead.)\n";
     generatedhtml += "                // homeTeamScore: home teams score\n";
     generatedhtml += "                // homeTeamTries: number of home teams tries. Used for points table.\n";
@@ -687,14 +740,8 @@ function generateCode() {
     generatedhtml += "                //     Scoring play codes:\n";
     generatedhtml += "                //         first 4 characters are: home or away.\n";
     generatedhtml += "                //         the rest of characters are one of: Try, Penalty, Conversion, DropGoal.\n";
-    generatedhtml += "                // changed: \n";
-    generatedhtml += "                // changes: \n";
-    generatedhtml += "                // liveScored: \n";
-    generatedhtml += "                // userID: \n";
-    generatedhtml += "                // lastTimeScored: \n";
-    generatedhtml += "                // locked: \n";
-    generatedhtml += "                // processed: \n";
-    generatedhtml += "                // cancelled: \n";
+    generatedhtml += "                // changes: array of changes made since game was added. Format of change: [time change was made, chnage code (same as above names)]\n";
+    generatedhtml += "                // cancelled: 'y' = game cancelled, 'n' = game not cancelled\n";
     generatedhtml += "                teamListInfo = response;\n";
     generatedhtml += "                generateTeamSelector();\n";
     generatedhtml += "            }, 'json');\n";
@@ -704,10 +751,10 @@ function generateCode() {
     generatedhtml += "        }, 'json');\n";
     generatedhtml += "        post.fail(function (request, textStatus, errorThrown) {\n";
     generatedhtml += "            alert('Error while retrieving team list and divisions from database. Please contact the web admin for this site.');\n";
-    generatedhtml += "        });\n\n";
+    generatedhtml += "        });\n";
     generatedhtml += "    }\n\n";
     
-    generatedhtml += "    // Retrieve team and division info from database\n";
+    generatedhtml += "    // Generate html for team selector\n";
     generatedhtml += "    function generateTeamSelector() {\n";
     generatedhtml += "        var html = '';\n";
     generatedhtml += "        html += \"<div id='teamSelectorContainer'>\";\n";
@@ -737,32 +784,50 @@ function generateCode() {
     generatedhtml += "        if (teamListInfo != null) {\n";
     generatedhtml += "            if (results) {\n";
     generatedhtml += "                // display results for team\n";
+    generatedhtml += "                html += \"<table class='drawResultsTable'>\";\n";
     generatedhtml += "                for (var c = 0; c < teamListInfo.length; c += 1) {\n";
     generatedhtml += "                    var game = teamListInfo[c];\n";
     generatedhtml += "                    var gameID = game.GameID;\n";
     generatedhtml += "                    if ((gameID.substr(8, 3) == teamID || gameID.substr(11, 3) == teamID) && game.minutesPlayed != 0) {\n";
+    generatedhtml += "                        var dateString = new Date(parseInt(gameID.substr(0, 4)), parseInt(gameID.substr(4, 2)), parseInt(gameID.substr(6, 2))).toCustomDateString();\n";
     generatedhtml += "                        html += \n";
-    generatedhtml += "                            \"<div>\" + \n";
-    generatedhtml += "                            getTeamName(gameID.substr(8, 3), divID) + \" \" + game.homeTeamScore + \n";
-    generatedhtml += "                            \" - \" + \n";
-    generatedhtml += "                            getTeamName(gameID.substr(11, 3), divID) + \" \" + game.awayTeamScore + \n";
-    generatedhtml += "                            \"</div>\";\n";
+    generatedhtml += "                            '<tr>' +\n";
+    generatedhtml += "                                '<td>' + dateString + '</td>' +\n";
+    generatedhtml += "                                '<td>' + getTeamName(gameID.substr(8, 3), divID) + '</td>' +\n";
+    generatedhtml += "                                '<td>' + game.homeTeamScore + '</td>' +\n";
+    generatedhtml += "                                '<td>' + getTeamName(gameID.substr(11, 3), divID) + '</td>' +\n";
+    generatedhtml += "                                '<td>' + game.awayTeamScore + '</td>' +\n";
+    generatedhtml += "                            '</tr>';\n";
     generatedhtml += "                    }\n";
     generatedhtml += "                }\n";
     generatedhtml += "            } else {\n";
     generatedhtml += "                // display draw for team\n";
+    generatedhtml += "                html += \"<table class='drawResultsTable'>\";\n";
+    generatedhtml += "                html += '    <tr>';\n";
+    generatedhtml += "                html += '        <th>Game Time</th>';\n";
+    generatedhtml += "                html += '        <th>Teams</th>';\n";
+    generatedhtml += "                html += '        <th>Location</th>';\n";
+    generatedhtml += "                html += '        <th>Ref</th>';\n";
+    generatedhtml += "                html += \"        <th colspan='2'>Assistant Refs</th>\";\n";
+    generatedhtml += "                html += '    </tr>';\n";
     generatedhtml += "                for (var d = 0; d < teamListInfo.length; d += 1) {\n";
     generatedhtml += "                    var game = teamListInfo[d];\n";
     generatedhtml += "                    var gameID = game.GameID;\n";
     generatedhtml += "                    if ((gameID.substr(8, 3) == teamID || gameID.substr(11, 3) == teamID) && game.minutesPlayed == 0) {\n";
+    generatedhtml += "                        var dateString = new Date(parseInt(gameID.substr(0, 4)), parseInt(gameID.substr(4, 2)), parseInt(gameID.substr(6, 2))).toCustomDateString();\n";
     generatedhtml += "                        html += \n";
-    generatedhtml += "                            \"<div>\" + \n";
-    generatedhtml += "                            getTeamName(gameID.substr(8, 3), divID) + \n";
-    generatedhtml += "                            \" vs \" + \n";
-    generatedhtml += "                            getTeamName(gameID.substr(11, 3), divID) + \n";
-    generatedhtml += "                            \"</div>\";\n";
+    generatedhtml += "                            '<tr>' + \n";
+    generatedhtml += "                                '<td>' + dateString + ' ' + game.time + '</td>' +\n";
+    generatedhtml += "                                '<td>' + getTeamName(gameID.substr(8, 3), divID) + ' vs ' + \n";
+    generatedhtml += "                                getTeamName(gameID.substr(11, 3), divID) + '</td>' +\n";
+    generatedhtml += "                                '<td>' + game.location + '</td>' +\n";
+    generatedhtml += "                                '<td>' + game.ref + '</td>' +\n";
+    generatedhtml += "                                '<td>' + game.assRef1 + '</td>' +\n";
+    generatedhtml += "                                '<td>' + game.assRef2 + '</td>' +\n";
+    generatedhtml += "                            '</tr>';\n";
     generatedhtml += "                    }\n";
     generatedhtml += "                }\n";
+    generatedhtml += "                html += '</table>';\n";
     generatedhtml += "            }\n";
     generatedhtml += "        }\n";
     generatedhtml += "        $(\"#teamInfoContainer\").empty().append(html);\n";
@@ -770,7 +835,7 @@ function generateCode() {
     generatedhtml += "</script>";
     
     generatedhtml = generatedhtml.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    $("#codeDisplayContainer").empty().append('<h1>Code</h1><h4>Copy and paste this code into your website or send it to the person responsible for updating your website.</h4><pre><code>' + generatedhtml + '</code></pre>');
+    $("#codeDisplayContainer").empty().append('<h1>Code</h1><h4>Copy and paste this code into your website or send it to the person responsible for updating your website.</h4><pre><code class="html">' + generatedhtml + '</code></pre>');
     
     $('pre code').each(function(i, block) {
         hljs.highlightBlock(block);

@@ -10,8 +10,8 @@ if (mysqli_connect_errno()) {
 }
 
 $start = $_POST['start'] . '000000';
-$end = $_POST['end'] . '000000';
-$sql = "SELECT assRef1, assRef2, awayTeamName, awayTeamScore, homeTeamName, homeTeamScore, changes, GameID, liveScored, location, minutesPlayed, ref, time, userID, locked, cancelled FROM Game WHERE GameID BETWEEN " . $start . " AND " . $end . " OR GameID BETWEEN " . $start . "00 AND " . $end . "00 ORDER BY `gameID` ASC";
+$end = $_POST['end'] . '999999';
+$sql = "SELECT assRef1, assRef2, awayTeamName, awayTeamScore, homeTeamName, homeTeamScore, changes, GameID, liveScored, location, minutesPlayed, ref, time, userID, locked, cancelled FROM Game WHERE GameID BETWEEN " . $start . " AND " . $end . " OR GameID BETWEEN " . $start . "00 AND " . $end . "99 ORDER BY `gameID` ASC";
 
 if ($gameresult = mysqli_query($con, $sql)) {
     

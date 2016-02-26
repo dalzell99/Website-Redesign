@@ -459,6 +459,8 @@ function addTeam() {
         function (response) {
             if (response[0] == 'success') {
                 // Name has been changed. Regenerate team list.
+                $("#addTeamName").val('');
+                $("#addTeamName").focus();
                 addBackEvent(['addTeam', teamName, divisionID]);
                 allTeams[parseInt(divisionID)].push({division:divisionID, enabled:'y', teamID:response[1], teamName:teamName});
                 generateTeamList();
@@ -852,17 +854,35 @@ function addEventsGame() {
     // Add event to the editable columns of the table. Tab moves tight one cell and shift + tab moves left one cell.
     $("tr > [contenteditable=true]").on({
         keydown: function (event) {
-            if (event.which == 13 && event.shiftKey) { // Shift + enter moves up one cell
-                // Stop a line break being added
-                event.preventDefault();
+            if (event.keyCode == 38 && event.shiftKey) { // Shift + arrow up moves up one cell
                 // Get the parent of element currently focused, move to previous sibling, get the child with the same class name and focus it.
                 $(this).parent().prev().children("." + this.className).focus();
                 placeCaretAtEnd(document.activeElement);
-            } else if (event.which == 13) { // Enter without shift moves down one cell
-                // Stop a line break being added
-                event.preventDefault();
+            } 
+            
+            else if (event.keyCode == 40 && event.shiftKey) { // Shift + arrow down moves down one cell
                 // Get the parent of element currently focused, move to next sibling, get the child with the same class name and focus it.
                 $(this).parent().next().children("." + this.className).focus();
+                placeCaretAtEnd(document.activeElement);
+            } 
+            
+            else if (event.keyCode == 37 && event.shiftKey) { // Shift + arrow left moves left one cell
+                // Get the parent of element currently focused, move to next sibling, get the child with the same class name and focus it.
+                if (this.classList[0] == 'awayTeamScore') {
+                    $(this).prev().prev().focus();
+                } else {
+                    $(this).prev().focus();
+                }
+                placeCaretAtEnd(document.activeElement);
+            } 
+            
+            else if (event.keyCode == 39 && event.shiftKey) { // Shift + arrow right moves right one cell
+                // Get the parent of element currently focused, move to next sibling, get the child with the same class name and focus it.
+                if (this.classList[0] == 'homeTeamTries') {
+                    $(this).next().next().focus();
+                } else {
+                    $(this).next().focus();
+                }
                 placeCaretAtEnd(document.activeElement);
             }
         },
@@ -872,7 +892,7 @@ function addEventsGame() {
             var oldValue = sessionStorage.contenteditable;
             var gameID = this.parentElement.classList.item(1);
             var column = this.classList.item(0);
-            var newValue = this.innerHTML;
+            var newValue = this.textContent;
             var rowIndex = this.parentElement.classList.item(2);
             var homeTeam = $("." + gameID + " > .homeTeamName").html();
             var awayTeam = $("." + gameID + " > .awayTeamName").html();
@@ -886,7 +906,7 @@ function addEventsGame() {
 
         // When user clicks into cell
         focus: function () {
-            sessionStorage.contenteditable = this.innerHTML;
+            sessionStorage.contenteditable = this.textContent;
         }
     });
     
@@ -1178,7 +1198,7 @@ function addGame() {
 // Lock the games that have been selected
 function lockSelectedGames() {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/lockgame.php', {
-            gameID: gameID
+            gameIDArray: JSON.stringify(selectedRowGameID)
         },
         function (response) {
             if (response == 'success') {
@@ -1197,7 +1217,7 @@ function lockSelectedGames() {
                 selectedRowGameID = [];
                 numGamesDeleted = 0;
                 filterDates();
-                alertSuccess("#alertDiv", "The selected games have been deleted");
+                alertSuccess("#alertDiv", "The selected games have been locked");
             } else {
                 // Error
                 alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
@@ -1212,7 +1232,7 @@ function lockSelectedGames() {
 // Unlock the games that have been selected
 function unlockSelectedGames() {
     var post = $.post('http://ccrscoring.co.nz/scripts/php/unlockgame.php', {
-            gameID: gameID
+            gameIDArray: JSON.stringify(selectedRowGameID)
         },
         function (response) {
             if (response == 'success') {
@@ -1231,7 +1251,7 @@ function unlockSelectedGames() {
                 selectedRowGameID = [];
                 numGamesDeleted = 0;
                 filterDates();
-                alertSuccess("#alertDiv", "The selected games have been deleted");
+                alertSuccess("#alertDiv", "The selected games have been unlocked");
             } else {
                 // Error
                 alertError("#alertDiv", "Error: " + response + ". Please try again later. If problem persists, use the contact form");
@@ -1451,7 +1471,7 @@ function createDrawPDF() {
                 bold: true		
             },
             table: {
-                fontSize: 12
+                fontSize: 10
             },
             dateString: {
                 fontSize: 14,
