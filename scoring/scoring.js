@@ -434,6 +434,7 @@ function showDrawResultsContainer() {
 // Show/hide week list
 function toggleWeeks() {
     $("#weeksList").slideToggle();
+    $(".showweeks").toggleClass("weeksexpanded");
 }
 
 // Show/hide game changes
@@ -1155,7 +1156,7 @@ function generateGameInfo() {
                         // message. If not then extract new score from XXXX (play), display it and update the score.
                         if (parseInt(play.substr(0, 3)) == 2) {
                             var scoreString = "Game Update: " + response[0].awayTeamName + " defaulted";
-                        } else if (parseInt(substr(play, 0, 3)) == 1) {
+                        } else if (parseInt(play.substr(play, 0, 3)) == 1) {
                             var scoreString = "Game Update: " + response[0].homeTeamName + " defaulted";
                         } else {
                             var scoreString = "Score Update: " + parseInt(play.substr(0, 3)) + " - " + parseInt(play.substr(3, 3)) + " (" + scoringPlayInfo[0] + "')";
@@ -1554,6 +1555,7 @@ function generateLiveScoring() {
                     // Add i to updatePlayIndexes
                     updatePlayIndexes = updatePlayIndexes + ',' + j;
                     if (play.length == 6) {
+                        var scoreString = '';
                         // For updtXXXYYY, first check if the update is a team defaulting and display appropriate 
                         // message. If not then extract new score from XXXX (play), display it and update the score.
                         if (parseInt(play.substr(0, 3)) == 2) {

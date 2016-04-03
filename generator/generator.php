@@ -8,7 +8,7 @@
         <?php echo '<link rel="stylesheet" type="text/css" href="http://www.ccrscoring.co.nz/generator/generator.css?' . filemtime('generator.css') . '" />'; ?>
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script type="text/javascript" src="http://www.ccrscoring.co.nz/scripts/js/highlight.pack.js"></script>
-        <?php echo '<script type="text/javascript" src="http://www.ccrscoring.co.nz/generator/generator.js?' . filemtime('generator.js') . '"></script>'; ?>
+        <?php echo '<script type="text/javascript" src="http://www.ccrscoring.co.nz/generator/generator.min.js?' . filemtime('generator.min.js') . '"></script>'; ?>
     </head>
     <body>
         <header>

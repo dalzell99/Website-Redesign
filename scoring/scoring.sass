@@ -28,6 +28,9 @@ button
   font-weight: bold
   padding: 6px 24px
   border: 0
+
+  @media (max-width: 768px)
+    padding: 6px 10px
   
   &:hover
     background-color: #019ad2
@@ -161,14 +164,22 @@ nav.row
   margin: 0 0 20px 1.11%
   font-weight: bold
   font-size: 140%
-  
+
+  @media (max-width: 768px)
+    font-size: 120%
+    padding: 10px
+
 .weeksexpanded
-  margin-bottom: 15px
+  margin-bottom: 10px
 
 .weeknav
   padding: 10px
   border: 1px solid #008DC1
   border-radius: 0px
+  height: 70px
+
+  @media (min-width: 768px)
+    //height: 60px
 
   &.active
     background-color: #2787aa
@@ -287,6 +298,7 @@ nav.row
 #autoUpdateButtonRow
   text-align: right
   margin: 0px 10px 15px 0px
+  font-size: 80%
 
 .autoUpdateButton.active
   background-color: #2787aa
@@ -539,9 +551,12 @@ nav.row
   margin: 25px 0
   
 .homeTeamRow, .awayTeamRow, .divDropDownRow
-  font-size: 180%
+  font-size: 140%
   margin-bottom: 10px
   text-align: center
+
+  @media (min-width: 768px)
+    font-size: 180%
 
 .stopScoringDiv
   text-align: end
@@ -559,11 +574,15 @@ nav.row
   min-width: 130px
 
 #changeScoreFormButton
-  margin-left: 15%
-  width: 25%
+  margin-left: 10%
+  width: 80%
   min-width: 100px
   height: 40px
-  
+
+  @media (min-width: 768px)
+    width: 30%
+    margin-left: 35%
+
 .timingInfoLive, .changeScoreFormButtonRow, .stopScoringButtonRow
   font-size: 150%
   margin: .5% 1%

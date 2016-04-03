@@ -14,7 +14,7 @@
         <script type="text/javascript" src="http://www.ccrscoring.co.nz/scripts/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="http://www.ccrscoring.co.nz/scripts/js/picker.min.js"></script>
         <script type="text/javascript" src="http://www.ccrscoring.co.nz/scripts/js/picker.date.min.js"></script>
-        <?php echo '<script type="text/javascript" src="http://www.ccrscoring.co.nz/scoring/scoring.js?' . filemtime('scoring.min.js') . '"></script>'; ?>
+        <?php echo '<script type="text/javascript" src="http://www.ccrscoring.co.nz/scoring/scoring.js?' . filemtime('scoring.js') . '"></script>'; ?>
     </head>
     <body>
         <header>
